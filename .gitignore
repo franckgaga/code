@@ -16,3 +16,4 @@ mpcPackageJulia.pdf
 rev/
 ~$*.docx
 *.fdb_latexmk
+*.fbd
