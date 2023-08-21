@@ -1,0 +1,61 @@
+% !TeX spellcheck = en_US
+% !TeX encoding = UTF-8
+\documentclass{ifacconf}
+
+% ------------------- debug cleveref and ifacconf -----------------------------
+\newcounter{part}
+\counterwithin*{section}{part}
+%% ===================== packages ============================================
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,dutchcal,mathtools,siunitx,physics,etoolbox}
+\usepackage{booktabs,graphicx,xcolor,colortbl,natbib,tikz,epstopdf}
+\usepackage[capitalize]{cleveref}
+\usepackage[qtmarkupright]{glosmathtools}			 
+%% =============== preamble ==================================================
+%% ---------------- tikz -----------------------------------------------------
+\usetikzlibrary{arrows,shapes.geometric}
+%%generate seperate PDF for each tikz (compile with pdflatex -shell-escape) :
+%\usetikzlibrary{external}
+%\tikzexternalize[prefix=fig/]
+%% ------------- glosmathtools -----------------------------------------------
+\newignoredglossary{ignoredglos} % vectors are not printed in nomenclature
+\loadglsentries{mpcPackageJulia_glos}
+%% ----------------- amsmath -------------------------------------------------
+\DeclareMathOperator{\diag}{diag}
+%% ============================================================================
+
+\begin{document}
+\begin{frontmatter}
+
+\title{ModelPredictiveControl.jl: toward democratizing advanced process control solutions}
+
+\author[First]{Francis Gagnon} 
+\author[First]{Alex Thivierge} 
+%\author[Second]{André Desbiens}
+
+\address[First]{Process Observation and Optimization Laboratory (LOOP), Université Laval, Quebec City, G1V 0A6, Canada}
+\address[Second]{Process Monitoring Automation and Control group (PMAC), Pfizer Canada ULC, Montreal, H9J 2M5, Canada}
+
+\begin{abstract} 
+Sit commodo ipsum nulla eu excepteur sit ut minim voluptate et eu velit sint. Lorem et amet incididunt officia id. Nulla magna fugiat incididunt veniam sunt excepteur in esse nulla et aliquip non magna deserunt. 
+\end{abstract}
+
+\begin{keyword}
+Model-based Control
+\end{keyword}
+
+\end{frontmatter}
+
+\input{tex/intro}
+\input{tex/mat_method_simple}
+\input{tex/results_simple}
+\input{tex/conclu}
+
+\begin{ack}
+Culpa in deserunt proident tempor non. Duis et esse pariatur esse qui duis exercitation ullamco aliquip. Dolore ipsum sint consequat enim laborum duis anim cupidatat.
+\end{ack}
+
+\bibliography{mpcPackageJulia_bibfile}
+
+
+\end{document}
