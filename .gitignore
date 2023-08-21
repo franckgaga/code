@@ -15,3 +15,4 @@ mpcPackageJulia.pdf
 *.aux
 rev/
 ~$*.docx
+*.fdb_latexmk
