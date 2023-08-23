@@ -17,3 +17,4 @@ rev/
 ~$*.docx
 *.fdb_latexmk
 *.fbd
+*.fls

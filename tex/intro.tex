@@ -2,6 +2,16 @@
 % !TeX spellcheck = en_US
 \section{Introduction}
 
+The control community, both in the academic and industrial sectors, has traditionally relied on MATLAB and its toolboxes for designing, simulating and implementing closed-loop systems. The ecosystem developed by The MathWorks\texttrademark\ is rich, mature, cohesive, and well documented, but their licensing policy can be unaffordable for smaller organizations.
+
+Additionally, because it is a proprietary software, many functions are closed source, weakening the transparency and reproducibility for scientific research. \citep{matlabPythonJulia}
+
+\citep{controlsystems_jl} \cite{jump_jl}
+
+
+For large organizations, the  
+
+
 The intense particle mixing and heat diffusivity of fluidized beds explains their popularity for pharmaceutical product drying. However, the gas flow through fluidized solids follows heterogeneous patterns with bypasses, generally perceptible as gas bubbles \citep{handbookFluidization}. Consequently, theories describing fluidized bed gas behavior are complex, leading to mathematical models hardly applicable for actual industrial developments \citep{reviewModelPhilippsen}. This is the case for process control design and implementation because computational burdens and tuning complexity hinder real-time applications \citep[e.g.][]{nmpcFBD}. Simplifying the \gls{FBD} dynamic model is thus desirable, at the very least for control purposes.
 
 \citet{batchTsotas} and \citet{fbd2phFG} introduce two-phase batch \gls{FBD} models to describe gas flow patterns. Although more realistic than single-phase descriptions \citep{flowModelCompFB}, they generally lead to large differential and algebraic equation systems requiring complex solving workflow. 
