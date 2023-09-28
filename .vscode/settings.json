@@ -1,2 +1,5 @@
 {
+    "[latex]": {
+        "editor.wordWrap": "on"
+    }
 }
