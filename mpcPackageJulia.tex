@@ -1,14 +1,16 @@
 % !TeX spellcheck = en_US
 % !TeX encoding = UTF-8
+% !LW recipe=latexmk (latexmkrc)
 \documentclass{ifacconf}
 
 % ------------------- debug cleveref and ifacconf -----------------------------
 \newcounter{part}
 \counterwithin*{section}{part}
-%% ===================== packages ============================================
+%% ===================== packages ===========================================
+\usepackage{fontspec}
 \usepackage[utf8]{inputenc}
-\usepackage{amsmath,amssymb,dutchcal,mathtools,siunitx,physics,etoolbox}
-\usepackage{booktabs,graphicx,xcolor,colortbl,natbib,tikz,epstopdf}
+\usepackage{amsmath,amssymb,dutchcal,mathtools,siunitx,physics,etoolbox,minted}
+\usepackage{booktabs,graphicx,xcolor,colortbl,natbib,tikz}
 \usepackage[capitalize]{cleveref}
 \usepackage[qtmarkupright]{glosmathtools}
 %% =============== preamble ==================================================
@@ -22,19 +24,40 @@
 \loadglsentries{mpcPackageJulia_glos}
 %% ----------------- amsmath -------------------------------------------------
 \DeclareMathOperator{\diag}{diag}
+%% ----------------- fontspec -------------------------------------
+%\setmonofont{DejaVu Sans Mono}
 %% ============================================================================
+
+\setminted[julia]{%
+    %linenos,
+    %numbersep=3pt,
+    %firstnumber=last,
+    fontsize=\footnotesize,
+    %frame=lines,
+    %framesep=-5mm,
+    bgcolor=gray!10,
+}
+\setminted[julia-repl]{%
+    fontsize=\footnotesize,
+    %frame=bottomline,
+    %framesep=2mm,
+    %framerule=10mm,
+    %bgcolor=white
+}
+
+\newcommand*{\textttsmall}[1]{\texttt{\footnotesize #1}}
 
 \begin{document}
 \begin{frontmatter}
 
-\title{ModelPredictiveControl.jl: toward democratizing advanced process control solutions}
+\title{ModelPredictiveControl.jl: advanced process control made easy in Julia}
 
 \author[First]{Francis Gagnon} 
 \author[First]{Alex Thivierge} 
-%\author[Second]{André Desbiens}
+\author[Second]{André Desbiens}
 
-\address[First]{Process Observation and Optimization Laboratory (LOOP), Université Laval, Quebec City, G1V 0A6, Canada}
-\address[Second]{Process Monitoring Automation and Control group (PMAC), Pfizer Canada ULC, Montreal, H9J 2M5, Canada}
+\address[First]{Jumine Inc., Quebec City, G1S 2K4, Canada}
+\address[Second]{Process Observation and Optimization Laboratory (LOOP), Université Laval, Quebec City, G1V 0A6, Canada}
 
 \begin{abstract} 
 Sit commodo ipsum nulla eu excepteur sit ut minim voluptate et eu velit sint. Lorem et amet incididunt officia id. Nulla magna fugiat incididunt veniam sunt excepteur in esse nulla et aliquip non magna deserunt. 

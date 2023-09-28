@@ -18,3 +18,5 @@ rev/
 *.fdb_latexmk
 *.fbd
 *.fls
+*.dvi
+_minted-mpcPackageJulia/
