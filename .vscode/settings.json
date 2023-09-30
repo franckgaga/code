@@ -4,5 +4,23 @@
     },
     "[tex]": {
         "editor.wordWrap": "on"
-    }
+    },
+    "cSpell.words": [
+        "bumpless",
+        "evaloutput",
+        "feedforward",
+        "initstate",
+        "Jacobians",
+        "Kalman",
+        "linearizes",
+        "Luenberger",
+        "moveinput",
+        "nint",
+        "plotd",
+        "plotŷ",
+        "Riccati",
+        "setconstraint",
+        "updatestate",
+        "ŷmin"
+    ]
 }

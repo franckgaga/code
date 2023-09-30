@@ -6,60 +6,7 @@ The control community, both in the academic and industrial sectors, has largely 
 
 Julia is relatively new programming language specialized for scientific computing. The just-ahead-of-time compiler allows reaching performance comparable to C and Fortran, while exhibiting a modern and expressive syntax like MATLAB and Python. The built-in read-eval-print-loop (REPL) allows to interactively test code and inspect variables, mimicking the development workflow of an interpreted language. Moreover, the language is free and open-source and it can be used for commercial purposes without any licensing fees. The ecosystem is still young, but a control toolbox, a system identification and an optimization packages are already available and complete for the most parts \citep{controlsystems_jl, jump_jl}. There is however no open-source model predictive control package available yet in the official registry of Julia, which is the main motivation for this project.
 
-This paper presents a model predictive control package for julia. A simple and creative framework for the development of advanced process controller. The focus is on modern mpc that rely on a state observer. Traditional approach like internal model structure is also available. The \textttsmall{JuMP.jl} interface allows changing the solver with a one-liner. Automatic differentiation (AD) compute the gradient and jacobians of models (EKF), and objective and constrain function of the nonlinear model predictive controller. Both soft and hard constraints are supported. Linear representation are automatically augmented with an adequate stochastic model of the disturbances (can be customized). The classical Kalman-type states estimator are all available as state feedback strategies. The analogue of predictive control for estimation, the moving horizon estimation, will be also available soon after this publication. This observer allows adding constraints on the estimates. 
+This paper presents a model predictive control package for Julia. The objective is to provide a simple and clear framework to quickly design model predictive controllers (MPCs) in Julia, while preserving the flexibility for advanced real-time optimization. The focus is on modern MPCs that rely on a closed-loop state observer for the feedback. Traditional approach like internal model structure is also available. The \texttt{JuMP.jl} interface allows changing the solver quickly among  many open-source and commercial optimization software. As generic Julia functions can be differentiated using forward mode automatic differentiation (AD) of \texttt{ForwardDiff.jl}, the gradient, Jacobian and Hessian of the objective and constraint functions for nonlinear MPCs are computed automatically with the machine precision. This also applies for the extended Kalman Filter. Both soft and hard constraints are supported. 
 
-\section{Materials and methods}
-
-The code of this package is separated into three abstract types:
-\begin{description}
-    \item[SimModel] (2 subtypes) -- Discrete state-space models of the plant, including linear and nonlinear representations. They serve as wrappers to construct \textbf{StateEstimator}s and \textbf{PredictiveController}s, and also as plant simulators.
-    \item[StateEstimator] (6 subtypes) -- Deterministic and stochastic observers used as the feedback for the \textbf{PredictiveController}s
-    \item[PredictiveController] (3 subtypes) -- Linear and nonlinear MPC are available. An explicit controller based on matrix algebra is also possible for linear description without constraint.
-\end{description}
-
-\section{Case studies}
-
-The example considers a continuisly stirred tank reactor (CSTR) with a hot and cold water intakes. The linear model, with the manipulated inputs $\mathbf{u}=\begin{smallmatrix}[
-u_c & u_h]'\end{smallmatrix}$ and the liquid level and tempertaure as measured outputs $\mathbf{y}=\begin{smallmatrix}[y_L & y_T]'\end{smallmatrix}$ is constructed with:
-
-\begin{minted}{julia}
-using ModelPredictiveControl, ControlSystemsBase
-sys = [ tf(1.90, [18, 1]) tf(1.90, [18, 1]);
-        tf(-0.74,[8, 1])  tf(0.74, [8, 1]) ]
-Ts = 4.0
-model = setop!(LinModel(sys, Ts), yop=[50, 30], uop=[20, 20])
-\end{minted}
-\vspace{-26pt}
-\begin{minted}{julia-repl}
-Discrete-time linear model with a sample time 
-Ts = 4.0 s and:
- 2 manipulated inputs u
- 2 states x
- 2 outputs y
- 0 measured disturbances d
-\end{minted}
-
-The figure 1 depicts the instrumentation installed on the plant.
-
-Ut dolore reprehenderit sint cillum do occaecat et pariatur duis. Culpa veniam esse aute velit ex. Aliquip est nisi ullamco fugiat excepteur incididunt nulla proident culpa sint nostrud id id. Dolor non culpa mollit nostrud ut dolore velit qui est aliqua.
-
-The objective is to control both the water temperature and level and enforcing a 45\% or 
-more liquid level:
-
-\begin{minted}{julia}
-ŷmin=[45, -Inf]
-mpc = setconstraint!(LinMPC(model, Hp=15); ŷmin)
-\end{minted}
-\vspace{-25pt}
-\begin{minted}{julia-repl}
-LinMPC controller with a sample time Ts = 4.0 s,
-OSQP optimizer, SteadyKalmanFilter estimator and:
- 15 prediction steps Hp
-  2 control steps Hc
-  2 manipulated inputs u (0 integrating states)
-  4 states x̂
-  2 measured outputs ym (2 integrating states)
-  0 unmeasured outputs yu
-  0 measured disturbances d
-\end{minted}
+Linear representation are automatically augmented with an adequate stochastic model of the unmeasured disturbances based on observability (can be customized). For the nonlinear case, the user chooses to add the integrators at the model input or output on each channel. The Luenberger observer and classical Kalman-type estimators are all available as feedback strategies. In addition, the analog of predictive control but for state estimation, the moving horizon estimator, will also be available soon after this publication. It will allow adding constraints on the estimates.
 

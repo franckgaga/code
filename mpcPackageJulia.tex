@@ -8,9 +8,8 @@
 \counterwithin*{section}{part}
 %% ===================== packages ===========================================
 \usepackage{fontspec}
-\usepackage[utf8]{inputenc}
-\usepackage{amsmath,amssymb,dutchcal,mathtools,siunitx,physics,etoolbox,minted}
-\usepackage{booktabs,graphicx,xcolor,colortbl,natbib,tikz}
+\usepackage{amsmath,amssymb,dutchcal,mathtools,siunitx,physics,etoolbox}
+\usepackage{enumitem,booktabs,graphicx,minted,xcolor,colortbl,natbib,tikz}
 \usepackage[capitalize]{cleveref}
 \usepackage[qtmarkupright]{glosmathtools}
 %% =============== preamble ==================================================
@@ -24,8 +23,6 @@
 \loadglsentries{mpcPackageJulia_glos}
 %% ----------------- amsmath -------------------------------------------------
 \DeclareMathOperator{\diag}{diag}
-%% ----------------- fontspec -------------------------------------
-%\setmonofont{DejaVu Sans Mono}
 %% ============================================================================
 
 \setminted[julia]{%
@@ -45,7 +42,8 @@
     %bgcolor=white
 }
 
-\newcommand*{\textttsmall}[1]{\texttt{\footnotesize #1}}
+
+\setlist[description]{font={\ttfamily\mdseries}} % bfseries
 
 \begin{document}
 \begin{frontmatter}
