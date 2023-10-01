@@ -1,5 +1,146 @@
 % !TeX encoding = UTF-8
 % !TeX spellcheck = en_US
+\section{Case studies}
+
+\subsection{Continously Stirred Tank Reactor}
+
+\subsubsection{Linear Model}
+
+The example considers a continuously stirred tank reactor (CSTR) with a hot and cold water intakes. The linear model, with the manipulated inputs $\mathbf{u}=\begin{smallmatrix}[
+u_c & u_h]'\end{smallmatrix}$ and the liquid level and tempertaure as measured outputs $\mathbf{y}=\begin{smallmatrix}[y_L & y_T]'\end{smallmatrix}$ is constructed with:
+
+\begin{minted}{julia}
+using ModelPredictiveControl, ControlSystemsBase
+sys = [ tf(1.90, [18, 1]) tf(1.90, [18, 1]);
+        tf(-0.74,[8, 1])  tf(0.74, [8, 1]) ]
+Ts = 2.0; uop = [20, 20]; yop = [50, 30]
+model = setop!(LinModel(sys, Ts); uop, yop)
+\end{minted}
+\vspace{-26pt}
+\begin{minted}{julia-repl}
+Discrete-time linear model with a sample time 
+Ts = 2.0 s and:
+ 2 manipulated inputs u
+ 2 states x
+ 2 outputs y
+ 0 measured disturbances d
+\end{minted}
+
+The figure 1 depicts the instrumentation installed on the plant. The \texttt{model} object will be used for two purposes : to construct our controller, and as a plant simulator to test the design.
+
+\subsubsection{Linear Model Predictive Controller}
+
+The objective is to control both the water temperature and level while constraining the level above 45:
+
+\begin{minted}{julia}
+nint_u = [1, 1]; ymin = [45, -Inf]
+mpc = setconstraint!(LinMPC(model; nint_u); ymin)
+\end{minted}
+\vspace{-25pt}
+\begin{minted}{julia-repl}
+LinMPC controller with a sample time Ts = 2.0 s,
+OSQP optimizer, SteadyKalmanFilter estimator and:
+ 15 prediction steps Hp
+  2 control steps Hc
+  2 manipulated inputs u (2 integrating states)
+  4 states x̂
+  2 measured outputs ym (0 integrating states)
+  0 unmeasured outputs yu
+  0 measured disturbances d
+\end{minted}
+
+By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} to solve the problem, soft constraints on output predictions $\mathbf{\hat y}$ to ensure feasibility, and a SteadyKalmanFilter to estimate the plant states\footnote{We could have use an InternalModel structure, to avoid state observer, with \texttt{mpc = LinMPC(InternalModel(model), Hp=15, Hc=2, Mwt=[1, 1], Nwt=[0.1, 0.1])}. It was tested on the example of this page and it gives similar results.}. An attentive reader will also notice that the Kalman filter estimates two additional states compared to the plant model. These are the integrating states for the unmeasured plant disturbances, added at the model inputs here.  
+
+Before closing the loop, 
+
+we initialize the estimates with the actual plant inputs and measurements to ensure a bumpless transfer. Since model simulates our plant here, its output will initialize the states. \texttt{LinModel} objects are callable for this purpose. 
+
+We can then close the loop and test \texttt{mpc} performance on the simulator by imposing step changes on output setpoints $\mathbf{r_y}$ and on a load disturbance $u_l$:
+
+\begin{minted}{julia}
+function test_mpc(mpc, model)
+    model.x[:] .= 0; y = model() # or evaloutput(model)
+    initstate!(mpc, model.uop, y)
+    N = 75; ry = [50, 30]; ul = 0
+    U_data, Y_data = zeros(model.nu,N), zeros(model.ny,N)
+    Ry_data = zeros(model.ny,N)
+    for i = 1:N
+        i == 26 && (ry = [48, 35])
+        i == 51 && (ul = -10)
+        y = model() # simulated measurements
+        u = mpc(ry) # or moveinput!(mpc, ry)
+        U_data[:,i], Y_data[:,i], Ry_data[:,i] = u, y, ry
+        updatestate!(mpc, u, y) # update mpc estimate
+        updatestate!(model, u+[0;ul]) # update simulator
+    end
+    return U_data, Y_data, Ry_data
+end
+U_data, Y_data, Ry_data = test_mpc(mpc, model)
+\end{minted}
+
+Updating the internal states of \texttt{mpc} prepares the object for the \emph{next} time step. That is why the call is done at the end of the \texttt{for} loop. The same logic applies for \texttt{model}. Lastly, we plot the closed-loop test with \texttt{Plots.jl}:
+
+\begin{minted}{julia}
+using Plots
+res = SimResult(mpc, U_data, Y_data; Ry_data); plot(res)
+\end{minted}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\columnwidth]{fig/plot1_LinMPC.pdf}
+    \caption{CSTR closed-loop simulation}
+    \label{fig:plot1_LinMPC}
+\end{figure}
+
+\cref{fig:plot1_LinMPC} shows that the controller violates the constraints around 110 s because of the disturbance. Adding feedforward compensation can improve the performance.
+
+\subsubsection{Feedforward Compensation}
+
+Suppose that the load disturbance $u_l$ of the last section is in fact caused by a separate hot water pipe that discharges into the tank. Measuring this flow rate allows us to incorporate feedforward compensation:
+
+\begin{minted}{julia}
+model_d = LinModel([sys sys[1:2, 2]], Ts; i_d=[3])
+model_d = setop!(model_d; uop, yop, dop=[20])
+\end{minted}
+
+The simulation needs an MPC based on \texttt{model\_ff} and a new test function that employs the measured disturbance:
+
+\begin{minted}{julia}
+mpc = setconstraint!(LinMPC(model_d; nint_u); ymin)
+function test_mpc_ff(mpc, model)
+    model.x[:] .= 0; y = model(); d = [20]
+    initstate!(mpc, model.uop, y, d)
+    N = 75; ry = [50, 30]; ul = 0
+    U_data, Y_data = zeros(model.nu,N), zeros(model.ny,N)
+    Ry_data = zeros(model.ny,N)
+    for i = 1:N
+        i == 26 && (ry = [48, 35])
+        i == 51 && (ul = -10)
+        y, d = model(), [20 + ul]
+        u = mpc(ry, d)
+        U_data[:,i], Y_data[:,i], Ry_data[:,i] = u, y, ry
+        updatestate!(mpc, u, y, d) 
+        updatestate!(model, u+[0;ul]) 
+    end
+    return U_data, Y_data, Ry_data
+end
+U_data, Y_data, Ry_data = test_mpc_ff(mpc, model)
+res = SimResult(mpc, U_data, Y_data; Ry_data); plot(res)
+\end{minted}
+
+\cref{fig:plot2_LinMPC} shows that the compensation handles the disturbance without violating the constraint.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\columnwidth]{fig/plot2_LinMPC.pdf}
+    \caption{CSTR closed-loop simulation with feedforward}
+    \label{fig:plot2_LinMPC}
+\end{figure}
+
+\subsection{Pendulum and motor}
+
+
+
 \section{Results and Discussion}
 \label{sec.results_simple}
 
@@ -19,21 +160,3 @@ Proident ad minim magna minim excepteur reprehenderit elit id ipsum amet velit s
 \end{table}
 
 Occaecat Lorem commodo in minim consectetur voluptate nostrud enim tempor incididunt laborum occaecat. Aliqua non et nulla voluptate amet sunt. Laboris nisi consequat cupidatat est consequat deserunt ipsum.
-
-Fugiat eu id qui nostrud adipisicing aute quis qui labore. Officia pariatur sunt ex deserunt culpa. Cupidatat est Lorem laborum laboris do culpa labore aliqua.
-
-\begin{figure}[tb]
-	\centering
-	\includegraphics{fig/batchFBD_simpleNMPC.eps}
-	\caption{Simplified predictive control results on simulator}
-	\label{fig.batchFBD_simpleNMPC}
-\end{figure}
-
-
-\cref{fig.batchFBD_simpleNMPC} Ea cillum commodo labore eiusmod non ut eu labore nulla Lorem sint. Labore proident ut enim exercitation officia voluptate laborum fugiat quis ex duis consectetur occaecat consectetur. Velit minim sint est id occaecat aute incididunt consequat. Eu minim veniam tempor eu ullamco duis et Lorem commodo in dolore occaecat. Et proident quis qui qui qui reprehenderit laborum consequat fugiat nisi dolore veniam excepteur velit.
-
-Sunt eu tempor veniam ullamco sit nulla enim ea. Anim mollit sint non dolore. Cillum mollit deserunt sint adipisicing cillum in. Fugiat mollit cupidatat Lorem nisi et ex ipsum dolor laborum adipisicing cillum culpa velit incididunt. Excepteur culpa quis mollit irure laboris ad tempor id sint tempor. Anim officia qui nulla ad eiusmod incididunt veniam amet dolore do reprehenderit. Reprehenderit culpa esse dolore magna nostrud tempor.
-
-Voluptate velit magna sit nulla laboris. Aute ut sit veniam ut. Anim est exercitation dolore id deserunt officia qui nulla sit ea veniam enim ut.
-
-Voluptate voluptate occaecat incididunt deserunt. Nisi aliquip officia laborum consequat tempor. Nostrud nisi cupidatat Lorem minim ullamco excepteur commodo aliqua sint laborum veniam esse qui dolor. Sint consequat ullamco quis proident in nulla quis do. Cillum dolore deserunt aliqua tempor id laboris sunt dolor consequat fugiat eu veniam nostrud pariatur. Nulla cupidatat excepteur exercitation mollit ex commodo est in quis cillum incididunt aliquip esse cillum. Adipisicing do Lorem labore officia nulla id.

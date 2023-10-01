@@ -7,6 +7,8 @@
     },
     "cSpell.words": [
         "bumpless",
+        "Continously",
+        "estim",
         "evaloutput",
         "feedforward",
         "initstate",
@@ -20,6 +22,7 @@
         "plotŷ",
         "Riccati",
         "setconstraint",
+        "setstate",
         "updatestate",
         "ŷmin"
     ]
