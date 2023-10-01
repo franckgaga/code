@@ -58,20 +58,20 @@ we initialize the estimates with the actual plant inputs and measurements to ens
 We can then close the loop and test \texttt{mpc} performance on the simulator by imposing step changes on output setpoints $\mathbf{r_y}$ and on a load disturbance $u_l$:
 
 \begin{minted}{julia}
-function test_mpc(mpc, model)
-    model.x[:] .= 0; y = model() # or evaloutput(model)
-    initstate!(mpc, model.uop, y)
+function test_mpc(mpc, plant)
+    plant.x[:] .= 0; y = plant() # or evaloutput(plant)
+    initstate!(mpc, plant.uop, y)
     N = 75; ry = [50, 30]; ul = 0
-    U_data, Y_data = zeros(model.nu,N), zeros(model.ny,N)
-    Ry_data = zeros(model.ny,N)
+    U_data, Y_data = zeros(plant.nu,N), zeros(plant.ny,N)
+    Ry_data = zeros(plant.ny,N)
     for i = 1:N
         i == 26 && (ry = [48, 35])
         i == 51 && (ul = -10)
-        y = model() # simulated measurements
+        y = plant() 
         u = mpc(ry) # or moveinput!(mpc, ry)
         U_data[:,i], Y_data[:,i], Ry_data[:,i] = u, y, ry
         updatestate!(mpc, u, y) # update mpc estimate
-        updatestate!(model, u+[0;ul]) # update simulator
+        updatestate!(plant, u + [0; ul]) 
     end
     return U_data, Y_data, Ry_data
 end
@@ -81,8 +81,8 @@ U_data, Y_data, Ry_data = test_mpc(mpc, model)
 Updating the internal states of \texttt{mpc} prepares the object for the \emph{next} time step. That is why the call is done at the end of the \texttt{for} loop. The same logic applies for \texttt{model}. Lastly, we plot the closed-loop test with \texttt{Plots.jl}:
 
 \begin{minted}{julia}
-using Plots
-res = SimResult(mpc, U_data, Y_data; Ry_data); plot(res)
+res = SimResult(mpc, U_data, Y_data; Ry_data)
+using Plots; plot(res)
 \end{minted}
 
 \begin{figure}
@@ -107,25 +107,25 @@ The simulation needs an MPC based on \texttt{model\_ff} and a new test function 
 
 \begin{minted}{julia}
 mpc = setconstraint!(LinMPC(model_d; nint_u); ymin)
-function test_mpc_ff(mpc, model)
-    model.x[:] .= 0; y = model(); d = [20]
-    initstate!(mpc, model.uop, y, d)
+function test_mpc_ff(mpc, plant)
+    plant.x[:] .= 0; y = plant(); d = [20]
+    initstate!(mpc, plant.uop, y, d)
     N = 75; ry = [50, 30]; ul = 0
-    U_data, Y_data = zeros(model.nu,N), zeros(model.ny,N)
-    Ry_data = zeros(model.ny,N)
+    U_data, Y_data = zeros(plant.nu,N), zeros(plant.ny,N)
+    Ry_data = zeros(plant.ny,N)
     for i = 1:N
         i == 26 && (ry = [48, 35])
         i == 51 && (ul = -10)
-        y, d = model(), [20 + ul]
+        y, d = plant(), [20 + ul]
         u = mpc(ry, d)
         U_data[:,i], Y_data[:,i], Ry_data[:,i] = u, y, ry
         updatestate!(mpc, u, y, d) 
-        updatestate!(model, u+[0;ul]) 
+        updatestate!(plant, u + [0; ul]) 
     end
     return U_data, Y_data, Ry_data
 end
 U_data, Y_data, Ry_data = test_mpc_ff(mpc, model)
-res = SimResult(mpc, U_data, Y_data; Ry_data); plot(res)
+plot(SimResult(mpc, U_data, Y_data; Ry_data))
 \end{minted}
 
 \cref{fig:plot2_LinMPC} shows that the compensation handles the disturbance without violating the constraint.
@@ -137,7 +137,7 @@ res = SimResult(mpc, U_data, Y_data; Ry_data); plot(res)
     \label{fig:plot2_LinMPC}
 \end{figure}
 
-\subsection{Pendulum and motor}
+\subsection{Inverted Pendulum}
 
 
 
