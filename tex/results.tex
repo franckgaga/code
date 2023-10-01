@@ -6,7 +6,7 @@
 
 \subsubsection{Linear Model}
 
-The example considers a continuously stirred tank reactor (CSTR) with a hot and cold water intakes. The linear model, with the manipulated inputs $\mathbf{u}=\begin{smallmatrix}[
+The example considers a continuously stirred tank reactor with a hot and cold water intakes. The linear model, with the manipulated inputs $\mathbf{u}=\begin{smallmatrix}[
 u_c & u_h]'\end{smallmatrix}$ and the liquid level and tempertaure as measured outputs $\mathbf{y}=\begin{smallmatrix}[y_L & y_T]'\end{smallmatrix}$ is constructed with:
 
 \begin{minted}{julia}
@@ -71,7 +71,7 @@ function test_mpc(mpc, plant)
         u = mpc(ry) # or moveinput!(mpc, ry)
         U_data[:,i], Y_data[:,i], Ry_data[:,i] = u, y, ry
         updatestate!(mpc, u, y) # update mpc estimate
-        updatestate!(plant, u + [0; ul]) 
+        updatestate!(plant, u+[0,ul])
     end
     return U_data, Y_data, Ry_data
 end
@@ -116,11 +116,11 @@ function test_mpc_ff(mpc, plant)
     for i = 1:N
         i == 26 && (ry = [48, 35])
         i == 51 && (ul = -10)
-        y, d = plant(), [20 + ul]
+        y = plant(); d = [20+ul]
         u = mpc(ry, d)
         U_data[:,i], Y_data[:,i], Ry_data[:,i] = u, y, ry
         updatestate!(mpc, u, y, d) 
-        updatestate!(plant, u + [0; ul]) 
+        updatestate!(plant, u+[0,ul])
     end
     return U_data, Y_data, Ry_data
 end
