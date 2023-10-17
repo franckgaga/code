@@ -2,31 +2,39 @@
 % !TeX spellcheck = en_US
 \section{Case studies}
 
-\subsection{Continously Stirred Tank Reactor}
+This section presents two case studies to demonstrate the design of linear and nonlinear MPCs. The objective here is to hopefully demonstrate how the package syntax facilitates the implementation and testing of predictive controllers. The first example details how to apply a MPC on a plant at each time step. The second uses higher-level functionalities to quickly simulate closed-loop systems. 
+
+\subsection{Linear Design: Continously Stirred Tank Reactor}
 
 \subsubsection{Linear Model}
 
-The example considers a continuously stirred tank reactor with a hot and cold water intakes. The linear model, with the manipulated inputs $\mathbf{u}=\begin{smallmatrix}[
-u_c & u_h]'\end{smallmatrix}$ and the liquid level and tempertaure as measured outputs $\mathbf{y}=\begin{smallmatrix}[y_L & y_T]'\end{smallmatrix}$ is constructed with:
+The example considers a continuously stirred tank reactor with a cold and hot water intakes, fed at a respective flow rate of $u_c$ and $u_h$. The manipulated input vector is thus $\mathbf{u} = [\begin{smallmatrix}u_c & u_h\end{smallmatrix}]'$. The liquid level $y_L$ and temperature $y_T$ constitute the measured output vector $\mathbf{y} = [\begin{smallmatrix}y_L & y_T\end{smallmatrix}]'$. The figure 1 depicts the instrumentation installed on the plant.
 
+At the steady-state operating point $u_c=u_h=20$, $y_L=50$, and $y_T=30$, the following linear model accurately describes the plant dynamics:
+\begin{equation}
+\mathbf{G}(s) = \frac{\mathbf{y}(s)}{\mathbf{u}(s)} =
+\begin{bmatrix}
+    \frac{1.90}{18s+1} & \frac{1.90}{18s+1} \\[3pt]
+    \frac{-0.74}{8s+1} & \frac{0.74}{8s+1}
+\end{bmatrix}
+\end{equation}
+The syntax for a sampling time of $T_s=\SI{2}{\second}$ is:
 \begin{minted}{julia}
 using ModelPredictiveControl, ControlSystemsBase
-sys = [ tf(1.90, [18, 1]) tf(1.90, [18, 1]);
-        tf(-0.74,[8, 1])  tf(0.74, [8, 1]) ]
-Ts = 2.0; uop = [20, 20]; yop = [50, 30]
-model = setop!(LinModel(sys, Ts); uop, yop)
+G = [ tf(1.90, [18, 1]) tf(1.90, [18, 1]);
+      tf(-0.74,[8, 1])  tf(0.74, [8, 1]) ]
+Ts = 2.0; uop=[20, 20]; yop=[50, 30]
+model = setop!(LinModel(G, Ts); uop, yop)
 \end{minted}
-\vspace{-26pt}
+\spacerepl
 \begin{minted}{julia-repl}
-Discrete-time linear model with a sample time 
-Ts = 2.0 s and:
+Discrete-time linear model with a sample time Ts = 2 s and:
  2 manipulated inputs u
  2 states x
  2 outputs y
  0 measured disturbances d
 \end{minted}
-
-The figure 1 depicts the instrumentation installed on the plant. The \texttt{model} object will be used for two purposes : to construct our controller, and as a plant simulator to test the design.
+The \texttt{model} object will be used for two purposes : to construct our controller, and as a plant simulator to test the design.
 
 \subsubsection{Linear Model Predictive Controller}
 
@@ -36,11 +44,11 @@ The objective is to control both the water temperature and level while constrain
 nint_u = [1, 1]; ymin = [45, -Inf]
 mpc = setconstraint!(LinMPC(model; nint_u); ymin)
 \end{minted}
-\vspace{-25pt}
+\spacerepl
 \begin{minted}{julia-repl}
 LinMPC controller with a sample time Ts = 2.0 s,
 OSQP optimizer, SteadyKalmanFilter estimator and:
- 15 prediction steps Hp
+ 10 prediction steps Hp
   2 control steps Hc
   2 manipulated inputs u (2 integrating states)
   4 states x̂
@@ -49,41 +57,34 @@ OSQP optimizer, SteadyKalmanFilter estimator and:
   0 measured disturbances d
 \end{minted}
 
-By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} to solve the problem, soft constraints on output predictions $\mathbf{\hat y}$ to ensure feasibility, and a SteadyKalmanFilter to estimate the plant states\footnote{We could have use an InternalModel structure, to avoid state observer, with \texttt{mpc = LinMPC(InternalModel(model), Hp=15, Hc=2, Mwt=[1, 1], Nwt=[0.1, 0.1])}. It was tested on the example of this page and it gives similar results.}. An attentive reader will also notice that the Kalman filter estimates two additional states compared to the plant model. These are the integrating states for the unmeasured plant disturbances, added at the model inputs here.  
+By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} to solve the problem, soft constraints on output predictions $\mathbf{\hat y}$ to ensure feasibility, and a \texttt{SteadyKalmanFilter} to estimate the plant states\footnote{As an alternative to state observer, we could have use an internal model structure with \texttt{estim = InternalModel(model)} and \texttt{mpc = setconstraint!(estim; nint\_u); ymin)}. It was tested on this example and it gives similar results.}. An attentive reader will also notice that the Kalman filter estimates two additional states compared to the plant model. These are the integrating states for the unmeasured plant disturbances, added at the inputs $\mathbf{u}$ for this example.
 
-Before closing the loop, 
-
-we initialize the estimates with the actual plant inputs and measurements to ensure a bumpless transfer. Since model simulates our plant here, its output will initialize the states. \texttt{LinModel} objects are callable for this purpose. 
-
-We can then close the loop and test \texttt{mpc} performance on the simulator by imposing step changes on output setpoints $\mathbf{r_y}$ and on a load disturbance $u_l$:
-
+Before closing the loop, the actual plant inputs and measurements should initialize the estimates to ensure a bumpless transfer. Since the plant is the linear model here, its output will initialize the states. \texttt{LinModel} objects are callable for this purpose. Once done, imposing step changes on the setpoint $\mathbf{r_y}$ and on a load disturbance $u_l$ tests the closed-loop performance of \texttt{mpc}:
 \begin{minted}{julia}
 function test_mpc(mpc, plant)
     plant.x[:] .= 0; y = plant() # or evaloutput(plant)
     initstate!(mpc, plant.uop, y)
     N = 75; ry = [50, 30]; ul = 0
-    U_data, Y_data = zeros(plant.nu,N), zeros(plant.ny,N)
-    Ry_data = zeros(plant.ny,N)
+    U, Y, Ry = zeros(2, N), zeros(2, N), zeros(2, N)
     for i = 1:N
         i == 26 && (ry = [48, 35])
         i == 51 && (ul = -10)
-        y = plant() 
+        y = plant() # simulations
         u = mpc(ry) # or moveinput!(mpc, ry)
-        U_data[:,i], Y_data[:,i], Ry_data[:,i] = u, y, ry
+        U[:,i], Y[:,i], Ry[:,i] = u, y, ry
         updatestate!(mpc, u, y) # update mpc estimate
-        updatestate!(plant, u+[0,ul])
+        updatestate!(plant, u+[0,ul]) # update simulator
     end
-    return U_data, Y_data, Ry_data
+    return U, Y, Ry
 end
 U_data, Y_data, Ry_data = test_mpc(mpc, model)
 \end{minted}
-
 Updating the internal states of \texttt{mpc} prepares the object for the \emph{next} time step. That is why the call is done at the end of the \texttt{for} loop. The same logic applies for \texttt{model}. Lastly, we plot the closed-loop test with \texttt{Plots.jl}:
-
 \begin{minted}{julia}
 res = SimResult(mpc, U_data, Y_data; Ry_data)
 using Plots; plot(res)
 \end{minted}
+\cref{fig:plot1_LinMPC} shows that the controller violates the constraints around 110 s because of the disturbance. Adding feedforward compensation can mitigate this.
 
 \begin{figure}
     \centering
@@ -92,43 +93,48 @@ using Plots; plot(res)
     \label{fig:plot1_LinMPC}
 \end{figure}
 
-\cref{fig:plot1_LinMPC} shows that the controller violates the constraints around 110 s because of the disturbance. Adding feedforward compensation can improve the performance.
-
 \subsubsection{Feedforward Compensation}
 
-Suppose that the load disturbance $u_l$ of the last section is in fact caused by a separate hot water pipe that discharges into the tank. Measuring this flow rate allows us to incorporate feedforward compensation:
+Suppose that the load disturbance $u_l$ of the last section is in fact caused by a separate hot water pipe that discharges into the tank. Measuring this flow rate allows us to incorporate feedforward compensation (FF):
 
 \begin{minted}{julia}
-model_d = LinModel([sys sys[1:2, 2]], Ts; i_d=[3])
-model_d = setop!(model_d; uop, yop, dop=[20])
+model_ff = LinModel([G G[1:2, 2]], Ts; i_d=[3])
+model_ff = setop!(model_ff; uop, yop, dop=[20])
 \end{minted}
-
-The simulation needs an MPC based on \texttt{model\_ff} and a new test function that employs the measured disturbance:
-
+\spacerepl
+\begin{minted}{julia-repl}
+Discrete-time linear model with a sample time Ts = 2 s and:
+ 2 manipulated inputs u
+ 4 states x
+ 2 outputs y
+ 1 measured disturbances d
+\end{minted}
+The simulation needs a new \texttt{LinMPC} object based on \texttt{model\_ff} and a new test function that employs the current disturbance measurement:
 \begin{minted}{julia}
-mpc = setconstraint!(LinMPC(model_d; nint_u); ymin)
-function test_mpc_ff(mpc, plant)
+mpc_ff = setconstraint!(LinMPC(model_ff; nint_u); ymin)
+function test_mpc_ff(mpc_ff, plant)
     plant.x[:] .= 0; y = plant(); d = [20]
-    initstate!(mpc, plant.uop, y, d)
+    initstate!(mpc_ff, plant.uop, y, d)
     N = 75; ry = [50, 30]; ul = 0
-    U_data, Y_data = zeros(plant.nu,N), zeros(plant.ny,N)
-    Ry_data = zeros(plant.ny,N)
+    U, Y, Ry = zeros(2, N), zeros(2, N), zeros(2, N)
+    Ry_data = zeros(2, N)
     for i = 1:N
         i == 26 && (ry = [48, 35])
         i == 51 && (ul = -10)
-        y = plant(); d = [20+ul]
-        u = mpc(ry, d)
-        U_data[:,i], Y_data[:,i], Ry_data[:,i] = u, y, ry
-        updatestate!(mpc, u, y, d) 
+        y, d = plant(), [20+ul] # simulations
+        u = mpc_ff(ry, d) # d in arguments
+        U[:,i], Y[:,i], Ry[:,i] = u, y, ry
+        updatestate!(mpc_ff, u, y, d) # d in arguments
         updatestate!(plant, u+[0,ul])
     end
-    return U_data, Y_data, Ry_data
+    return U, Y, Ry
 end
-U_data, Y_data, Ry_data = test_mpc_ff(mpc, model)
-plot(SimResult(mpc, U_data, Y_data; Ry_data))
+U_data, Y_data, Ry_data = test_mpc_ff(mpc_ff, model)
+res = SimResult(mpc, U_data, Y_data; Ry_data)
+plot(res)
 \end{minted}
 
-\cref{fig:plot2_LinMPC} shows that the compensation handles the disturbance without violating the constraint.
+\cref{fig:plot2_LinMPC} shows that the feedforward compensation handles the disturbance without violating the constraint.
 
 \begin{figure}
     \centering
@@ -137,9 +143,9 @@ plot(SimResult(mpc, U_data, Y_data; Ry_data))
     \label{fig:plot2_LinMPC}
 \end{figure}
 
-\subsection{Inverted Pendulum}
+\subsection{Nonlinear Design : Inverted Pendulum}
 
-
+In this ex
 
 \section{Results and Discussion}
 \label{sec.results_simple}

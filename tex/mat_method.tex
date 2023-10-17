@@ -3,33 +3,54 @@
 
 \section{Materials and Methods}
 
-The code of this package is separated into three abstract types:
+The functions of this package dispatch over three abstract types :
 \begin{description}
     \item[SimModel] (2 subtypes) -- Discrete state-space models of the plant, including linear and nonlinear representations. They serve as a wrapper to construct \texttt{StateEstimator} and \texttt{PredictiveController} objects, and also as plant simulators to test the designs.
     \item[StateEstimator] (6 subtypes) -- Closed-loop state observers, both for deterministic and stochastic systems. They produce the full state feedback for the \texttt{PredictiveController}.
-    \item[PredictiveController] (3 subtypes) -- Linear and nonlinear MPC are available. An explicit controller based on matrix algebra is also possible for linear description without constraint.
+    \item[PredictiveController] (3 subtypes) -- Linear and nonlinear MPC are available. An explicit controller based on matrix algebra is also possible for linear model without constraint.
 \end{description}
 
-\subsection{Plant Models}
+
+
+
+\subsection{\texttt{SimModel}: Plant Models}
 
 The \texttt{SimModel} include two concrete subtypes:
-\begin{description}
-    \item[LinModel] Linear discrete state-space representations of the plant. Continuous-time models are discretized using zero-order hold for the manipulated inputs, and Tustin's approximation, for the measured disturbances.
-    \item[NonLinModel] Nonlinear discrete state-space model of the plant. Continuous-time model are not supported yet but manually calling a differential equation solver can mitigate this.
-\end{description}
+
+\subsubsection{\texttt{LinModel}}
+
+Linear discrete state-space representations of the plant. Continuous-time models are discretized using zero-order hold for the manipulated inputs, and Tustin's approximation, for the measured disturbances (sampled continuous signals, usually). This leads to equations of the form:
+\begin{subequations}
+\begin{align}
+    \mathbf{x}(k+1) &= \mathbf{A x}(k) + \mathbf{B_u u}(k) + \mathbf{B_d d}(k) \\
+    \mathbf{y}(k)   &= \mathbf{C x}(k) + \mathbf{D_d d}(k)
+\end{align}
+\end{subequations}
+Objects are constructed with \texttt{ss} or \texttt{tf} functions from \texttt{ControlSystems.jl}, or by providing the fives state-space matrices directly.
+
+\subsubsection{\texttt{NonLinModel}}
+
+Nonlinear discrete state-space model of the plant. Continuous-time model are not supported yet but manually calling a differential equation solver can mitigate this. The user provide the following two functions:
+\begin{subequations}
+\begin{align}
+    \mathbf{x}(k+1) &= \mathbf{f}\big(\mathbf{x}(k), \mathbf{u}(k), \mathbf{d}(k)\big) \\
+    \mathbf{y}(k)   &= \mathbf{h}\big( \mathbf{x}(k), \mathbf{d}(k) \big)
+\end{align}
+\end{subequations}
+
 
 \subsection{State Estimators}
 
 The estimators are all implemented in the predictor form (a.k.a. observer form), that is, they all estimates at each discrete time $k$ the states of the next period $\mathbf{\hat{x}}_k(k+1)$. In comparison, the filter form that estimates $\mathbf{\hat{x}}_k(k)$ is sometimes slightly more accurate. The predictor form comes in handy for control applications since the estimations come after the controller computations, without introducing any additional delays. This is especially true if the observer computations are expensive.
 
-There is six \texttt{StateEstimator}s available at the time of writing, all supporting measured an unmeasured model outputs:
+There is six \texttt{StateEstimator} concrete types available at the time of writing, all supporting measured an unmeasured model outputs:
 \begin{description}
     \item[SteadyKalmanFilter] Steady-state Kalman filter (a.k.a. asymptotic form). This is the default state estimator for controllers based on \texttt{LinModel} objects.
-    \item[KalmanFilter] Time-varying version of the Kalman filter. It can computes the estimation error covariance or be applied in situations where there is no solution to the algebraic Riccati equation.
-    \item[Luenberger] Deterministic state observer based on eigenvalue placement.
-    \item[UnscentedKalmanFilter] Kalman filter for nonlinear systems relying on the generalized unscented transform. It propagates the mean and covariance of the noise by approximating the state distribution. This is the default state estimator for controllers based on \texttt{NonLinModel} objects.
-    \item[ExtendedKalmanFilter] Extended version of the Kalman filter. The Jacobians of nonlinear state-space functions approximate the propagation of the noise, automatically computed by forward mode AD.
-    \item[InternalModel] Allows the design of predictive controller based on an internal model structure. The stochastic model of the unmeasured disturbances defaults to integrating white noise for each measured output (customizable). This is equivalent of assuming that the disturbances are constant over the prediction horizon, similarly to dynamic matrix control (DMC).
+    \item[KalmanFilter] Time-varying version of the Kalman filter. It can evaluate the estimation error covariance in real time or be applied in situations where there is no solution to the algebraic Riccati equation.
+    \item[Luenberger] Deterministic state observer based on closed-loop eigenvalue placement.
+    \item[UnscentedKalmanFilter] Kalman filter for nonlinear systems relying on the generalized unscented transform. It propagates the mean and covariance of the noise by approximating the state probability distribution. This is the default state estimator for controllers based on \texttt{NonLinModel} objects.
+    \item[ExtendedKalmanFilter] Extended version of the time-varying Kalman filter. The Jacobians of the nonlinear state-space functions approximate the propagation of the noise. The matrices are automatically computed by forward mode AD.
+    \item[InternalModel] Allows the design of predictive controller based on an internal model structure. The stochastic model of the unmeasured disturbances defaults to integrating white noise for each measured output (customizable). This is equivalent of assuming that the disturbances are constant over the prediction horizon, similarly to dynamic matrix control (DMC). It supports asymptotically stable \texttt{LinModel} or \texttt{NonLinModel}.
 \end{description}
 
 \subsection{Predictive Controllers}
