@@ -23,6 +23,8 @@
         "moveinput",
         "nint",
         "plotd",
+        "plotu",
+        "plotxwithx̂",
         "plotŷ",
         "Riccati",
         "setconstraint",

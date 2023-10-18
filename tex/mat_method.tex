@@ -30,7 +30,7 @@ Objects are constructed with \texttt{ss} or \texttt{tf} functions from \texttt{C
 
 \subsubsection{\texttt{NonLinModel}}
 
-Nonlinear discrete state-space model of the plant. Continuous-time model are not supported yet but manually calling a differential equation solver can mitigate this. The user provide the following two functions:
+Nonlinear discrete state-space model of the plant. Continuous-time model are not supported yet but manually calling a differential equation solver can mitigate this (see \cref{sec.nonlinear_design} example). The user provide the following two functions:
 \begin{subequations}
 \begin{align}
     \mathbf{x}(k+1) &= \mathbf{f}\big(\mathbf{x}(k), \mathbf{u}(k), \mathbf{d}(k)\big) \\
@@ -45,11 +45,11 @@ The estimators are all implemented in the predictor form (a.k.a. observer form),
 
 There is six \texttt{StateEstimator} concrete types available at the time of writing, all supporting measured an unmeasured model outputs:
 \begin{description}
-    \item[SteadyKalmanFilter] Steady-state Kalman filter (a.k.a. asymptotic form). This is the default state estimator for controllers based on \texttt{LinModel} objects.
+    \item[SteadyKalmanFilter] Steady-state Kalman filter (or asymptotic form). This is the default state estimator for controllers based on \texttt{LinModel} objects.
     \item[KalmanFilter] Time-varying version of the Kalman filter. It can evaluate the estimation error covariance in real time or be applied in situations where there is no solution to the algebraic Riccati equation.
     \item[Luenberger] Deterministic state observer based on closed-loop eigenvalue placement.
     \item[UnscentedKalmanFilter] Kalman filter for nonlinear systems relying on the generalized unscented transform. It propagates the mean and covariance of the noise by approximating the state probability distribution. This is the default state estimator for controllers based on \texttt{NonLinModel} objects.
-    \item[ExtendedKalmanFilter] Extended version of the time-varying Kalman filter. The Jacobians of the nonlinear state-space functions approximate the propagation of the noise. The matrices are automatically computed by forward mode AD.
+    \item[ExtendedKalmanFilter] Extended form of the time-varying Kalman filter. The Jacobians of the nonlinear state-space functions approximate the propagation of the noise. These matrices are automatically computed by forward mode AD.
     \item[InternalModel] Allows the design of predictive controller based on an internal model structure. The stochastic model of the unmeasured disturbances defaults to integrating white noise for each measured output (customizable). This is equivalent of assuming that the disturbances are constant over the prediction horizon, similarly to dynamic matrix control (DMC). It supports asymptotically stable \texttt{LinModel} or \texttt{NonLinModel}.
 \end{description}
 
