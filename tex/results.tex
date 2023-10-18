@@ -81,7 +81,7 @@ res = SimResult(mpc, U_data, Y_data; Ry_data)
 using Plots; plot(res)
 \end{minted}
 
-\begin{figure}
+\begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_LinMPC1.pdf}
     \caption{CSTR closed-loop simulation}
@@ -130,7 +130,7 @@ res = SimResult(mpc, U_data, Y_data; Ry_data)
 plot(res)
 \end{minted}
 
-\begin{figure}
+\begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_LinMPC2.pdf}
     \caption{CSTR closed-loop simulation with feedforward}
@@ -179,6 +179,7 @@ The output function $\mathbf{h}$ converts the $\theta$ angle to degrees.
 \subsubsection{Nonlinear Model Predictive Controller}
 
 The controller feedback is the state estimate of an \texttt{UnscentedKalmanFilter}:
+
 \begin{minted}{julia}
 σQ = [0.1, 0.5]; σR=[0.5]; nint_u=[1]; σQint_u=[0.1]
 estim = UnscentedKalmanFilter(model; σQ, σR, nint_u, σQint_u)
@@ -202,7 +203,7 @@ N = 35; u=[0.5]; res = sim!(estim, N, u; plant, y_noise=[0.5])
 using Plots; plot(res, plotu=false, plotxwithx̂=true)
 \end{minted}
 
-\begin{figure}
+\begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC1.pdf}
     \caption{Pendulum state estimation}
@@ -228,13 +229,14 @@ optimizer, UnscentedKalmanFilter estimator and:
 \end{minted}
 
 The keyword arguments \texttt{Mwt} and \texttt{Nwt} are the output setpoint tracking and move suppression weights, respectively. An angular setpoint of \SI{180}{\degree} (inverted position) test \texttt{mpc} performance on the plant: 
+
 \begin{minted}{julia}
 x0 = [0, 0]; x̂0 = [0, 0, 0]
 res = sim!(mpc, N, [180]; plant, x0, x̂0)
 plot(res)
 \end{minted}
 
-\begin{figure}
+\begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC2.pdf}
     \caption{Pendulum output setpoint tracking}
@@ -242,18 +244,19 @@ plot(res)
 \end{figure}
 
 The result in \cref{fig:plot_NonLinMPC2} suggests that the controller is robust enough to variations on $K$ coefficient. Starting from this inverted position, the closed-loop response to a step disturbances of \SI{10}{\degree}:
+
 \begin{minted}{julia}
 x0 = [π, 0]; x̂0 = [π, 0, 0]
 res = sim!(mpc, N, [180.0]; plant, x0, x̂0, y_step=[10])
 plot(res)
 \end{minted}
 
-\begin{figure}
+\begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC3.pdf}
     \caption{Pendulum load disturbance rejection}
     \label{fig:plot_NonLinMPC3}
 \end{figure}
 
-seems satisfactory, as presented in \cref{fig:plot_NonLinMPC3}.
+is satisfactory, as presented in \cref{fig:plot_NonLinMPC3}.
 
