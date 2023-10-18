@@ -7,7 +7,7 @@
 \newcounter{part}
 \counterwithin*{section}{part}
 %% ===================== packages ===========================================
-\usepackage{amsmath,amssymb,dutchcal,mathtools,siunitx,etoolbox}
+\usepackage{amsmath,amssymb,fontspec,mathtools,siunitx,etoolbox}
 \usepackage{enumitem,booktabs,graphicx,minted,xcolor,colortbl,natbib,tikz}
 \usepackage[capitalize]{cleveref}
 \usepackage[qtmarkupright]{glosmathtools}
@@ -22,9 +22,9 @@
 \loadglsentries{mpcPackageJulia_glos}
 %% ----------------- amsmath -------------------------------------------------
 \DeclareMathOperator{\diag}{diag}
-%% ============================================================================
-
-
+%% ----------------- fontspec ------------------------------------------------
+\setmonofont{DejaVu Sans Mono}[Scale=MatchLowercase]
+%% ----------------- minted --------------------------------------------------
 \setminted[julia]{%
     %linenos,
     %numbersep=3pt,
@@ -42,9 +42,10 @@
     %bgcolor=white
 }
 \newcommand*{\spacerepl}{\vspace*{-28pt}}
-
-
+%% ----------------- enumitem ------------------------------------------------
 \setlist[description]{font={\ttfamily\mdseries}} % bfseries
+%% ============================================================================
+
 
 \begin{document}
 \begin{frontmatter}

@@ -8,7 +8,7 @@ This section presents two case studies to demonstrate the design of linear and n
 
 \subsubsection{Linear Model}
 
-The example considers a continuously stirred tank reactor with a cold and hot water intakes, fed at a respective flow rate of $u_c$ and $u_h$. The manipulated input vector is thus $\mathbf{u} = [\begin{smallmatrix}u_c & u_h\end{smallmatrix}]'$. The liquid level $y_L$ and temperature $y_T$ constitute the measured output vector $\mathbf{y} = [\begin{smallmatrix}y_L & y_T\end{smallmatrix}]'$. The figure 1 depicts the instrumentation installed on the plant.
+The example considers a continuously stirred tank reactor with a cold and hot water intakes, fed at a respective flow rate of $u_c$ and $u_h$. The manipulated input vector is thus $\mathbf{u} = [\begin{smallmatrix}u_c & u_h\end{smallmatrix}]'$. The liquid level $y_L$ and temperature $y_T$ constitute the measured output vector $\mathbf{y} = [\begin{smallmatrix}y_L & y_T\end{smallmatrix}]'$. Fig. 1 depicts the instrumentation installed on the plant.
 
 At the steady-state operating point $u_c=u_h=20$, $y_L=50$, and $y_T=30$, the following linear model accurately describes the plant dynamics:
 \begin{equation}
@@ -28,7 +28,7 @@ model = setop!(LinModel(G, Ts); uop, yop)
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-Discrete-time linear model with a sample time Ts = 2 s and:
+Discrete-time linear model with a sample time Ts = 2.0 s and:
  2 manipulated inputs u
  2 states x
  2 outputs y
@@ -69,7 +69,7 @@ function test_mpc(mpc, plant)
     for i = 1:N
         i == 26 && (ry = [48, 35])
         i == 51 && (ul = -10)
-        y = plant() # simulations
+        y = plant() # simulated measurements
         u = mpc(ry) # or moveinput!(mpc, ry)
         U[:,i], Y[:,i], Ry[:,i] = u, y, ry
         updatestate!(mpc, u, y) # update mpc estimate
@@ -103,13 +103,13 @@ model_ff = setop!(model_ff; uop, yop, dop=[20])
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-Discrete-time linear model with a sample time Ts = 2 s and:
+Discrete-time linear model with a sample time Ts = 2.0 s and:
  2 manipulated inputs u
  4 states x
  2 outputs y
  1 measured disturbances d
 \end{minted}
-The simulation needs a new \texttt{LinMPC} object based on \texttt{model\_ff} and a new test function that employs the current disturbance measurement:
+The simulation needs a new \texttt{LinMPC} object based on \texttt{model\_ff} and a new test function that explicitly employs the current disturbance measurement:
 \begin{minted}{julia}
 mpc_ff = setconstraint!(LinMPC(model_ff; nint_u); ymin)
 function test_mpc_ff(mpc_ff, plant)
@@ -117,11 +117,10 @@ function test_mpc_ff(mpc_ff, plant)
     initstate!(mpc_ff, plant.uop, y, d)
     N = 75; ry = [50, 30]; ul = 0
     U, Y, Ry = zeros(2, N), zeros(2, N), zeros(2, N)
-    Ry_data = zeros(2, N)
     for i = 1:N
         i == 26 && (ry = [48, 35])
         i == 51 && (ul = -10)
-        y, d = plant(), [20+ul] # simulations
+        y, d = plant(), [20+ul] # simulated measurements
         u = mpc_ff(ry, d) # d in arguments
         U[:,i], Y[:,i], Ry[:,i] = u, y, ry
         updatestate!(mpc_ff, u, y, d) # d in arguments
@@ -145,7 +144,38 @@ plot(res)
 
 \subsection{Nonlinear Design : Inverted Pendulum}
 
-In this ex
+For this case study, the goal is to control the angular position $\theta$ of a pendulum attached to a motor. An encoder measures the position, thus $\mathbf{y} = \theta$. The manipulated input is the motor torque $\mathbf{u} = \tau$. Fig. 4 depicts the instrumentation. The plant model is nonlinear:
+\begin{subequations}
+\begin{align}
+\dot{\theta}(t) &= \omega(t) \\
+\dot{\omega}(t) &= -\frac{g}{L}\sin\big(\theta(t)\big) -\frac{K}{m}\omega(t) + \frac{1}{m L^2}\tau(t)
+\end{align}
+\end{subequations}
+in which $g$ is the gravitational acceleration, $L$, the pendulum length, $K$, the friction coefficient at the pivot point, and $m$, the mass attached at the end of the pendulum. Here, the explicit Euler method discretizes the system to construct a \texttt{NonLinModel}:
+\begin{minted}{julia}
+using ModelPredictiveControl
+function pendulum(par, x, u)
+    g, L, K, m = par     # [m/s²], [m], [kg/s], [kg]
+    θ, ω = x[1], x[2]    # [rad], [rad/s]
+    τ = u[1]             # [N m]
+    return [ω, -g/L*sin(θ) - K/m*ω + τ/m/L^2]
+end
+Ts  = 0.1                   # [s]
+par = (9.8, 0.4, 1.2, 0.3)
+f(x, u, _ ) = x + Ts*pendulum(par, x, u) # Euler method
+h(x, _ )    = [180/π*x[1]]  # [°]
+nu, nx, ny = 1, 2, 1
+model = NonLinModel(f, h, Ts, nu, nx, ny)
+\end{minted}
+\spacerepl
+\begin{minted}{julia-repl}
+Discrete-time nonlinear model with a sample time Ts = 0.1 s
+and:
+ 1 manipulated inputs u
+ 2 states x
+ 1 outputs y
+ 0 measured disturbances d
+\end{minted}
 
 \section{Results and Discussion}
 \label{sec.results_simple}
