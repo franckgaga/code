@@ -10,14 +10,11 @@ The functions of this package dispatch over three abstract types :
     \item[PredictiveController] (3 subtypes) -- Linear and nonlinear MPC are available. An explicit controller based on matrix algebra is also possible for linear model without constraint.
 \end{description}
 
+\subsection{Plant Models}
 
+Plant models are defined by the abstract type \texttt{SimModel}. Operating points on the model inputs, outputs and measured disturbances are explicitly defined by the user. There is currently two concrete subtypes in the package, introduced in the following two sections.
 
-
-\subsection{\texttt{SimModel}: Plant Models}
-
-The \texttt{SimModel} include two concrete subtypes:
-
-\subsubsection{\texttt{LinModel}}
+\subsubsection{\textnormal{\texttt{LinModel}}}
 
 Linear discrete state-space representations of the plant. Continuous-time models are discretized using zero-order hold for the manipulated inputs, and Tustin's approximation, for the measured disturbances (sampled continuous signals, usually). This leads to equations of the form:
 \begin{subequations}
@@ -28,7 +25,7 @@ Linear discrete state-space representations of the plant. Continuous-time models
 \end{subequations}
 Objects are constructed with \texttt{ss} or \texttt{tf} functions from \texttt{ControlSystems.jl}, or by providing the fives state-space matrices directly.
 
-\subsubsection{\texttt{NonLinModel}}
+\subsubsection{\textnormal{\texttt{NonLinModel}}}
 
 Nonlinear discrete state-space model of the plant. Continuous-time model are not supported yet but manually calling a differential equation solver can mitigate this (see \cref{sec.nonlinear_design} example). The user provide the following two functions:
 \begin{subequations}
@@ -37,27 +34,48 @@ Nonlinear discrete state-space model of the plant. Continuous-time model are not
     \mathbf{y}(k)   &= \mathbf{h}\big( \mathbf{x}(k), \mathbf{d}(k) \big)
 \end{align}
 \end{subequations}
-
+It is worth mentioning that the state update $\mathbf{f}$ and output $\mathbf{h}$ functions must be in pure Julia to design nonlinear MPCs from them, since the implementation rely on automatic differentiation.
 
 \subsection{State Estimators}
 
-The estimators are all implemented in the predictor form (a.k.a. observer form), that is, they all estimates at each discrete time $k$ the states of the next period $\mathbf{\hat{x}}_k(k+1)$. In comparison, the filter form that estimates $\mathbf{\hat{x}}_k(k)$ is sometimes slightly more accurate. The predictor form comes in handy for control applications since the estimations come after the controller computations, without introducing any additional delays. This is especially true if the observer computations are expensive.
+The estimators of the package focus on control applications, that is, relying on the estimates to compute a full state feedback. They all incorporates some kind of integral action by default if feasible, since it is generally desired to eliminate the steady-state error with closed-loop control (offset-free tracking).
 
-There is six \texttt{StateEstimator} concrete types available at the time of writing, all supporting measured an unmeasured model outputs:
-\begin{description}
-    \item[SteadyKalmanFilter] Steady-state Kalman filter (or asymptotic form). This is the default state estimator for controllers based on \texttt{LinModel} objects.
-    \item[KalmanFilter] Time-varying version of the Kalman filter. It can evaluate the estimation error covariance in real time or be applied in situations where there is no solution to the algebraic Riccati equation.
-    \item[Luenberger] Deterministic state observer based on closed-loop eigenvalue placement.
-    \item[UnscentedKalmanFilter] Kalman filter for nonlinear systems relying on the generalized unscented transform. It propagates the mean and covariance of the noise by approximating the state probability distribution. This is the default state estimator for controllers based on \texttt{NonLinModel} objects.
-    \item[ExtendedKalmanFilter] Extended form of the time-varying Kalman filter. The Jacobians of the nonlinear state-space functions approximate the propagation of the noise. These matrices are automatically computed by forward mode AD.
-    \item[InternalModel] Allows the design of predictive controller based on an internal model structure. The stochastic model of the unmeasured disturbances defaults to integrating white noise for each measured output (customizable). This is equivalent of assuming that the disturbances are constant over the prediction horizon, similarly to dynamic matrix control (DMC). It supports asymptotically stable \texttt{LinModel} or \texttt{NonLinModel}.
-\end{description}
+They are also implemented in the predictor form (a.k.a. observer form), that is, they all estimates at each discrete time $k$ the states of the next period $\mathbf{\hat{x}}_k(k+1)$. In comparison, the filter form that estimates $\mathbf{\hat{x}}_k(k)$ is sometimes slightly more accurate. The predictor form comes in handy for control applications since the estimations come after the controller computations, without introducing any additional delays. This is especially true if the observer computations are expensive.
+
+There is six \texttt{StateEstimator} concrete types available at the time of writing, all supporting measured $\mathbf{y^m}$ an unmeasured $\mathbf{y^u}$ model outputs. The moving horizon estimator will be added soon after this publication. The following list presents those six types.
+
+\subsubsection{\textnormal{\texttt{SteadyKalmanFilter}}}
+Steady-state Kalman filter, a.k.a. asymptotic form. The solution to the algebraic Riccati equation pre-compute the Kalman gain. This is the default state estimator for controllers based on \texttt{LinModel} objects.
+
+\subsubsection{\textnormal{\texttt{KalmanFilter}}}
+Time-varying version of the Kalman filter. It can evaluate the estimation error covariance in real time or be applied in situations where there is no solution to the algebraic Riccati equation.
+
+\subsubsection{\textnormal{\texttt{Luenberger}}}
+Deterministic state observer based on closed-loop eigenvalue placement. It pre-computes the observer gain with \texttt{place} function from \texttt{ControlSystemsBase.jl}, that implements the method of \citet{placePoles}.
+
+\subsubsection{\textnormal{\texttt{UnscentedKalmanFilter}}}
+Kalman filter for nonlinear systems relying on the generalized unscented transform \citep{kalmanBook}. It propagates the mean and covariance of the noise by approximating the state probability distribution instead of linearizing the model like the \texttt{ExtendedKalmanFilter}. This is the default state estimator for controllers based on \texttt{NonLinModel} objects.
+
+\subsubsection{\textnormal{\texttt{ExtendedKalmanFilter}}}
+Extended form of the time-varying Kalman filter. The Jacobians of the nonlinear state-space functions approximate the propagation of the noise. These matrices are automatically computed by forward mode automatic differentiation.
+
+\subsubsection{\textnormal{\texttt{InternalModel}}}
+Allows the design of predictive controller based on an internal model structure. It is based on the general approach of \citet{globPC}. The stochastic model of the unmeasured disturbances defaults to integrating white noise for each measured output (customizable). This is equivalent of assuming that the disturbances are constant over the prediction horizon, similarly to dynamic matrix control (DMC). It supports asymptotically stable \texttt{LinModel} or \texttt{NonLinModel}.
+
 
 \subsection{Predictive Controllers}
 
-\begin{description}
-    \item[LinearMPC] Linear model predictive controller. The default optimizer is OSQP, but other solvers can be used by implementing the \texttt{AbstractOptimizer} interface.
-    \item[ExplicitMPC] Explicit linear model predictive controller. The explicit solution is computed offline and stored in a \texttt{ExplicitSolution} object. The \texttt{ExplicitMPC} object is then a wrapper to the \texttt{ExplicitSolution} object.
-    \item[NonLinMPC] Nonlinear model predictive controller. The default optimizer is Ipopt, but other solvers can be used by implementing the \texttt{AbstractOptimizer} interface. 
-\end{description}
+The prediction methodology applied throughout the package is mainly based on \citet{mpcMac} textbook. The three \texttt{PredictiveController} types are presented in the following sections.
+
+\subsubsection{\textnormal{\texttt{LinearMPC}}}
+Linear model predictive controller with constraints. Weights on output setpoints, manipulated input increments, manipulated input setpoints and slack variable for relaxation are all supported. The default optimizer is \texttt{OSQP.jl} that efficiently handles sparse problems \citep{osqp}, but the \texttt{JuMP.jl} interface allows switching among many quadratic programming solvers. For example, the dual active-set method of \citet{daqp} is sometimes faster on small and dense matrices. Testing this solver only takes one line of code.
+
+\subsubsection{\textnormal{\texttt{ExplicitMPC}}}
+Linear model predictive controller without constraints. The computational costs are extremely low (array division), therefore suitable for applications that require small sample times.
+
+\subsubsection{\textnormal{\texttt{NonLinMPC}}}
+Nonlinear model predictive controller with constraints. The objective function supports all the same weights as the linear case. Economic MPCs are also possible by providing an additional custom function that receives the predicted values in argument.
+An additional economic term can be added to design economic MPCs
+The default optimizer is \texttt{Ipopt.jl}, an open-source interior point method developed by \citet{ipopt}.
+
 

@@ -10,18 +10,12 @@
 \usepackage{amsmath,amssymb,fontspec,mathtools,siunitx,etoolbox}
 \usepackage{enumitem,booktabs,graphicx,minted,xcolor,colortbl,natbib,tikz}
 \usepackage[capitalize]{cleveref}
-\usepackage[qtmarkupright]{glosmathtools}
 %% =============== preamble ==================================================
 %% ---------------- tikz -----------------------------------------------------
 \usetikzlibrary{arrows,shapes.geometric}
 %%generate seperate PDF for each tikz (compile with pdflatex -shell-escape) :
 %\usetikzlibrary{external}
 %\tikzexternalize[prefix=fig/]
-%% ------------- glosmathtools -----------------------------------------------
-\newignoredglossary{ignoredglos} % vectors are not printed in nomenclature
-\loadglsentries{mpcPackageJulia_glos}
-%% ----------------- amsmath -------------------------------------------------
-\DeclareMathOperator{\diag}{diag}
 %% ----------------- fontspec ------------------------------------------------
 \setmonofont{Noto Sans Mono}[Scale=MatchLowercase]
 %% ----------------- minted --------------------------------------------------
@@ -43,7 +37,7 @@
 }
 \newcommand*{\spacerepl}{\vspace*{-28pt}}
 %% ----------------- enumitem ------------------------------------------------
-\setlist[description]{font={\ttfamily\itshape\mdseries}} % bfseries
+\setlist[description]{font={\ttfamily\mdseries}} % bfseries
 %% ============================================================================
 
 

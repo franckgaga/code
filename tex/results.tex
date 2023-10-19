@@ -18,7 +18,7 @@ At the steady-state operating point $u_c=u_h=20$, $y_L=50$, and $y_T=30$, the fo
     \frac{-0.74}{8s+1} & \frac{0.74}{8s+1}
 \end{bmatrix}
 \end{equation}
-The syntax for a sampling time of $T_s=\SI{2}{\second}$ is:
+The syntax to construct a linear model with a sample time of $\SI{2}{\second}$ is:
 \begin{minted}{julia}
 using ModelPredictiveControl, ControlSystemsBase
 G = [ tf(1.90, [18, 1]) tf(1.90, [18, 1]);
@@ -33,7 +33,7 @@ Discrete-time linear model with a sample time Ts = 2.0 s and:
  2 outputs y
  0 measured disturbances d
 \end{minted}
-The \texttt{model} object will be used for two purposes : to construct our controller, and as a plant simulator to test the design.
+The \texttt{model} object will be used for two purposes : to construct our controller and as a plant simulator to test the design.
 
 \subsubsection{Linear Model Predictive Controller}
 
@@ -53,7 +53,7 @@ SteadyKalmanFilter estimator and:
   0 unmeasured outputs yu
   0 measured disturbances d
 \end{minted}
-By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} \citep{osqp_jl} to solve the problem, soft constraints on output predictions $\mathbf{\hat y}$ to ensure feasibility, a \texttt{SteadyKalmanFilter} to estimate the plant states\footnote{As an alternative to state observer, we could have use an internal model structure with \texttt{estim = InternalModel(model)} and \texttt{mpc = setconstraint!(estim; nint\_u); ymin)}. It was tested on this example and it gives similar results.}. The default predictive and control horizons are \texttt{Hp=10+nk} and \texttt{Hc=2}, respectively, where \texttt{nk} is the number of delays in the model. An attentive reader will also notice that the Kalman filter estimates two additional states compared to the plant model. These are the integrating states for the unmeasured plant disturbances, and they are automatically added at the model output $\mathbf{y}$ by default if feasible.
+By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} \citep{osqp} to solve the problem, soft constraints on output predictions $\mathbf{\hat y}$ to ensure feasibility, and a \texttt{SteadyKalmanFilter} to estimate the plant states\footnote{As an alternative to state observers, we could have use an internal model structure with \texttt{estim = InternalModel(model)} and \texttt{mpc = setconstraint!(estim; nint\_u); ymin)}. It was tested on this example and it gives similar results.}. The default predictive and control horizons are \texttt{Hp=10+nk} and \texttt{Hc=2}, respectively, where \texttt{nk} is the number of delays in the linear model. An attentive reader will also notice that the Kalman filter estimates two additional states compared to the plant model. These are the integrating states for the unmeasured plant disturbances, and they are automatically added at the model output $\mathbf{y}$ by default if observability is preserved.
 
 Before closing the loop, the actual plant inputs and measurements should initialize the estimates with \texttt{initstate!} to ensure a bumpless transfer. Since the plant is the linear model here, its output will initialize the states. \texttt{LinModel} objects are callable for this purpose. Once done, imposing step changes on the setpoint \texttt{ry} and on a load disturbance \texttt{ul} tests the closed-loop performance of \texttt{mpc}:
 \begin{minted}{julia}
