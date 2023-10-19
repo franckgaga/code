@@ -51,7 +51,7 @@ Steady-state Kalman filter, a.k.a. asymptotic form. The solution to the algebrai
 Time-varying version of the Kalman filter. It can evaluate the estimation error covariance in real time or be applied in situations where there is no solution to the algebraic Riccati equation.
 
 \subsubsection{\textnormal{\texttt{Luenberger}}}
-Deterministic state observer based on closed-loop eigenvalue placement. It pre-computes the observer gain with \texttt{place} function from \texttt{ControlSystemsBase.jl}, that implements the method of \citet{placePoles}.
+Deterministic state observer based on closed-loop eigenvalue placement. It pre-computes the observer gain with \texttt{place} function from \texttt{ControlSystems.jl}, that implements the method of \citet{placePoles}.
 
 \subsubsection{\textnormal{\texttt{UnscentedKalmanFilter}}}
 Kalman filter for nonlinear systems relying on the generalized unscented transform \citep{kalmanBook}. It propagates the mean and covariance of the noise by approximating the state probability distribution instead of linearizing the model like the \texttt{ExtendedKalmanFilter}. This is the default state estimator for controllers based on \texttt{NonLinModel} objects.
