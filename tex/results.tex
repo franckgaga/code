@@ -99,11 +99,11 @@ using Plots; plot(res)
 
 \subsubsection{Feedforward Compensation}
 
-Suppose that the load disturbance $u_l$ of the last section is in fact caused by a separate hot water pipe that discharges into the tank. Measuring this flow rate allows us to incorporate feedforward compensation (FF) with the disturbance $\mathbf{d}=u_l$:
+Suppose that the load disturbance $u_l$ of the last section is in fact caused by a separate hot water pipe that discharges into the tank. Measuring this flow rate allows us to incorporate feedforward compensation with the disturbance $\mathbf{d}=u_l$:
 
 \begin{minted}{julia}
-model_ff = LinModel([G G[1:2, 2]], 2.0; i_d=[3])
-model_ff = setop!(model_ff; uop=[20,20], yop=[50,30], dop=[20])
+model_d = LinModel([G G[1:2, 2]], 2.0; i_d=[3])
+model_d = setop!(model_d; uop=[20,20], yop=[50,30], dop=[20])
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
@@ -113,26 +113,26 @@ Discrete-time linear model with a sample time Ts = 2.0 s and:
  2 outputs y
  1 measured disturbances d
 \end{minted}
-The simulation needs a new \texttt{LinMPC} object based on \texttt{model\_ff} and a new test function that explicitly employs the current disturbance measurement:
+The simulation needs a new \texttt{LinMPC} object based on \texttt{model\_d} and a new test function that explicitly employs the current disturbance measurement:
 \begin{minted}{julia}
-mpc_ff = setconstraint!(LinMPC(model_ff), ymin=[45, -Inf])
-function test_mpc_ff(mpc_ff, plant)
+mpc_d = setconstraint!(LinMPC(model_d), ymin=[45, -Inf])
+function test_mpc_d(mpc_d, plant)
     plant.x[:] .= 0; y = plant(); d = [20]
-    initstate!(mpc_ff, plant.uop, y, d)
+    initstate!(mpc_d, plant.uop, y, d)
     N = 75; ry = [50, 30]; ul = 0
     U, Y, Ry = zeros(2, N), zeros(2, N), zeros(2, N)
     for i = 1:N
         i == 26 && (ry = [48, 35])
         i == 51 && (ul = -10)
         y, d = plant(), [20+ul] # simulated measurements
-        u = mpc_ff(ry, d) # d in arguments
+        u = mpc_d(ry, d) # d in arguments
         U[:,i], Y[:,i], Ry[:,i] = u, y, ry
-        updatestate!(mpc_ff, u, y, d) # d in arguments
+        updatestate!(mpc_d, u, y, d) # d in arguments
         updatestate!(plant, u+[0,ul])
     end
     return U, Y, Ry
 end
-U_data, Y_data, Ry_data = test_mpc_ff(mpc_ff, model)
+U_data, Y_data, Ry_data = test_mpc_d(mpc_d, model)
 res = SimResult(mpc, U_data, Y_data; Ry_data)
 plot(res)
 \end{minted}
