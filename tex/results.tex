@@ -8,9 +8,9 @@ This section presents two case studies in simulation to demonstrate the design o
 
 \subsubsection{Linear Model}
 
-The example considers a continuously stirred tank reactor (CSTR) with a cold and hot water intakes, fed at a respective flow rate of $u_1$ and $u_2$. The manipulated input vector is thus $\mathbf{u} = [\begin{smallmatrix}u_1 & u_2\end{smallmatrix}]'$. The liquid level $y_1$ and temperature $y_2$ constitute the measured output vector $\mathbf{y} = [\begin{smallmatrix}y_1 & y_2\end{smallmatrix}]'$. Fig. 1 depicts the instrumentation installed on the plant.
+The example considers a continuously stirred tank reactor (CSTR) with a cold and hot water intakes, fed at a respective flow rate of $u_c$ and $u_h$. The manipulated input vector is thus $\mathbf{u} = [\begin{smallmatrix}u_c & u_h\end{smallmatrix}]'$. The liquid level $y_L$ and temperature $y_T$ constitute the measured output vector $\mathbf{y} = [\begin{smallmatrix}y_L & y_T\end{smallmatrix}]'$. Fig. 1 depicts the instrumentation installed on the plant.
 
-At the steady-state operating point $u_1=u_2=20$, $y_1=50$, and $y_2=30$, the following linear model accurately describes the plant dynamics:
+At the steady-state operating point $u_c=u_h=20$, $y_L=50$, and $y_T=30$, the following linear model accurately describes the plant dynamics:
 \begin{equation}
 \mathbf{G}(s) = \frac{\mathbf{y}(s)}{\mathbf{u}(s)} =
 \begin{bmatrix}
@@ -84,8 +84,15 @@ using Plots; plot(res)
 \begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_LinMPC1.pdf}
-    \caption{CSTR closed-loop simulation}
+    \caption{CSTR closed-loop simulation: $y_1=y_L$, $y_2=y_T$, $u_1=u_c$, and $u_2=u_h$.}
     \label{fig:plot_LinMPC1}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\columnwidth]{fig/plot_LinMPC2.pdf}
+    \caption{CSTR closed-loop simulation with feedforward: $y_1=y_L$, $y_2=y_T$, $u_1=u_c$, and $u_2=u_h$.}
+    \label{fig:plot_LinMPC2}
 \end{figure}
 
 \cref{fig:plot_LinMPC1} shows that the controller violates the constraints around 110 s because of the disturbance. Adding feedforward compensation can mitigate this.
@@ -130,13 +137,6 @@ res = SimResult(mpc, U_data, Y_data; Ry_data)
 plot(res)
 \end{minted}
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=\columnwidth]{fig/plot_LinMPC2.pdf}
-    \caption{CSTR closed-loop simulation with feedforward}
-    \label{fig:plot_LinMPC2}
-\end{figure}
-
 \cref{fig:plot_LinMPC2} shows that the feedforward compensation handles the disturbance without violating the constraint.
 
 \subsection{Nonlinear Design : Inverted Pendulum}
@@ -176,9 +176,9 @@ Discrete-time nonlinear model with a sample time Ts = 0.1 s and:
 \end{minted}
 The output function $\mathbf{h}$ converts the $\theta$ angle to degrees.
 
-\subsubsection{Nonlinear Model Predictive Controller}
+\subsubsection{Nonlinear State Estimator}
 
-The controller feedback is the state estimate of an \texttt{UnscentedKalmanFilter}:
+The state estimates produced by an \texttt{UnscentedKalmanFilter} will feed the controller:
 
 \begin{minted}{julia}
 σQ = [0.1, 0.5]; σR=[0.5]; nint_u=[1]; σQint_u=[0.1]
@@ -206,11 +206,15 @@ using Plots; plot(res, plotu=false, plotxwithx̂=true)
 \begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC1.pdf}
-    \caption{Pendulum state estimation}
+    \caption{Pendulum state estimation: $y_1 = \theta$ in \si{\degree}, $x_1=\theta$ in \si{\radian}, and $x_2=\omega$ in \si{\radian\per\second}.}
     \label{fig:plot_NonLinMPC1}
 \end{figure}
 
-\cref{fig:plot_NonLinMPC1} shows that the Kalman filter performance seems sufficient for control. The estimate $\hat{x}_3$ is the integrating state that compensates for static errors. As the motor torque is limited to \num{-1.5} to \SI{1.5}{\newton\meter}, the input constraints are incorporated to a \texttt{NonLinMPC} object:
+\cref{fig:plot_NonLinMPC1} indicates that the Kalman filter performance seems sufficient for control. The estimate $\hat{x}_3$ is the integrating state on the torque $\tau$ that compensates for static errors. 
+
+\subsubsection{Nonlinear Model Predictive Controller}
+
+As the motor torque is limited to \num{-1.5} to \SI{1.5}{\newton\meter}, the input constraints are incorporated to a \texttt{NonLinMPC} object:
 \begin{minted}{julia}
 mpc = NonLinMPC(estim, Hp=20, Hc=2, Mwt=[0.5], Nwt=[2.5])
 mpc = setconstraint!(mpc, umin=[-1.5], umax=[+1.5])
@@ -239,7 +243,7 @@ plot(res)
 \begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC2.pdf}
-    \caption{Pendulum output setpoint tracking}
+    \caption{Pendulum output setpoint tracking: $y_1 = \theta$ in \si{\degree} and $u_1 = \tau$ in \si{\newton\meter}.}
     \label{fig:plot_NonLinMPC2}
 \end{figure}
 
@@ -254,7 +258,7 @@ plot(res)
 \begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC3.pdf}
-    \caption{Pendulum load disturbance rejection}
+    \caption{Pendulum load disturbance rejection : $y_1 = \theta$ in \si{\degree} and $u_1 = \tau$ in \si{\newton\meter}.}
     \label{fig:plot_NonLinMPC3}
 \end{figure}
 
