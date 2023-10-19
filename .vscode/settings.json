@@ -8,6 +8,7 @@
     "cSpell.words": [
         "bumpless",
         "Continously",
+        "CSTR",
         "discretizes",
         "estim",
         "evaloutput",
@@ -24,16 +25,20 @@
         "Luenberger",
         "moveinput",
         "nint",
+        "OSQP",
         "plotd",
         "plotu",
         "plotxwithx̂",
         "plotŷ",
+        "Qint",
         "Riccati",
         "setconstraint",
         "setop",
         "setpoint",
         "setpoints",
         "setstate",
+        "umax",
+        "umin",
         "updatestate",
         "ŷmin"
     ]

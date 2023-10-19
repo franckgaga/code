@@ -81,14 +81,14 @@ res = SimResult(mpc, U_data, Y_data; Ry_data)
 using Plots; plot(res)
 \end{minted}
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_LinMPC1.pdf}
     \caption{CSTR closed-loop simulation: $y_1=y_L$, $y_2=y_T$, $u_1=u_c$, and $u_2=u_h$.}
     \label{fig:plot_LinMPC1}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_LinMPC2.pdf}
     \caption{CSTR closed-loop simulation with feedforward: $y_1=y_L$, $y_2=y_T$, $u_1=u_c$, and $u_2=u_h$.}
