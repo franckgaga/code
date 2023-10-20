@@ -37,6 +37,7 @@
         "setpoint",
         "setpoints",
         "setstate",
+        "tikzpicture",
         "umax",
         "umin",
         "updatestate",

@@ -16,15 +16,15 @@
 \draw (T-right) -- ++(+0.6,0);
 \draw (L-left)  -- ++(-0.3,0);
 
-\pic (VC)    at (-0.6, 2.25) {valve=secondary};
-\pic (VCact) at (-0.6, 2.25) {actuator};
-\pic (VH)    at (2.1, 2.25) {valve=secondary};
-\pic (VHact) at (2.1, 2.25) {actuator};
+\pic [blue] (VC)    at (-0.6, 2.25) {valve=secondary};
+\pic [blue] (VCact) at (-0.6, 2.25) {actuator};
+\pic [red]  (VH)    at (2.1, 2.25) {valve=secondary};
+\pic [red]  (VHact) at (2.1, 2.25) {actuator};
 
-\draw[main stream] 	(VC-right) -- node[above]{$u_c$} (0.5, 2.25) -| ++(0,-0.5);
-\draw[main stream] 	(VH-left)  -- node[above]{$u_h$} (1.0, 2.25) -| ++(0,-0.5);
-\draw[main stream] 	(-1.3, 2.25) -- (VC-left);
-\draw[main stream] 	(+2.8, 2.25) -- (VH-right);
-\draw[main stream]  (1.8,0.15) -- ++(0.5, 0);
+\draw[main stream, blue] (VC-right) -- node[above, black]{$u_c$} (0.5, 2.25) -| ++(0,-0.5);
+\draw[main stream, red]  (VH-left)  -- node[above, black]{$u_h$} (1.0, 2.25) -| ++(0,-0.5);
+\draw[main stream, blue] (-1.3, 2.25) -- (VC-left);
+\draw[main stream, red]  (+2.8, 2.25) -- (VH-right);
+\draw[main stream] (1.8,0.15) -- ++(0.5, 0);
 
 \end{tikzpicture}

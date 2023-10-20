@@ -1,30 +1,22 @@
 \begin{tikzpicture}[scale=1]
        
-\fill[blue!10](0.0,0) rectangle (1.5,1.5);
-\fill[blue!10](1.5,0) rectangle (1.8,0.3);
+\fill (-0.85,-0.2) rectangle (0.85,0.2);
+\draw (-1.5,0) -- (1.5,0) node[above, very near start]{$\tau$};
+\draw[fill=white] (0,0) circle (0.75);
 
-\draw[blue!30] (0.0, 1.5) -- (1.5,1.5);
 
-\draw[<-,semithick] (0.45,0.75) arc (180:-150:0.3 and 0.3);
+\fill (0,0) circle (0.15);
 
-\draw[line width=2.2] (0, 2) -- (0, 0) -- (1.8,0);
-\draw[line width=2.2] (1.8,0.3) -- (1.5,0.3) -- (1.5,2);
+\draw[line width=2.2] (0,0) -- (0,1.3);
+\draw[densely dotted, gray] (0,0) -- (0,-0.5);
+\draw[gray] (0,0.3) arc [start angle=90, end angle=-90, radius=0.3];
+\node[gray] at (0.5, 0.0) {$\theta$};
 
-\pic[scale=0.6] (T) at (-0.6,1.20) {instrument=$y_T$};
-\pic[scale=0.6] (L) at (+2.1,1.50) {instrument=$y_L$};
+\node[black] at (-0.35, 0.0) {$K$};
 
-\draw (T-right) -- ++(+0.6,0);
-\draw (L-left)  -- ++(-0.3,0);
+\draw (0, 1.6) circle (0.3) node {$m$};
 
-\pic (VC)    at (-0.6, 2.25) {valve=secondary};
-\pic (VCact) at (-0.6, 2.25) {actuator};
-\pic (VH)    at (2.1, 2.25) {valve=secondary};
-\pic (VHact) at (2.1, 2.25) {actuator};
-
-\draw[main stream] 	(VC-right) -- node[above]{$u_c$} (0.5, 2.25) -| ++(0,-0.5);
-\draw[main stream] 	(VH-left)  -- node[above]{$u_h$} (1.0, 2.25) -| ++(0,-0.5);
-\draw[main stream] 	(-1.3, 2.25) -- (VC-left);
-\draw[main stream] 	(+2.8, 2.25) -- (VH-right);
-\draw[main stream]  (1.8,0.15) -- ++(0.5, 0);
+\draw [Stealth-Stealth] (1.2, 0) -- node[fill=white]{$L$} (1.2, 1.6);
+\draw (1.15, 1.6) -- (1.25, 1.6);
 
 \end{tikzpicture}

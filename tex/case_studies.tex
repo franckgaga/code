@@ -151,7 +151,16 @@ plot(res)
 
 \subsubsection{Nonlinear Model}
 
-For this case study, the goal is to control the angular position $\theta$ of a pendulum attached to a motor, thus $\mathbf{y} = \theta$. The manipulated input is the motor torque $\mathbf{u} = \tau$. Fig. 4 depicts the instrumentation. The plant model is:
+For this case study, the goal is to control the angular position $\theta$ of a pendulum attached to a motor, thus $\mathbf{y} = \theta$. The manipulated input is the motor torque $\mathbf{u} = \tau$. \cref{fig:pendulum} depicts the system. 
+
+\begin{figure}[h]
+    \centering
+    \input{fig/pendulum.tikz}
+    \caption{Inverted pendulum instrumentation}
+    \label{fig:pendulum}
+\end{figure}
+
+The plant model is:
 \begin{subequations}
 \begin{align}
 \dot{\theta}(t) &= \omega(t) \\
