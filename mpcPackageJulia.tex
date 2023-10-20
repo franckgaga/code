@@ -8,7 +8,7 @@
 \counterwithin*{section}{part}
 %% ===================== packages ===========================================
 \usepackage{amsmath,amssymb,fontspec,mathtools,siunitx,etoolbox}
-\usepackage{enumitem,booktabs,graphicx,minted,xcolor,colortbl,natbib,tikz,chemplants}
+\usepackage{enumitem,graphicx,minted,xcolor,colortbl,natbib,tikz,chemplants}
 \usepackage[capitalize]{cleveref}
 %% =============== preamble ==================================================
 %% ---------------- tikz -----------------------------------------------------
@@ -38,6 +38,7 @@
 \newcommand*{\spacerepl}{\vspace*{-28pt}}
 %% ----------------- enumitem ------------------------------------------------
 \setlist[description]{font={\ttfamily\mdseries}} % bfseries
+\AtBeginEnvironment{minted}{\let\itshape\relax}
 %% ============================================================================
 
 
@@ -54,15 +55,8 @@
 \address[Second]{Process Observation and Optimization Laboratory (LOOP), Université Laval, Quebec City, G1V 0A6, Canada}
 
 \begin{abstract} 
-Proprietary closed-source software is still the norm for advanced process control. Scientific research is based transparency and reproducibility. Free and open-source frameworks can contribute to the development, sharing and advancement of new efficient control strategies, and the industrial sector will certainly benefit from them.  
-
-
-This paper presents ModelPredictiveControl.jl, an open-source software package for model predictive control (MPC) written in the Julia programming language. The package is based on the JuMP modeling language and is designed to be easy to use, while providing advanced features such as robust estimation and control, and nonlinear MPC. The package is open-source and available on GitHub. It is also registered in the Julia package repository. The package is currently in beta version and is under active development. The paper presents the package's main features and illustrates them with case studies. 
-
-
+Proprietary closed-source software is still the norm in advanced process control. Transparency and reproducibility are key aspects of scientific research. Free and open-source toolkit can contribute to the development, sharing and advancement of  new and efficient control approaches, and the industrial sector will certainly benefit from them. This paper presents ModelPredictiveControl.jl, an open-source software package for designing model predictive controllers (MPC) in the Julia programming language. It is designed to be easy to use and modular, while providing advanced features like nonlinear state estimation and control. It relies on powerful control system and mathematical optimization frameworks to simplify the construction and testing of state estimators and predicative controllers. It also integrates with the standard plotting library to quickly visualize closed-loop data. The paper presents the main functionalities and illustrates them with two case studies.
 \end{abstract}
-
-%The control community is in need of a modern, open-source, and easy-to-use software package for model predictive control (MPC). This paper presents ModelPredictiveControl.jl, a Julia package that aims to fill this need. The package is based on the Julia programming language and the JuMP modeling language. It is designed to be easy to use, while providing advanced features such as robust estimation and control, and nonlinear MPC. The package is open-source and available on GitHub. It is also registered in the Julia package repository. The package is currently in beta version and is under active development. The paper presents the package's main features and illustrates them with case studies.
 
 \begin{keyword}
 Model Predictive Control; Estimation and Robust Estimation
@@ -76,7 +70,7 @@ Model Predictive Control; Estimation and Robust Estimation
 \input{tex/conclu}
 
 \begin{ack}
-Culpa in deserunt proident tempor non. Duis et esse pariatur esse qui duis exercitation ullamco aliquip. Dolore ipsum sint consequat enim laborum duis anim cupidatat.
+The authors would like to acknowledge all the developers involved in the control system and optimization frameworks of Julia. Their ease of use and intuitiveness  significantly accelerated the programming of this package.
 \end{ack}
 
 \bibliography{mpcPackageJulia_bibfile}
