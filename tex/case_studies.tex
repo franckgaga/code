@@ -8,7 +8,14 @@ This section presents two case studies in simulation to demonstrate the design o
 
 \subsubsection{Linear Model}
 
-The example considers a continuously stirred tank reactor (CSTR) with a cold and hot water intakes, fed at a respective flow rate of $u_c$ and $u_h$. The manipulated input vector is thus $\mathbf{u} = [\begin{smallmatrix}u_c & u_h\end{smallmatrix}]'$. The liquid level $y_L$ and temperature $y_T$ constitute the measured output vector $\mathbf{y} = [\begin{smallmatrix}y_L & y_T\end{smallmatrix}]'$. Fig. 1 depicts the instrumentation installed on the plant.
+The example considers a continuously stirred tank reactor (CSTR) with a cold and hot water intakes, fed at a respective flow rate of $u_c$ and $u_h$. The manipulated input vector is thus $\mathbf{u} = [\begin{smallmatrix}u_c & u_h\end{smallmatrix}]'$. The liquid level $y_L$ and temperature $y_T$ constitute the measured output vector $\mathbf{y} = [\begin{smallmatrix}y_L & y_T\end{smallmatrix}]'$. \cref{fig:cstr} depicts the instrumentation installed on the plant.
+
+\begin{figure}[h]
+    \centering
+    \input{fig/cstr.tikz}
+    \caption{CSTR instrumentation}
+    \label{fig:cstr}
+\end{figure}
 
 At the steady-state operating point $u_c=u_h=20$, $y_L=50$, and $y_T=30$, the following linear model accurately describes the plant dynamics:
 \begin{equation}
@@ -75,24 +82,17 @@ function test_mpc(mpc, plant)
 end
 U_data, Y_data, Ry_data = test_mpc(mpc, model)
 \end{minted}
-Updating the internal states of \texttt{mpc} prepares the object for the \emph{next} time step. That is why the call is done at the end of the \texttt{for} loop. The same logic applies for \texttt{plant}. Lastly, we plot the closed-loop test with \texttt{Plots.jl}:
+Calling \texttt{LinMPC} instances computes and returns $\mathbf{u}(k)$. Also, updating the internal states of \texttt{mpc} prepares the object for the \emph{next} time step. That is why the call is done at the end of the \texttt{for} loop. The same logic applies for \texttt{plant}. Lastly, the package implements a \texttt{Plots.jl} recipe \citep{plots} to quickly visualize the results:
 \begin{minted}{julia}
 res = SimResult(mpc, U_data, Y_data; Ry_data)
 using Plots; plot(res)
 \end{minted}
 
-\begin{figure}[ht]
+\begin{figure}[t]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_LinMPC1.pdf}
     \caption{CSTR closed-loop simulation: $y_1=y_L$, $y_2=y_T$, $u_1=u_c$, and $u_2=u_h$.}
     \label{fig:plot_LinMPC1}
-\end{figure}
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=\columnwidth]{fig/plot_LinMPC2.pdf}
-    \caption{CSTR closed-loop simulation with feedforward: $y_1=y_L$, $y_2=y_T$, $u_1=u_c$, and $u_2=u_h$.}
-    \label{fig:plot_LinMPC2}
 \end{figure}
 
 \cref{fig:plot_LinMPC1} shows that the controller violates the constraints around 110 s because of the disturbance. Adding feedforward compensation can mitigate this.
@@ -136,6 +136,13 @@ U_data, Y_data, Ry_data = test_mpc_d(mpc_d, model)
 res = SimResult(mpc, U_data, Y_data; Ry_data)
 plot(res)
 \end{minted}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{fig/plot_LinMPC2.pdf}
+    \caption{CSTR closed-loop simulation with feedforward: $y_1=y_L$, $y_2=y_T$, $u_1=u_c$, and $u_2=u_h$.}
+    \label{fig:plot_LinMPC2}
+\end{figure}
 
 \cref{fig:plot_LinMPC2} shows that the feedforward compensation handles the disturbance without violating the constraint.
 
@@ -203,7 +210,7 @@ N = 35; u=[0.5]; res = sim!(estim, N, u; plant, y_noise=[0.5])
 using Plots; plot(res, plotu=false, plotxwithx̂=true)
 \end{minted}
 
-\begin{figure}[h]
+\begin{figure}[t]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC1.pdf}
     \caption{Pendulum state estimation: $y_1 = \theta$ in \si{\degree}, $x_1=\theta$ in \si{\radian}, and $x_2=\omega$ in \si{\radian\per\second}.}
@@ -232,7 +239,7 @@ optimizer, UnscentedKalmanFilter estimator and:
   0 measured disturbances d
 \end{minted}
 
-The keyword arguments \texttt{Mwt} and \texttt{Nwt} are the output setpoint tracking and move suppression weights, respectively. An angular setpoint of \SI{180}{\degree} (inverted position) test \texttt{mpc} performance on the plant: 
+The keyword arguments \texttt{Mwt} and \texttt{Nwt} are the output setpoint tracking and move suppression weights, respectively. An angular setpoint of \SI{180}{\degree} (inverted position) tests \texttt{mpc} performance on the plant: 
 
 \begin{minted}{julia}
 x0 = [0, 0]; x̂0 = [0, 0, 0]

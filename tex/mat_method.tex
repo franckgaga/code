@@ -27,7 +27,7 @@ Objects are constructed with \texttt{ss} or \texttt{tf} functions from \texttt{C
 
 \subsubsection{\textnormal{\texttt{NonLinModel}}}
 
-Nonlinear discrete state-space model of the plant. Continuous-time model are not supported yet but manually calling a differential equation solver can mitigate this (see \cref{sec.nonlinear_design} example). The user provide the following two functions:
+Nonlinear discrete state-space model of the plant. Continuous-time model are not supported yet but manually calling a differential equation solver can mitigate this (see \cref{sec.nonlinear_design} example). The user provides the following two functions:
 \begin{subequations}
 \begin{align}
     \mathbf{x}(k+1) &= \mathbf{f}\big(\mathbf{x}(k), \mathbf{u}(k), \mathbf{d}(k)\big) \\
@@ -74,8 +74,6 @@ Linear model predictive controller with constraints. Weights on output setpoints
 Linear model predictive controller without constraints. The computational costs are extremely low (array division), therefore suitable for applications that require small sample times.
 
 \subsubsection{\textnormal{\texttt{NonLinMPC}}}
-Nonlinear model predictive controller with constraints. The objective function supports all the same weights as the linear case. Economic MPCs are also possible by providing an additional custom function that receives the predicted values in argument.
-An additional economic term can be added to design economic MPCs
-The default optimizer is \texttt{Ipopt.jl}, an open-source interior point method developed by \citet{ipopt}.
+Nonlinear model predictive controller with constraints. The objective function supports all the same weights as the linear case. Economic MPCs are also possible by providing an additional custom function that receives all the predicted values as arguments. The default optimizer is \texttt{Ipopt.jl}, an open-source interior point method developed by \citet{ipopt}.
 
 

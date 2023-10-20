@@ -8,11 +8,12 @@
 \counterwithin*{section}{part}
 %% ===================== packages ===========================================
 \usepackage{amsmath,amssymb,fontspec,mathtools,siunitx,etoolbox}
-\usepackage{enumitem,booktabs,graphicx,minted,xcolor,colortbl,natbib,tikz}
+\usepackage{enumitem,booktabs,graphicx,minted,xcolor,colortbl,natbib,tikz,chemplants}
 \usepackage[capitalize]{cleveref}
 %% =============== preamble ==================================================
 %% ---------------- tikz -----------------------------------------------------
-\usetikzlibrary{arrows,shapes.geometric}
+\usetikzlibrary{arrows,arrows.meta,positioning,decorations.pathreplacing,
+	decorations.pathmorphing,spy,calc,patterns,shapes.geometric}
 %%generate separate PDF for each tikz (compile with pdflatex -shell-escape) :
 %\usetikzlibrary{external}
 %\tikzexternalize[prefix=fig/]
@@ -54,8 +55,15 @@
 \address[Second]{Process Observation and Optimization Laboratory (LOOP), Université Laval, Quebec City, G1V 0A6, Canada}
 
 \begin{abstract} 
-Sit commodo ipsum nulla eu excepteur sit ut minim voluptate et eu velit sint. Lorem et amet incididunt officia id. Nulla magna fugiat incididunt veniam sunt excepteur in esse nulla et aliquip non magna deserunt. 
+Proprietary closed-source software is still the norm for advanced process control. Scientific research is based transparency and reproducibility. Free and open-source frameworks can contribute to the development, sharing and advancement of new efficient control strategies, and the industrial sector will certainly benefit from them.  
+
+
+This paper presents ModelPredictiveControl.jl, an open-source software package for model predictive control (MPC) written in the Julia programming language. The package is based on the JuMP modeling language and is designed to be easy to use, while providing advanced features such as robust estimation and control, and nonlinear MPC. The package is open-source and available on GitHub. It is also registered in the Julia package repository. The package is currently in beta version and is under active development. The paper presents the package's main features and illustrates them with case studies. 
+
+
 \end{abstract}
+
+%The control community is in need of a modern, open-source, and easy-to-use software package for model predictive control (MPC). This paper presents ModelPredictiveControl.jl, a Julia package that aims to fill this need. The package is based on the Julia programming language and the JuMP modeling language. It is designed to be easy to use, while providing advanced features such as robust estimation and control, and nonlinear MPC. The package is open-source and available on GitHub. It is also registered in the Julia package repository. The package is currently in beta version and is under active development. The paper presents the package's main features and illustrates them with case studies.
 
 \begin{keyword}
 Model Predictive Control; Estimation and Robust Estimation
@@ -65,7 +73,7 @@ Model Predictive Control; Estimation and Robust Estimation
 
 \input{tex/intro}
 \input{tex/mat_method}
-\input{tex/results}
+\input{tex/case_studies}
 \input{tex/conclu}
 
 \begin{ack}
