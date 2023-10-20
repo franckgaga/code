@@ -1,10 +1,10 @@
 % !TeX encoding = UTF-8
 % !TeX spellcheck = en_US
-\section{Case studies}
+\section{Case Studies}
 
-This section presents two case studies in simulation to demonstrate the design of linear and nonlinear MPCs. The objective here is to hopefully demonstrate how the package syntax facilitates the implementation and testing of predictive controllers and state estimators. The first example details how to apply a MPC on a plant at each discrete time step. The second uses higher-level functionalities to quickly simulate closed-loop systems. 
+This section presents two case studies in simulation to demonstrate the design of linear and nonlinear MPCs. The objective here is to hopefully demonstrate how the package syntax facilitates the implementation and testing of predictive controllers and state estimators. The first example details how to apply an MPC on a plant at each discrete time step. The second uses higher-level functionalities to quickly simulate closed-loop systems. 
 
-\subsection{Linear Design: Continously Stirred Tank Reactor}
+\subsection{Linear Design: Continuously Stirred Tank Reactor}
 
 \subsubsection{Linear Model}
 
@@ -82,7 +82,7 @@ function test_mpc(mpc, plant)
 end
 U_data, Y_data, Ry_data = test_mpc(mpc, model)
 \end{minted}
-Calling \texttt{LinMPC} instances computes and returns $\mathbf{u}(k)$. Also, updating the internal states of \texttt{mpc} prepares the object for the \emph{next} time step. That is why the call is done at the end of the \texttt{for} loop. The same logic applies for \texttt{plant}. Lastly, the package implements a \texttt{Plots.jl} recipe \citep{plots} to quickly visualize the results:
+Calling \texttt{LinMPC} instances computes and returns $\mathbf{u}(k)$. Also, updating the internal states of \texttt{mpc} prepares the object for the \emph{next} time step. That is why the call is made at the end of the \texttt{for} loop. The same logic applies for \texttt{plant}. Lastly, the package implements a \texttt{Plots.jl} recipe \citep{plots} to quickly visualize the results:
 \begin{minted}{julia}
 res = SimResult(mpc, U_data, Y_data; Ry_data)
 using Plots; plot(res)
