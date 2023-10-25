@@ -60,7 +60,7 @@ SteadyKalmanFilter estimator and:
   0 unmeasured outputs yu
   0 measured disturbances d
 \end{minted}
-By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} \citep{osqp} to solve the problem, soft constraints on output predictions $\mathbf{\hat y}$ to ensure feasibility, and a \texttt{SteadyKalmanFilter} to estimate the plant states\footnote{As an alternative to state observers, we could have use an internal model structure with \texttt{estim = InternalModel(model)} and \texttt{mpc = setconstraint!(estim; nint\_u); ymin)}. It was tested on this example and it gives similar results.}. The default predictive and control horizons are \texttt{Hp=10+nk} and \texttt{Hc=2}, respectively, where \texttt{nk} is the number of delays in the linear model. An attentive reader will also notice that the Kalman filter estimates two additional states compared to the plant model. These are the integrating states for the unmeasured plant disturbances, and they are automatically added at the model output $\mathbf{y}$ by default if observability is preserved.
+By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} \citep{osqp} to solve the problem, soft constraints on output predictions $\mathbf{\hat y}$ to ensure feasibility, and a \texttt{SteadyKalmanFilter} to estimate the plant states\footnote{As an alternative to state observers, we could have use an internal model structure with \texttt{estim = InternalModel(model)} and \texttt{mpc = setconstraint!(LinMPC(estim); ymin=[45, -Inf])}. It was tested on this example and it gives similar results.}. The default predictive and control horizons are \texttt{Hp=10+nk} and \texttt{Hc=2}, respectively, where \texttt{nk} is the number of delays in the linear model. An attentive reader will also notice that the Kalman filter estimates two additional states compared to the plant model. These are the integrating states for the unmeasured plant disturbances, and they are automatically added at the model output $\mathbf{y}$ by default if observability is preserved.
 
 Before closing the loop, the actual plant inputs and measurements should initialize the estimates with \texttt{initstate!} to ensure a bumpless transfer. Since the plant is the linear model here, its output will initialize the states. \texttt{LinModel} objects are callable for this purpose. Once done, imposing step changes on the setpoint \texttt{ry} and on a load disturbance \texttt{ul} tests the closed-loop performance of \texttt{mpc}:
 \begin{minted}{julia}
@@ -156,7 +156,7 @@ For this case study, the goal is to control the angular position $\theta$ of a p
 \begin{figure}[h]
     \centering
     \input{fig/pendulum.tikz}
-    \caption{Inverted pendulum instrumentation}
+    \caption{Inverted pendulum}
     \label{fig:pendulum}
 \end{figure}
 
@@ -210,7 +210,7 @@ NonLinModel and:
  0 unmeasured outputs yu
  0 measured disturbances d
 \end{minted}
-The vectors \texttt{σQ} and \texttt{σR} are the standard deviations of the process and sensor noises, respectively. The value for the velocity $\omega$ is higher here (\texttt{σQ} second value) since \eqref{eq.pendulum_speed} includes an uncertain parameter: the friction coefficient $K$. Also, the argument \texttt{nint\_u} explicitly adds one integrating state at the model input $\mathbf{u}$, the motor torque $\tau$, with an associated standard deviation \texttt{σQint\_u} of $\SI{0.1}{\newton\meter}$. The estimator tuning is tested on a plant with a \SI{25}{\percent} larger friction coefficient $K$:
+The vectors \texttt{σQ} and \texttt{σR} are the standard deviations of the process and sensor noises, respectively. The value for the velocity $\omega$ is higher here (\texttt{σQ} second value) since \eqref{eq.pendulum_speed} includes an uncertain parameter: the friction coefficient $K$. Also, the argument \texttt{nint\_u} explicitly adds one integrating state at the model input, the motor torque $\tau$, with an associated standard deviation \texttt{σQint\_u} of $\SI{0.1}{\newton\meter}$. The estimator tuning is tested on a plant with a \SI{25}{\percent} larger friction coefficient $K$:
 \begin{minted}{julia}
 par_plant = (par[1], par[2], 1.25*par[3], par[4])
 f_plant(x, u, _) = x + Ts*pendulum(par_plant, x, u)

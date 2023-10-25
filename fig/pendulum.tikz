@@ -9,12 +9,12 @@
 
 \draw[line width=2.2] (0,0) -- (0,1.3);
 \draw[densely dotted, gray] (0,0) -- (0,-0.5);
-\draw[gray] (0,0.3) arc [start angle=90, end angle=-90, radius=0.3];
+\draw[gray, <-] (0,0.3) arc [start angle=90, end angle=-90, radius=0.3];
 \node[gray] at (0.5, 0.0) {$\theta$};
 
 \node[black] at (-0.35, 0.0) {$K$};
 
-\draw (0, 1.6) circle (0.3) node {$m$};
+\filldraw (0, 1.6) circle (0.3) node[white]{$m$};
 
 \draw [Stealth-Stealth] (1.2, 0) -- node[fill=white]{$L$} (1.2, 1.6);
 \draw (1.15, 1.6) -- (1.25, 1.6);

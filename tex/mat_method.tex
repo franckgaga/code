@@ -27,7 +27,7 @@ Objects are constructed with \texttt{ss} or \texttt{tf} functions from \texttt{C
 
 \subsubsection{\textnormal{\texttt{NonLinModel}}}
 
-Discrete nonlinear  state-space representations of the plant. Continuous-time models are not supported yet but manually calling a differential equation solver can mitigate this (see \cref{sec.nonlinear_design} example). The user provides the following two functions:
+Discrete nonlinear state-space representations of the plant. Continuous-time models are not supported yet but manually calling a differential equation solver can mitigate this (see \cref{sec.nonlinear_design} example). The user provides the following two functions:
 \begin{subequations}
 \begin{align}
     \mathbf{x}(k+1) &= \mathbf{f}\big(\mathbf{x}(k), \mathbf{u}(k), \mathbf{d}(k)\big) \\

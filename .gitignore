@@ -20,3 +20,10 @@ rev/
 *.fls
 *.dvi
 _minted-mpcPackageJulia/
+fig/mpcPackageJulia-figure0.dpth
+fig/mpcPackageJulia-figure0.md5
+fig/mpcPackageJulia-figure0.pdf
+fig/mpcPackageJulia-figure1.dpth
+fig/mpcPackageJulia-figure1.md5
+fig/mpcPackageJulia-figure1.pdf
+mpcPackageJulia.auxlock
