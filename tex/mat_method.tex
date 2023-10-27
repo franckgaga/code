@@ -38,14 +38,14 @@ It is worth mentioning that the state update $\mathbf{f}$ and output $\mathbf{h}
 
 \subsection{State Estimators}
 
-The estimators of the package focus on control applications, that is, relying on the estimates to compute a full state feedback. They all incorporate some kind of integral action by default if feasible, since it is generally desired to eliminate the steady-state error with closed-loop control (offset-free tracking).
+The estimators of the package focus on control applications, that is, relying on the estimates to compute a full state feedback. They all incorporate some kind of integral action by default if feasible, since it is generally desired to eliminate the steady-state error with closed-loop control (offset-free tracking). \cref{sec:case_studies} gives details on that matter.
 
 They are also implemented in the predictor form (a.k.a. observer form), that is, they all estimates at each discrete time $k$ the states of the next period $\mathbf{\hat{x}}_k(k+1)$. In comparison, the filter form that estimates $\mathbf{\hat{x}}_k(k)$ is sometimes slightly more accurate. The predictor form comes in handy for control applications since the estimations come after the controller computations, without introducing any additional delays. This is especially true if the observer computations are expensive.
 
 There is six \texttt{StateEstimator} concrete types available at the time of writing, all supporting measured $\mathbf{y^m}$ an unmeasured $\mathbf{y^u}$ model outputs. The moving horizon estimator will be added soon after this publication. The following list presents those six types.
 
 \subsubsection{\textnormal{\texttt{SteadyKalmanFilter}}}
-Steady-state Kalman filter, a.k.a. asymptotic form. The solution to the algebraic Riccati equation pre-compute the Kalman gain. This is the default state estimator for controllers based on \texttt{LinModel} objects.
+Steady-state Kalman filter, a.k.a. asymptotic form. The solution to the algebraic Riccati equation pre-compute the Kalman gain \citep{kalmanBookSS}. This is the default state estimator for controllers based on \texttt{LinModel} objects.
 
 \subsubsection{\textnormal{\texttt{KalmanFilter}}}
 Time-varying version of the Kalman filter. It can evaluate the estimation error covariance in real time or be applied in situations where there is no solution to the algebraic Riccati equation.
@@ -61,7 +61,6 @@ Extended form of the time-varying Kalman filter. The Jacobians of the nonlinear 
 
 \subsubsection{\textnormal{\texttt{InternalModel}}}
 Allows the design of predictive controllers based on an internal model structure. It is based on the general approach of \citet{globPC}. The stochastic model of the unmeasured disturbances defaults to integrating white noise for each measured output (customizable). This is the equivalent of assuming that the disturbances are constant over the prediction horizon, similarly to dynamic matrix control (DMC). It supports asymptotically stable \texttt{LinModel} or \texttt{NonLinModel}.
-
 
 \subsection{Predictive Controllers}
 
