@@ -5,8 +5,9 @@
 
 The functions of this package dispatch over three abstract types :
 \begin{description}
-    \item[SimModel] (2 subtypes) -- Discrete state-space models of the plant, including linear and nonlinear representations. They serve as a wrapper to construct \texttt{StateEstimator} and \texttt{PredictiveController} objects, and also as plant simulators to test the designs.
-    \item[StateEstimator] (6 subtypes) -- Closed-loop state observers, both for deterministic and stochastic systems. They produce the full state feedback for the \texttt{PredictiveController}.
+    \item[SimModel] (2 subtypes) -- Discrete state-space models of the plant, including linear and nonlinear representations. Constructors automatically discretizes 
+    continuous-time linear systems. Instances of this type serves as a wrapper to construct \texttt{StateEstimator} and \texttt{PredictiveController} objects, and also as plant simulators to test the designs.
+    \item[StateEstimator] (6 subtypes) -- Open loop and closed-loop state observers, both for deterministic and stochastic systems. They produce the full state feedback for the \texttt{PredictiveController}.
     \item[PredictiveController] (3 subtypes) -- Linear and nonlinear MPC are available. An explicit controller based on matrix algebra is also possible for linear models without constraint.
 \end{description}
 
@@ -23,7 +24,7 @@ Discrete linear state-space representations of the plant. Continuous-time models
     \mathbf{y}(k)   &= \mathbf{C x}(k) + \mathbf{D_d d}(k)
 \end{align}
 \end{subequations}
-Objects are constructed with \texttt{ss} or \texttt{tf} functions from \texttt{ControlSystems.jl}, or by providing the fives state-space matrices directly.
+in which the vectors $\mathbf{u}$, $\mathbf{d}$, $\mathbf{x}$ and $\mathbf{y}$ are the manipulated input, measured disturbance, state and output of the model, respectively. Objects are constructed with \texttt{ss} or \texttt{tf} functions from \texttt{ControlSystems.jl}, or by providing the fives state-space matrices directly.
 
 \subsubsection{\textnormal{\texttt{NonLinModel}}}
 
@@ -40,9 +41,9 @@ It is worth mentioning that the state update $\mathbf{f}$ and output $\mathbf{h}
 
 The estimators of the package focus on control applications, that is, relying on the estimates to compute a full state feedback. They all incorporate some kind of integral action by default if feasible, since it is generally desired to eliminate the steady-state error with closed-loop control (offset-free tracking). \cref{sec:case_studies} gives details on that matter.
 
-They are also implemented in the predictor form (a.k.a. observer form), that is, they all estimates at each discrete time $k$ the states of the next period $\mathbf{\hat{x}}_k(k+1)$. In comparison, the filter form that estimates $\mathbf{\hat{x}}_k(k)$ is sometimes slightly more accurate. The predictor form comes in handy for control applications since the estimations come after the controller computations, without introducing any additional delays. This is especially true if the observer computations are expensive.
+They are also implemented in the predictor form (a.k.a. observer form), that is, they all estimates at each discrete time $k$ the states of the next period $\mathbf{\hat{x}}_k(k+1)$\footnote{also denoted $\mathbf{\hat{x}}(k+1|k)$ in Kalman Filter literature.}. In comparison, the filter form that estimates $\mathbf{\hat{x}}_k(k)$ is sometimes slightly more accurate. The predictor form comes in handy for control applications since the estimations come after the controller computations, without introducing any additional delays. This is especially true if the observer computations are expensive.
 
-There is six \texttt{StateEstimator} concrete types available at the time of writing, all supporting measured $\mathbf{y^m}$ an unmeasured $\mathbf{y^u}$ model outputs. The moving horizon estimator will be added soon after this publication. The following list presents those six types.
+There is six \texttt{StateEstimator} concrete types available at the time of writing, all supporting measured $\mathbf{y^m}$ and unmeasured $\mathbf{y^u}$ model outputs. The moving horizon estimator will be added soon after this publication. The following list presents those six types.
 
 \subsubsection{\textnormal{\texttt{SteadyKalmanFilter}}}
 Steady-state Kalman filter, a.k.a. asymptotic form. The solution to the algebraic Riccati equation pre-compute the Kalman gain \citep{kalmanBookSS}. This is the default state estimator for controllers based on \texttt{LinModel} objects.
@@ -67,12 +68,52 @@ Allows the design of predictive controllers based on an internal model structure
 The prediction methodology applied throughout the package is mainly based on the textbook of \citet{mpcMac}. The three \texttt{PredictiveController} types are presented in the following sections.
 
 \subsubsection{\textnormal{\texttt{LinearMPC}}}
-Linear model predictive controller with constraints. Weights on output setpoints, manipulated input increments, manipulated input setpoints and slack variable for relaxation are all supported. The default optimizer is \texttt{OSQP.jl} that efficiently handles sparse problems \citep{osqp}, but the \texttt{JuMP.jl} interface allows switching among many quadratic programming solvers. For example, the dual active-set method of \citet{daqp} is sometimes faster on small and dense matrices. Testing this solver only takes one line of code.
+Linear model predictive controller with constraints. It minimizes the following objective function at each discrete time $k$:
+\begin{multline}
+J_{\mathit{MPC}} = 
+    \mathbf{\big(\hat{R}_y - \hat{Y}\big)}^\intercal \mathbf{M}_{H_p} \mathbf{\big(\hat{R}_y - \hat{Y}\big)}   
+    + \mathbf{\big(ΔU\big)}^\intercal \mathbf{N}_{H_c} \mathbf{\big(ΔU\big)} \\
+    + \mathbf{\big(\hat{R}_u - U\big)}^\intercal \mathbf{L}_{H_p} \mathbf{\big(\hat{R}_u - U\big)} 
+    + C \epsilon^2
+\end{multline}
+with the decision variables $\mathbf{ΔU}$ and $\epsilon$, the inputs increments over the control horizon $H_c$ and the slack variable for relaxation, respectively. The vectors $\mathbf{\hat{Y}}$ and $\mathbf{\hat{R}_y}$ encompass the predictions of the outputs and their setpoints over the horizon $H_p$, respectively. The variables $\mathbf{U}$ and $\mathbf{\hat{R}_u}$ are similar but for the input setpoints. The matrices $\mathbf{M}_{H_p}$, $\mathbf{N}_{H_c}$ and $\mathbf{L}_{H_p}$ are diagonal weights, and $C$ is a scalar weight. 
+
+The problem is subject to the following constraints:
+\begin{alignat}{3}
+    \mathbf{U_{min}  - c_{U_{min}}}  \epsilon &\le \mathbf{U}  &&\le \mathbf{U_{max}  + c_{U_{max}}}  \epsilon \\
+    \mathbf{ΔU_{min} - c_{ΔU_{min}}} \epsilon &\le \mathbf{ΔU} &&\le \mathbf{ΔU_{max} + c_{ΔY_{max}}} \epsilon \\
+    \mathbf{Y_{min}  - c_{Y_{min}}}  \epsilon &\le \mathbf{\hat{Y}} &&\le \mathbf{Y_{max}  + c_{Y_{max}}}  \epsilon
+\end{alignat}
+and also $\epsilon \ge 0$. The constraint softness parameters $\mathbf{c}$c are non-negative values that specify the softness of the associated bound. Box constraints on the terminal states are also possible: $\mathbf{\hat{x}_{min}} - \mathbf{c_{\hat{x}_{min}}}\epsilon \le \mathbf{\hat{x}}_{k-1}(k+H_p) \le \mathbf{\hat{x}_{max}} + \mathbf{c_{\hat{x}_{max}}}\epsilon$. Note that changing the bounds at runtime and time-varying constraints over the horizons are
+completely supported.
+
+The default optimizer is \texttt{OSQP.jl} that efficiently handles sparse problems \citep{osqp}, but the \texttt{JuMP.jl} interface allows switching among many quadratic programming solvers. For example, the dual active-set method of \citet{daqp} is sometimes faster on small and dense matrices. Testing this solver only takes one line of code.
 
 \subsubsection{\textnormal{\texttt{ExplicitMPC}}}
-Linear model predictive controller without constraints. The computational costs are extremely low (array division), therefore suitable for applications that require small sample times.
+Linear model predictive controller without constraints. The objective function is identical
+to \texttt{LinMPC}. The computational costs are extremely low (array division), therefore suitable for applications that require small sample times.
 
 \subsubsection{\textnormal{\texttt{NonLinMPC}}}
-Nonlinear model predictive controller with constraints. The objective function supports all the same weights as the linear case. Economic MPCs are also possible by providing an additional custom function that receives all the predicted values as arguments. The default optimizer is \texttt{Ipopt.jl}, an open-source interior point method developed by \citet{ipopt}.
+Nonlinear model predictive controller with constraints. The objective function includes an additional term for economic MPCs:
+\begin{equation}
+J_{\mathit{NMPC}} = J_{\mathit{MPC}} 
+    + E J_E\big(\mathbf{U}_E, \mathbf{\hat{Y}}_E, \mathbf{\hat{D}}_E\big)
+\end{equation}
+The user provides a custom function $J_E$ that returns the economic costs for a given set of inputs $\mathbf{U}_E$, outputs $\mathbf{\hat{Y}}_E$ and measured disturbances $\mathbf{\hat{D}}_E$:
+\begin{equation}
+\mathbf{U}_E = 
+\begin{bmatrix}
+    \mathbf{U} \\ \mathbf{u}(k+H_p-1)
+\end{bmatrix}\!,\,
+\mathbf{\hat{Y}}_E = 
+\begin{bmatrix}
+    \mathbf{\hat{y}}(k) \\ \mathbf{\hat{Y}}
+\end{bmatrix}\!,\, 
+\mathbf{\hat{D}}_E = 
+\begin{bmatrix}
+    \mathbf{d}(k) \\ \mathbf{\hat{D}(k)}
+\end{bmatrix} 
+\end{equation} 
+The constraints are identical to \texttt{LinMPC}. The default optimizer is \texttt{Ipopt.jl}, an open-source interior point method developed by \citet{ipopt}.
 
 

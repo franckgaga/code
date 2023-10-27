@@ -13,6 +13,7 @@
         "estim",
         "evaloutput",
         "feedforward",
+        "getinfo",
         "initstate",
         "intagrating",
         "Ipopt",
