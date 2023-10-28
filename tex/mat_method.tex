@@ -41,12 +41,12 @@ It is worth mentioning that the state update $\mathbf{f}$ and output $\mathbf{h}
 
 The estimators of the package focus on control applications, that is, relying on the estimates to compute a full state feedback. They all incorporate some kind of integral action by default if feasible, since it is generally desired to eliminate the steady-state error with closed-loop control (offset-free tracking). \cref{sec:case_studies} gives details on that matter.
 
-They are also implemented in the predictor form (a.k.a. observer form), that is, they all estimates at each discrete time $k$ the states of the next period $\mathbf{\hat{x}}_k(k+1)$\footnote{also denoted $\mathbf{\hat{x}}(k+1|k)$ in Kalman Filter literature.}. In comparison, the filter form that estimates $\mathbf{\hat{x}}_k(k)$ is sometimes slightly more accurate. The predictor form comes in handy for control applications since the estimations come after the controller computations, without introducing any additional delays. This is especially true if the observer computations are expensive.
+They are also implemented in the predictor form (a.k.a. observer form), that is, they all estimates at each discrete time $k$ the states of the next period $\mathbf{\hat{x}}_k(k+1)$, also denoted $\mathbf{\hat{x}}(k+1|k)$. In comparison, the filter form that estimates $\mathbf{\hat{x}}_k(k)$ is sometimes slightly more accurate. The predictor form comes in handy for control applications since the estimations come after the controller computations, without introducing any additional delays. This is especially true if the observer computations are expensive.
 
 There is six \texttt{StateEstimator} concrete types available at the time of writing, all supporting measured $\mathbf{y^m}$ and unmeasured $\mathbf{y^u}$ model outputs. The moving horizon estimator will be added soon after this publication. The following list presents those six types.
 
 \subsubsection{\textnormal{\texttt{SteadyKalmanFilter}}}
-Steady-state Kalman filter, a.k.a. asymptotic form. The solution to the algebraic Riccati equation pre-compute the Kalman gain \citep{kalmanBookSS}. This is the default state estimator for controllers based on \texttt{LinModel} objects.
+Steady-state Kalman filter, a.k.a. asymptotic form. The solution to the algebraic Riccati equation pre-compute the Kalman gain \citep{simon}. This is the default state estimator for controllers based on \texttt{LinModel} objects.
 
 \subsubsection{\textnormal{\texttt{KalmanFilter}}}
 Time-varying version of the Kalman filter. It can evaluate the estimation error covariance in real time or be applied in situations where there is no solution to the algebraic Riccati equation.
@@ -55,7 +55,7 @@ Time-varying version of the Kalman filter. It can evaluate the estimation error 
 Deterministic state observer based on closed-loop eigenvalue placement. It pre-computes the observer gain with \texttt{place} function from \texttt{ControlSystems.jl}, that implements the method of \citet{placePoles}.
 
 \subsubsection{\textnormal{\texttt{UnscentedKalmanFilter}}}
-Kalman filter for nonlinear systems relying on the generalized unscented transform \citep{kalmanBook}. It propagates the mean and covariance of the noise by approximating the state probability distribution instead of linearizing the model like the \texttt{ExtendedKalmanFilter}. This is the default state estimator for controllers based on \texttt{NonLinModel} objects.
+Kalman filter for nonlinear systems relying on the generalized unscented transform \citep{simon}. It propagates the mean and covariance of the noise by approximating the state probability distribution instead of linearizing the model like the \texttt{ExtendedKalmanFilter}. This is the default state estimator for controllers based on \texttt{NonLinModel} objects.
 
 \subsubsection{\textnormal{\texttt{ExtendedKalmanFilter}}}
 Extended form of the time-varying Kalman filter. The Jacobians of the nonlinear state-space functions approximate the propagation of the noise. These matrices are automatically computed by forward mode automatic differentiation.
@@ -87,14 +87,13 @@ The problem is subject to the following constraints:
 and also $\epsilon \ge 0$. The constraint softness parameters $\mathbf{c}$c are non-negative values that specify the softness of the associated bound. Box constraints on the terminal states are also possible: $\mathbf{\hat{x}_{min}} - \mathbf{c_{\hat{x}_{min}}}\epsilon \le \mathbf{\hat{x}}_{k-1}(k+H_p) \le \mathbf{\hat{x}_{max}} + \mathbf{c_{\hat{x}_{max}}}\epsilon$. Note that changing the bounds at runtime and time-varying constraints over the horizons are
 completely supported.
 
-The default optimizer is \texttt{OSQP.jl} that efficiently handles sparse problems \citep{osqp}, but the \texttt{JuMP.jl} interface allows switching among many quadratic programming solvers. For example, the dual active-set method of \citet{daqp} is sometimes faster on small and dense matrices. Testing this solver only takes one line of code.
+The default optimizer is \texttt{OSQP.jl} that efficiently handles sparse problems \citep{osqp}, but the \texttt{JuMP.jl} interface allows switching among many quadratic solvers. For example, the dual active-set method of \citet{daqp} is sometimes faster on small and dense matrices. Testing this solver only takes one line of code.
 
 \subsubsection{\textnormal{\texttt{ExplicitMPC}}}
-Linear model predictive controller without constraints. The objective function is identical
-to \texttt{LinMPC}. The computational costs are extremely low (array division), therefore suitable for applications that require small sample times.
+Linear model predictive controller without constraints, see \texttt{LinMPC} for the cost function. The computational costs are extremely low (array division), therefore suitable for applications that require small sample times.
 
 \subsubsection{\textnormal{\texttt{NonLinMPC}}}
-Nonlinear model predictive controller with constraints. The objective function includes an additional term for economic MPCs:
+Nonlinear model predictive controller with constraints. The objective function includes an additional term for economic MPC:
 \begin{equation}
 J_{\mathit{NMPC}} = J_{\mathit{MPC}} 
     + E J_E\big(\mathbf{U}_E, \mathbf{\hat{Y}}_E, \mathbf{\hat{D}}_E\big)
