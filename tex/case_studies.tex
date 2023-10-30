@@ -15,14 +15,14 @@ The first example details how to apply an MPC on a plant at each discrete time s
 
 \subsubsection{Linear Model}
 
-The example considers a continuously stirred tank reactor (CSTR) with a cold and hot water intakes, fed at a respective flow rate of $u_c$ and $u_h$. The manipulated input vector is thus $\mathbf{u} = [\begin{smallmatrix}u_c & u_h\end{smallmatrix}]^\intercal$. The liquid level $y_L$ and temperature $y_T$ constitute the measured output vector $\mathbf{y} = [\begin{smallmatrix}y_L & y_T\end{smallmatrix}]^\intercal$. \cref{fig:cstr} presents schematically the case study process.
-
 \begin{figure}[b]
     \centering
     \input{fig/cstr.tikz}
     \caption{CSTR process.}
     \label{fig:cstr}
 \end{figure}
+
+The example considers a continuously stirred tank reactor (CSTR) with a cold and hot water intakes, fed at a respective flow rate of $u_c$ and $u_h$. The manipulated input vector is thus $\mathbf{u} = [\begin{smallmatrix}u_c & u_h\end{smallmatrix}]^\intercal$. The liquid level $y_L$ and temperature $y_T$ constitute the measured output vector $\mathbf{y} = [\begin{smallmatrix}y_L & y_T\end{smallmatrix}]^\intercal$. \cref{fig:cstr} presents schematically the case study process.
 
 At the steady-state operating point $u_c=u_h=20$, $y_L=50$, and $y_T=30$, the following linear model accurately describes the plant dynamics:
 \begin{equation}
@@ -89,30 +89,24 @@ function test_mpc(mpc, plant)
 end
 U_data, Y_data, Ry_data = test_mpc(mpc, model)
 \end{minted}
-Calling \texttt{LinMPC} instances computes and returns $\mathbf{u}(k)$. It is worth mentioning that additional information like the optimal output predictions can be accessed by calling \texttt{getinfo} after solving the problem. Also, updating the internal states of \texttt{mpc} prepares the object for the \emph{next} time step. That is why the call is made at the end of the \texttt{for} loop. The same logic applies for \texttt{plant}. Lastly, the package implements a \texttt{Plots.jl} recipe \citep{plots} to quickly visualize the results:
+Calling \texttt{LinMPC} instances computes and returns $\mathbf{u}(k)$. It is worth mentioning that additional information like the optimal output predictions $\mathbf{\hat{Y}}$ can be retrieved by calling \texttt{getinfo} after solving the problem. Also, updating the internal states of \texttt{mpc} prepares the object for the \emph{next} time step. That is why the call is made at the end of the \texttt{for} loop. The same logic applies for \texttt{plant}. Lastly, the package implements a \texttt{Plots.jl} recipe \citep{plots} to quickly visualize the results:
 \begin{minted}{julia}
 res = SimResult(mpc, U_data, Y_data; Ry_data)
 using Plots; plot(res)
 \end{minted}
-\cref{fig:plot_LinMPC1} shows that the controller violates the constraints around 110 s because of the disturbance. Adding feedforward compensation can mitigate this.
 
-\begin{figure}
+\begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_LinMPC1.pdf}
     \caption{CSTR closed-loop simulation: $y_1=y_L$, $y_2=y_T$, $u_1=u_c$, and $u_2=u_h$.}
     \label{fig:plot_LinMPC1}
 \end{figure}
 
-\begin{figure}
-    \centering
-    \includegraphics[width=\columnwidth]{fig/plot_LinMPC2.pdf}
-    \caption{CSTR closed-loop simulation with feedforward: $y_1=y_L$, $y_2=y_T$, $u_1=u_c$, and $u_2=u_h$.}
-    \label{fig:plot_LinMPC2}
-\end{figure}
+\cref{fig:plot_LinMPC1} shows that the controller violates the constraints around 110 s because of the disturbance. Adding feedforward compensation can mitigate this.
 
 \subsubsection{Feedforward Compensation}
 
-Suppose that the load disturbance $u_l$ of the last section is in fact caused by a separate hot water pipe that discharges into the tank. Measuring this flow rate allows us to incorporate feedforward compensation with the disturbance $\mathbf{d}=u_l$. The new plant model, named \texttt{model\_d}, is:
+Suppose that the load disturbance $u_l$ is in fact caused by a separate hot water pipe that discharges into the tank. Measuring this flow rate allows us to incorporate feedforward compensation with $\mathbf{d}=u_l$. The new plant model, named \texttt{model\_d}, is:
 \begin{minted}{julia}
 model_d = LinModel([G G[1:2, 2]], 2.0; i_d=[3])
 model_d = setop!(model_d; uop=[20,20], yop=[50,30], dop=[20])
@@ -148,7 +142,15 @@ U_data, Y_data, Ry_data = test_mpc_d(mpc_d, model)
 res = SimResult(mpc, U_data, Y_data; Ry_data)
 plot(res)
 \end{minted}
-\cref{fig:plot_LinMPC2} shows that the feedforward compensation handles the disturbance without violating the constraint. The measured disturbances are assumed constant in the future by default but custom $\mathbf{\hat{D}}$ predictions are possible. The same applies for the setpoints $\mathbf{\hat{R}_y}$ and $\mathbf{\hat{R}_u}$.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\columnwidth]{fig/plot_LinMPC2.pdf}
+    \caption{CSTR closed-loop simulation with feedforward: $y_1=y_L$, $y_2=y_T$, $u_1=u_c$, and $u_2=u_h$.}
+    \label{fig:plot_LinMPC2}
+\end{figure}
+
+\cref{fig:plot_LinMPC2} shows that the feedforward compensation handles the disturbance without violating the constraint. Note that measured disturbances are assumed constant in the future by default but custom $\mathbf{\hat{D}}$ predictions are possible. The same applies for the setpoints $\mathbf{\hat{R}_y}$ and $\mathbf{\hat{R}_u}$.
 
 \subsection{Nonlinear Design : Inverted Pendulum}
 \label{sec.nonlinear_design}
@@ -170,6 +172,7 @@ For this case study, the goal is to control the angular position $\theta$ of a p
 \end{align}
 \end{subequations}
 in which $g$ is the gravitational acceleration in \si{\meter\per\second\squared}, $L$, the pendulum length in \si{\meter}, $K$, the friction coefficient at the pivot point in \si{\kilogram\per\second}, and $m$, the mass attached at the end of the pendulum in \si{\kilogram}. Here, the explicit Euler method discretizes the system to construct a \texttt{NonLinModel}:
+\vspace*{-5pt}
 \begin{minted}{julia}
 using ModelPredictiveControl
 function pendulum(par, x, u)
@@ -183,7 +186,7 @@ f(x, u, _ ) = x + Ts*pendulum(par, x, u) # Euler method
 h(x, _ )    = [180/π*x[1]]  # [°]
 model = NonLinModel(f, h, Ts, nu, nx, ny)
 \end{minted}
-
+\spacerepl
 \begin{minted}{julia-repl}
 Discrete-time nonlinear model with a sample time Ts = 0.1 s and:
  1 manipulated inputs u
@@ -219,14 +222,15 @@ plant = NonLinModel(f_plant, h, Ts, nu, nx, ny)
 N = 35; u=[0.5]; res = sim!(estim, N, u; plant, y_noise=[0.5])
 using Plots; plot(res, plotu=false, plotxwithx̂=true)
 \end{minted}
-\cref{fig:plot_NonLinMPC1} indicates that the Kalman filter performance seems sufficient for control. The estimate $\hat{x}_3$ is the integrating state on the torque $\tau$ that compensates for static errors. 
 
-\begin{figure}[b]
+\begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC1.pdf}
     \caption{Pendulum state estimation: $y_1 = \theta$ in \si{\degree}, $x_1=\theta$ in \si{\radian}, and $x_2=\omega$ in \si{\radian\per\second}.}
     \label{fig:plot_NonLinMPC1}
 \end{figure}
+
+\cref{fig:plot_NonLinMPC1} indicates that the Kalman filter performance seems sufficient for control. The estimate $\hat{x}_3$ is the integrating state on the torque $\tau$ that compensates for static errors. 
 
 \subsubsection{Nonlinear Model Predictive Controller}
 
@@ -235,7 +239,7 @@ As the motor torque is limited to \num{-1.5} to \SI{1.5}{\newton\meter}, the inp
 mpc = NonLinMPC(estim, Hp=20, Hc=2, Mwt=[0.5], Nwt=[2.5])
 mpc = setconstraint!(mpc, umin=[-1.5], umax=[+1.5])
 \end{minted}
-\spacerepl
+
 \begin{minted}{julia-repl}
 NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt
 optimizer, UnscentedKalmanFilter estimator and:
@@ -254,6 +258,14 @@ x0 = [0, 0]; x̂0 = [0, 0, 0]
 res = sim!(mpc, N, [180]; plant, x0, x̂0)
 plot(res)
 \end{minted}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC2.pdf}
+    \caption{Pendulum output setpoint tracking: $y_1 = \theta$ in \si{\degree} and $u_1 = \tau$ in \si{\newton\meter}.}
+    \label{fig:plot_NonLinMPC2}
+\end{figure}
+
 The result in \cref{fig:plot_NonLinMPC2} suggests that the controller is robust enough to variations on the $K$ coefficient. Starting from this inverted position, \cref{fig:plot_NonLinMPC3} shows the closed-loop response to a step disturbances of \SI{10}{\degree} is satisfactory:
 \begin{minted}{julia}
 x0 = [π, 0]; x̂0 = [π, 0, 0]
@@ -261,16 +273,9 @@ res = sim!(mpc, N, [180.0]; plant, x0, x̂0, y_step=[10])
 plot(res)
 \end{minted}
 
-\begin{figure}
-    \centering
-    \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC2.pdf}
-    \caption{Pendulum output setpoint tracking: $y_1 = \theta$ in \si{\degree} and $u_1 = \tau$ in \si{\newton\meter}.}
-    \label{fig:plot_NonLinMPC2}
-\end{figure}
-
-\begin{figure}
+\begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC3.pdf}
-    \caption{Pendulum output disturbance rejection.}
+    \caption{Pendulum output disturbance rejection: $y_1 = \theta$ in \si{\degree} and $u_1 = \tau$ in \si{\newton\meter}.}
     \label{fig:plot_NonLinMPC3}
 \end{figure}
