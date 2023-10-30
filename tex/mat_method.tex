@@ -84,7 +84,7 @@ The problem is subject to the following constraints:
     \mathbf{ΔU_{min} - c_{ΔU_{min}}} \epsilon &\le \mathbf{ΔU} &&\le \mathbf{ΔU_{max} + c_{ΔY_{max}}} \epsilon \\
     \mathbf{Y_{min}  - c_{Y_{min}}}  \epsilon &\le \mathbf{\hat{Y}} &&\le \mathbf{Y_{max}  + c_{Y_{max}}}  \epsilon
 \end{alignat}
-and also $\epsilon \ge 0$. The constraint softness parameters $\mathbf{c}$ are non-negative values that specify the softness of the associated bound. Box constraints on the terminal states are also possible: $\mathbf{\hat{x}_{min}} - \mathbf{c_{\hat{x}_{min}}}\epsilon \le \mathbf{\hat{x}}_{k-1}(k+H_p) \le \mathbf{\hat{x}_{max}} + \mathbf{c_{\hat{x}_{max}}}\epsilon$. Note that changing the bounds at runtime and time-varying constraints over the horizons are supported.
+and also $\epsilon \ge 0$. The $\mathbf{c}$ parameters are non-negative values that specify the softness of the associated bound (equal concern for relaxation). Box constraints on the terminal states are also possible: $\mathbf{\hat{x}_{min}} {-} \mathbf{c_{\hat{x}_{min}}}\epsilon \le \mathbf{\hat{x}}_{k-1}(k{+}H_p) \le \mathbf{\hat{x}_{max}} + \mathbf{c_{\hat{x}_{max}}}\epsilon$. Note that changing the bounds at runtime and time-varying constraints over the horizons are supported.
 
 The default optimizer is \texttt{OSQP.jl} that efficiently handles sparse problems \citep{osqp}, but the \texttt{JuMP.jl} interface allows switching among many quadratic solvers. For example, the dual active-set method of \citet{daqp} is sometimes faster on small and dense matrices. Testing this solver only takes one line of code.
 
