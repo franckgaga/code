@@ -69,7 +69,7 @@ The prediction methodology applied throughout the package is mainly based on the
 
 \subsubsection{\textnormal{\texttt{LinearMPC}}}
 Linear model predictive controller with constraints. It minimizes the following objective function at each discrete time $k$:
-\begin{multline}
+\begin{multline}\label{eq:J_MPC}
 J_{\mathit{MPC}} = 
     \mathbf{\big(\hat{R}_y - \hat{Y}\big)}^\intercal \mathbf{M}_{H_p} \mathbf{\big(\hat{R}_y - \hat{Y}\big)}   
     + \mathbf{\big(ΔU\big)}^\intercal \mathbf{N}_{H_c} \mathbf{\big(ΔU\big)} \\
@@ -97,7 +97,7 @@ Nonlinear model predictive controller with constraints. The objective function i
 J_{\mathit{NMPC}} = J_{\mathit{MPC}} 
     + E J_E\big(\mathbf{U}_E, \mathbf{\hat{Y}}_E, \mathbf{\hat{D}}_E\big)
 \end{equation}
-The user provides a custom function $J_E$ that returns the economic costs for a given set of inputs $\mathbf{U}_E$, outputs $\mathbf{\hat{Y}}_E$ and measured disturbances $\mathbf{\hat{D}}_E$:
+with $J_{\mathit{MPC}}$ from \eqref{eq:J_MPC}. The user provides a custom function $J_E$ that returns the economic costs for a given set of inputs $\mathbf{U}_E$, outputs $\mathbf{\hat{Y}}_E$ and measured disturbances $\mathbf{\hat{D}}_E$:
 \begin{equation}
 \mathbf{U}_E = 
 \begin{bmatrix}
