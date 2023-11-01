@@ -214,12 +214,13 @@ NonLinModel and:
  0 unmeasured outputs yu
  0 measured disturbances d
 \end{minted}
-The vectors \texttt{σQ} and \texttt{σR} are the standard deviations of the process and sensor noises, respectively. The value for the velocity $\omega$ is higher here (\texttt{σQ} second value) since \eqref{eq.pendulum_speed} includes an uncertain parameter: the friction coefficient $K$. Also, the argument \texttt{nint\_u} explicitly adds one integrating state at the model input, the motor torque $\tau$, with an associated standard deviation \texttt{σQint\_u} of $\SI{0.1}{\newton\meter}$. Custom unmeasured disturbance models other than integrators will be added in future releases. The estimator tuning is tested on a plant with a \SI{25}{\percent} larger friction coefficient $K$:
+The vectors \texttt{σQ} and \texttt{σR} are the standard deviations of the process and sensor noises, respectively. The value for the velocity $\omega$ is higher here (\texttt{σQ} second value) since \eqref{eq.pendulum_speed} includes an uncertain parameter: the friction coefficient $K$. Also, the argument \texttt{nint\_u} explicitly adds one integrating state at the model input, the motor torque $\tau$, with an associated standard deviation \texttt{σQint\_u} of $\SI{0.1}{\newton\meter}$. Custom models for the unmeasured disturbances will be added in a future release (other than integrators). The estimator tuning is tested on a plant with a \SI{25}{\percent} larger friction coefficient $K$:
 \begin{minted}{julia}
 par_plant = (par[1], par[2], 1.25*par[3], par[4])
 f_plant(x, u, _) = x + Ts*pendulum(par_plant, x, u)
 plant = NonLinModel(f_plant, h, Ts, nu, nx, ny)
-N = 35; u=[0.5]; res = sim!(estim, N, u; plant, y_noise=[0.5])
+N = 35; u = [0.5]; y_noise = [0.5]
+res = sim!(estim, N, u; plant, y_noise)
 using Plots; plot(res, plotu=false, plotxwithx̂=true)
 \end{minted}
 
@@ -280,4 +281,4 @@ plot(res)
     \label{fig:plot_NonLinMPC3}
 \end{figure}
 
-See the package documentation\footnote{\texttt{https://franckgaga.github.io/ModelPredictiveControl.jl/stable/}} for more advanced examples like an economic MPC of the pendulum.
+See the package documentation\footnote{\texttt{https://franckgaga.github.io/ModelPredictiveControl.jl/stable/}} for more advanced examples like economic MPC of the pendulum.
