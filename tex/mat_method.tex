@@ -80,9 +80,9 @@ with the decision variables $\mathbf{ΔU}$ and $\epsilon$, the inputs increments
 
 The problem is subject to the following constraints:
 \begin{alignat}{3}
-    \mathbf{U_{min}  - c_{U_{min}}}  \epsilon &\le \mathbf{U}  &&\le \mathbf{U_{max}  + c_{U_{max}}}  \epsilon \\
-    \mathbf{ΔU_{min} - c_{ΔU_{min}}} \epsilon &\le \mathbf{ΔU} &&\le \mathbf{ΔU_{max} + c_{ΔY_{max}}} \epsilon \\
-    \mathbf{Y_{min}  - c_{Y_{min}}}  \epsilon &\le \mathbf{\hat{Y}} &&\le \mathbf{Y_{max}  + c_{Y_{max}}}  \epsilon
+    \mathbf{U_{min}  - C_{u_{min}}}  \epsilon &\le \mathbf{U}  &&\le \mathbf{U_{max}  + C_{u_{max}}}  \epsilon \\
+    \mathbf{ΔU_{min} - C_{Δu_{min}}} \epsilon &\le \mathbf{ΔU} &&\le \mathbf{ΔU_{max} + C_{Δu_{max}}} \epsilon \\
+    \mathbf{Y_{min}  - C_{y_{min}}}  \epsilon &\le \mathbf{\hat{Y}} &&\le \mathbf{Y_{max}  + C_{y_{max}}}  \epsilon
 \end{alignat}
 and also $\epsilon \ge 0$. The $\mathbf{c}$ parameters are non-negative values that specify the softness of the associated bound (equal concern for relaxation). Box constraints on the terminal states are also possible: $\mathbf{\hat{x}_{min}} {-} \mathbf{c_{\hat{x}_{min}}}\epsilon \le \mathbf{\hat{x}}_{k-1}(k{+}H_p) \le \mathbf{\hat{x}_{max}} + \mathbf{c_{\hat{x}_{max}}}\epsilon$. Note that changing the bounds at runtime and time-varying constraints over the horizons are supported.
 
