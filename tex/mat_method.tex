@@ -74,13 +74,13 @@ evaluate the arrival costs. The block diagonal matrices $\mathbf{\hat{Q}}_{N_k}$
 }%
 
 \added{%
-This approach allows incorporating additional physical information on the process an its disturbances, in the form of constraints on the states and noise estimates:
+This approach allows incorporating additional physical information on the process an its disturbances, in the form of constraints on the state and noise estimates:
 \begin{alignat}{3}
     \mathbf{\hat{X}_{min} - C_{\hat{x}_{min}}} \epsilon &\le \mathbf{\hat{X}} &&\le \mathbf{\hat{X}_{max} + C_{\hat{x}_{max}}} \epsilon \\
     \mathbf{\hat{W}_{min} - C_{\hat{w}_{min}}} \epsilon &\le \mathbf{\hat{W}} &&\le \mathbf{\hat{W}_{max} + C_{\hat{w}_{max}}} \epsilon \\
     \mathbf{\hat{V}_{min} - C_{\hat{v}_{min}}} \epsilon &\le \mathbf{\hat{V}} &&\le \mathbf{\hat{V}_{max} + C_{\hat{v}_{max}}} \epsilon
 \end{alignat}
-and also $\epsilon \ge 0$. The $\mathbf{\hat{X}}$ vectors gather the state estimates over the time window. The $\mathbf{C}$ vectors are non-negative values that specify the softness of the associated bound (equal concern for relaxation). The problem \eqref{eq:J_MHE} is treated as a quadratic program for \texttt{LinModel}, and nonlinear program, for \texttt{NonLinModel}.
+and also $\epsilon \ge 0$. The $\mathbf{\hat{X}}$ vectors gather the state estimates over the time window. The $\mathbf{C}$ vectors are non-negative values that specify the softness of the associated bound (equal concern for relaxation). The problem \eqref{eq:J_MHE} is treated as a quadratic program for \texttt{LinModel}, and a nonlinear optimization, for \texttt{NonLinModel}.
 }%
 
 \subsubsection{\textnormal{\texttt{InternalModel}}}
