@@ -112,7 +112,7 @@ and also $\epsilon \ge 0$. \deleted[comment={moved above in the new MHE section}
 The default optimizer is \texttt{OSQP.jl} that efficiently handles sparse problems \citep{osqp}, but the \texttt{JuMP.jl} interface allows switching among many quadratic solvers. For example, the dual active-set method of \citet{daqp} is sometimes faster on small and dense matrices. Testing this solver only takes one line of code.
 
 \subsubsection{\textnormal{\texttt{ExplicitMPC}}}
-Linear model predictive controller without constraints, see \texttt{LinMPC} for the cost function. The computational costs are extremely low (array division), therefore suitable for applications that require small sample times.
+Linear model predictive controller without constraints, see \texttt{LinMPC} for the cost function. The computational costs are extremely low (\added{the analytical solution of the quadratic problem leads to a single} array division), therefore suitable for applications that require small sample times. \added{It produces a control law similar to a finite-horizon linear-quadratic regulator (LQR), but with the control horizon $H_c$, the move suppression $\mathbf{N}_{H_c}$ and the input setpoint tracking $\mathbf{L}_{H_p}$ weights available as additional tuning parameters.}
 
 \subsubsection{\textnormal{\texttt{NonLinMPC}}}
 Nonlinear model predictive controller with constraints. The objective function includes an additional term for economic MPC:
