@@ -43,7 +43,7 @@ The estimators of the package focus on control applications, that is, relying on
 
 They are also implemented in the predictor form (a.k.a. observer form), that is, they all estimates at each discrete time $k$ the states of the next period $\mathbf{\hat{x}}_k(k+1)$, also denoted $\mathbf{\hat{x}}(k+1|k)$. In comparison, the filter form that estimates $\mathbf{\hat{x}}_k(k)$ is sometimes slightly more accurate. The predictor form comes in handy for control applications since the estimations come after the controller computations, without introducing any additional delays. This is especially true if the observer computations are expensive.
 
-There is \replaced{seven}{six} \texttt{StateEstimator} concrete types available at the time of writing, all supporting measured $\mathbf{y^m}$ and unmeasured $\mathbf{y^u}$ model outputs. \deleted{The moving horizon estimator will be added soon after this publication.}The following list presents them.
+There \replaced{are seven}{is six} \texttt{StateEstimator} concrete types available at the time of writing, all supporting measured $\mathbf{y^m}$ and unmeasured $\mathbf{y^u}$ model outputs. \deleted{The moving horizon estimator will be added soon after this publication.}The following list presents them.
 
 \subsubsection{\textnormal{\texttt{SteadyKalmanFilter}}}
 Steady-state Kalman filter, a.k.a. asymptotic form. The solution to the algebraic Riccati equation pre-compute the Kalman gain \citep{simon}. This is the default state estimator for controllers based on \texttt{LinModel} objects.
@@ -80,7 +80,7 @@ This approach allows incorporating additional physical information on the proces
     \mathbf{\hat{W}_{min} - C_{\hat{w}_{min}}} \epsilon &\le \mathbf{\hat{W}} &&\le \mathbf{\hat{W}_{max} + C_{\hat{w}_{max}}} \epsilon \\
     \mathbf{\hat{V}_{min} - C_{\hat{v}_{min}}} \epsilon &\le \mathbf{\hat{V}} &&\le \mathbf{\hat{V}_{max} + C_{\hat{v}_{max}}} \epsilon
 \end{alignat}
-and also $\epsilon \ge 0$. The $\mathbf{\hat{X}}$ vectors gather the state estimates over the time window. The $\mathbf{C}$ vectors are non-negative values that specify the softness of the associated bound (equal concern for relaxation). The problem \eqref{eq:J_MHE} is treated as a quadratic program for \texttt{LinModel}, and a nonlinear optimization, for \texttt{NonLinModel}.
+and also $\epsilon \ge 0$. The $\mathbf{\hat{X}}$ vectors gather the state estimates over the window. The $\mathbf{C}$ vectors are non-negative values that specify the softness of the associated bound (equal concern for relaxation). The problem \eqref{eq:J_MHE} is treated as a quadratic program for \texttt{LinModel}, and a nonlinear optimization, for \texttt{NonLinModel}.
 }%
 
 \subsubsection{\textnormal{\texttt{InternalModel}}}
