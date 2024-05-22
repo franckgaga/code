@@ -7,7 +7,7 @@ The functions of this package dispatch over three abstract types :
 \begin{description}
     \item[SimModel] (2 subtypes) -- Discrete state-space models of the plant, including linear and nonlinear representations. Constructors automatically discretize 
     continuous-time linear systems. Instances of \texttt{SimModel} serves as a wrapper to construct \texttt{StateEstimator} and \texttt{PredictiveController} objects, and also as plant simulators to test the designs.
-    \item[StateEstimator] (6 subtypes) -- Open loop and closed-loop state observers, both for deterministic and stochastic systems. They produce the full state feedback for the \texttt{PredictiveController}.
+    \item[StateEstimator] (\replaced{7}{6} subtypes) -- Open loop and closed-loop state observers, both for deterministic and stochastic systems. They produce the full state feedback for the \texttt{PredictiveController}.
     \item[PredictiveController] (3 subtypes) -- Linear and nonlinear MPC are available. An explicit controller based on matrix algebra is also possible for linear models without constraint.
 \end{description}
 
@@ -28,7 +28,7 @@ in which the vectors $\mathbf{u}$, $\mathbf{d}$, $\mathbf{x}$ and $\mathbf{y}$ a
 
 \subsubsection{\textnormal{\texttt{NonLinModel}}}
 
-Discrete nonlinear state-space representations of the plant. Continuous-time models are not supported yet but manually calling a differential equation solver can mitigate this (see \cref{sec.nonlinear_design} example). The user provides the following two functions:
+Discrete nonlinear state-space representations of the plant. \replaced[comment={now supported}]{A built-in 4th order Runge-Kutta solver with optional supersampling discretizes continuous-time dynamics by default, leading to the following system of equations:}{Continuous-time models are not supported yet but manually calling a differential equation solver can mitigate this (see Section 3.2 example). The user provides the following two functions:}. 
 \begin{subequations}
 \begin{align}
     \mathbf{x}(k+1) &= \mathbf{f}\big(\mathbf{x}(k), \mathbf{u}(k), \mathbf{d}(k)\big) \\
@@ -80,7 +80,7 @@ This approach allows incorporating additional physical information on the proces
     \mathbf{\hat{W}_{min} - C_{\hat{w}_{min}}} \epsilon &\le \mathbf{\hat{W}} &&\le \mathbf{\hat{W}_{max} + C_{\hat{w}_{max}}} \epsilon \\
     \mathbf{\hat{V}_{min} - C_{\hat{v}_{min}}} \epsilon &\le \mathbf{\hat{V}} &&\le \mathbf{\hat{V}_{max} + C_{\hat{v}_{max}}} \epsilon
 \end{alignat}
-and also $\epsilon \ge 0$. The $\mathbf{\hat{X}}$ vectors gather the state estimates over the window. The $\mathbf{C}$ vectors are non-negative values that specify the softness of the associated bound (equal concern for relaxation). The problem \eqref{eq:J_MHE} is treated as a quadratic program for \texttt{LinModel}, and a nonlinear optimization, for \texttt{NonLinModel}.
+and also $\epsilon \ge 0$. The $\mathbf{\hat{X}}$ vectors gather the state estimates over the window. The $\mathbf{C}$ vectors are non-negative values that specify the softness of the associated bound, and $C$ globally weights the slack $\epsilon$ (equal concern for relaxation). The problem \eqref{eq:J_MHE} is treated as a quadratic program for \texttt{LinModel}, and a nonlinear optimization, for \texttt{NonLinModel}.
 }%
 
 \subsubsection{\textnormal{\texttt{InternalModel}}}
