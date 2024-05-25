@@ -39,6 +39,7 @@
         "Qint",
         "Riccati",
         "setconstraint",
+        "setname",
         "setop",
         "setpoint",
         "setpoints",

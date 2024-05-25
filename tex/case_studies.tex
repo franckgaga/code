@@ -30,22 +30,24 @@ At the steady-state operating point $u_c=u_h=20$, $y_L=50$, and $y_T=30$, the fo
     \frac{-0.74}{8s+1} & \frac{0.74}{8s+1}
 \end{bmatrix}
 \end{equation}
-The syntax to construct a linear model with a sample time of $\SI{2}{\second}$ is:
+The syntax to construct a linear model with a sample time of $\SI{2}{\second}$ is: \comment{added \texttt{setname!} call for y-axis labels in the plots (new feature)}
 \begin{minted}{julia}
 using ModelPredictiveControl, ControlSystemsBase
 G = [ tf(1.90, [18, 1]) tf(1.90, [18, 1]);
       tf(-0.74,[8, 1])  tf(0.74, [8, 1]) ]
 model = setop!(LinModel(G, 2.0); uop=[20,20], yop=[50,30])
+vu, vy = ["\$u_c\$", "\$u_h\$"], ["\$y_L\$", "\$y_T\$"]
+model = setname!(model; u=vu, y=vy)
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-Discrete-time linear model with a sample time Ts = 2.0 s and:
+LinModel with a sample time Ts = 2.0 s and:
  2 manipulated inputs u
  2 states x
  2 outputs y
  0 measured disturbances d
 \end{minted}
-The \texttt{model} object is used for two purposes : to construct our controller and as a plant simulator to test the design.
+The \texttt{model} object is used for two purposes : to construct our controller and as a plant simulator to test the design. \added{The \texttt{setname!} function allows customized Y-axis labels in the plots.}
 
 \subsubsection{Linear Model Predictive Controller}
 
@@ -108,6 +110,7 @@ Suppose that the load disturbance $u_l$ is in fact caused by a separate hot wate
 \begin{minted}{julia}
 model_d = LinModel([G G[1:2, 2]], 2.0; i_d=[3])
 model_d = setop!(model_d; uop=[20,20], yop=[50,30], dop=[20])
+model_d = setname!(model_d; u=vu, y=vy, d=["\$u_l\$"])
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
@@ -169,7 +172,7 @@ For this case study, the goal is to control the angular position $\theta$ of a p
 \dot{\omega}(t) &= -\frac{g}{L}\sin\big(\theta(t)\big) -\frac{K}{m}\omega(t) + \frac{1}{m L^2}\tau(t) \label{eq.pendulum_speed}
 \end{align}
 \end{subequations}
-in which $g$ is the gravitational acceleration in \si{\meter\per\second\squared}, $L$, the pendulum length in \si{\meter}, $K$, the friction coefficient at the pivot point in \si{\kilogram\per\second}, and $m$, the mass attached at the end of the pendulum in \si{\kilogram}. Here, the explicit Euler method discretizes the system to construct a \texttt{NonLinModel}:
+in which $g$ is the gravitational acceleration in \si{\meter\per\second\squared}, $L$, the pendulum length in \si{\meter}, $K$, the friction coefficient at the pivot point in \si{\kilogram\per\second}, and $m$, the mass attached at the end of the pendulum in \si{\kilogram}. \replaced{By default, the \texttt{NonLinModel} constructor assumes continuous-time equations and discretizes them with Runge-Kutta:}{Here, the explicit Euler method discretizes the system to construct a \texttt{NonLinModel}}:
 \vspace*{-5pt}
 \begin{minted}{julia}
 using ModelPredictiveControl
@@ -180,13 +183,17 @@ function pendulum(par, x, u)
     return [ω, -g/L*sin(θ) - K/m*ω + τ/m/L^2]
 end
 par = (9.8, 0.4, 1.2, 0.3); Ts = 0.1; nu = 1; nx = 2; ny = 1
-f(x, u, _ ) = x + Ts*pendulum(par, x, u) # Euler method
+f(x, u, _ ) = pendulum(par, x, u)
 h(x, _ )    = [180/π*x[1]]  # [°]
 model = NonLinModel(f, h, Ts, nu, nx, ny)
+vu = ["\$τ\$ (N m)"]
+vx = ["\$θ\$ (rad)", "\$ω\$ (rad/s)"]
+vy = ["\$θ\$ (°)"]
+model = setname!(model; u=vu, x=vx, y=vy)
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-Discrete-time nonlinear model with a sample time Ts = 0.1 s and:
+NonLinModel with a sample time Ts = 0.1 s, RungeKutta solver and:
  1 manipulated inputs u
  2 states x
  1 outputs y
@@ -280,3 +287,11 @@ plot(res)
 \end{figure}
 
 See the package documentation\footnote{\texttt{https://franckgaga.github.io/ModelPredictiveControl.jl/stable/}} for more advanced examples like economic MPC of the pendulum.
+
+\begin{table}
+    \centering
+    \caption{Julia and MATLAB benchmarks for the case studies.}
+    \label{tab:benchamrks}
+    \centering
+	\input{tab/benchmarks.tex}
+\end{table}
