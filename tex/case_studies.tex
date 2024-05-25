@@ -286,12 +286,113 @@ plot(res)
     \label{fig:plot_NonLinMPC3}
 \end{figure}
 
-See the package documentation\footnote{\texttt{https://franckgaga.github.io/ModelPredictiveControl.jl/stable/}} for more advanced examples like economic MPC of the pendulum.
+\replaced{The next section presents an econimic predictive control on the pendulum.}{See the package documentation for more advanced examples like economic MPC of the pendulum.}
 
-\begin{table}
-    \centering
-    \caption{Julia and MATLAB benchmarks for the case studies.}
-    \label{tab:benchamrks}
-    \centering
-	\input{tab/benchmarks.tex}
-\end{table}
+\subsection{Economic model predictive control}
+
+Economic MPC can achieve the same objective but with lower economical costs. For this case study, the controller will aim to reduce the energy consumed by the motor. The power (W) transmitted by the motor to the pendulum is:
+
+\begin{equation}
+\dot{W}(t) = \tau(t) \omega(t) 
+\end{equation}
+
+Thus, the work (J) done by the motor from $t_0$ to $t_{end}$ is:
+
+\begin{equation}
+W = \int_{t_0}^{t_{end}} \dot{W}(t) \mathrm{d}t 
+\end{equation}
+
+With the sampling time $T_s$ in s, the prediction horizon $H_p$, the limits defined as $t_0=k$ and $t_{end} = (k + H_p) T_s$, and the left-endpoint rectangle method for the integral, we get:
+
+\begin{equation}
+W = T_s \sum_{j = 0}^{H_p - 1} \tau(k+j) \omega(k+j) 
+\end{equation}
+
+The objective function will now include an additive term that penalizes the work done by the motor WW to reduce the energy consumption. Notice that $W$ is a function of the manipulated input $\tau$ and the angular speed $\omega$, a state that is not measured (only the angle $\theta$ is measured here). As the arguments of \texttt{NonLinMPC} economic function $E$ do not include the states, the speed is now defined as an unmeasured output to design a \texttt{KalmanFilter} similar to the previous one ($ y_m = \theta$ and $y_u = \omega$):
+
+\begin{minted}{julia}
+h2(x, _ ) = [180/π*x[1], x[2]]
+nu, nx, ny = 1, 2, 2
+model2 = NonLinModel(f      , h2, Ts, nu, nx, ny)
+# setname!
+plant2 = NonLinModel(f_plant, h2, Ts, nu, nx, ny)
+# setname!
+estim2 = UnscentedKalmanFilter(model2; σQ, σR, nint_u, σQint_u, i_ym=[1])
+\end{minted}
+\spacerepl
+\begin{minted}{julia-repl}
+UnscentedKalmanFilter estimator with a sample time Ts = 0.1 s,
+NonLinModel and:
+ 1 manipulated inputs u (1 integrating states)
+ 3 estimated states x̂
+ 1 measured outputs ym (0 integrating states)
+ 1 unmeasured outputs yu
+ 0 measured disturbances d
+\end{minted}
+
+The \texttt{plant2} object based on \texttt{h2} is also required since sim! expects that the output vector of plant argument corresponds to the model output vector in mpc argument. We can now define the $J_E$ function and the EMPC controller:
+
+\begin{minted}{julia}
+function JE(UE, ŶE, _ )
+    τ, ω = UE[1:end-1], ŶE[2:2:end-1]
+    return Ts*sum(τ.*ω)
+end
+empc = NonLinMPC(estim2; Hp, Hc, Nwt, Mwt=[0.5, 0], Cwt=Inf, Ewt=3.5e3, JE=JE)
+empc = setconstraint!(empc; umin, umax)
+\end{minted}
+\spacerepl
+\begin{minted}{julia-repl}
+NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt optimizer, UnscentedKalmanFilter estimator and:
+ 20 prediction steps Hp
+  2 control steps Hc
+  0 slack variable ϵ (control constraints)
+  1 manipulated inputs u (1 integrating states)
+  3 estimated states x̂
+  1 measured outputs ym (0 integrating states)
+  1 unmeasured outputs yu
+  0 measured disturbances d
+\end{minted}
+
+The keyword argument Ewt weights the economic costs relative to the other terms in the objective function. The term must be large enough to be significant but a too high value can lead to a static error on the angle setpoint. The second element of Mwt is zero since the speed ωω is not requested to track a setpoint. The closed-loop response to a 180° setpoint is similar:
+
+\begin{minted}{julia}
+res2_ry = sim!(empc, N, [180, 0], plant=plant2, x_0=[0, 0], x̂_0=[0, 0, 0])
+plot(res2_ry, ploty=[1])
+\end{minted}
+
+and the energy consumption is slightly lower:
+
+\begin{minted}{julia}
+function calcW(res)
+    τ, ω = res.U_data[1, 1:end-1], res.X_data[2, 1:end-1]
+    return Ts*sum(τ.*ω)
+end
+Dict(:W_nmpc => calcW(res_ry), :W_empc => calcW(res2_ry))
+\end{minted}
+\spacerepl
+\begin{minted}{julia-repl}
+Dict{Symbol, Float64} with 2 entries:
+  :W_empc => 3.89437
+  :W_nmpc => 3.91597
+\end{minted}
+
+Also, for a 10° step disturbance:
+
+\begin{minted}{julia}
+res2_yd = sim!(empc, N, [180; 0]; plant=plant2, x_0=[π, 0], x̂_0=[π, 0, 0], y_step=[10, 0])
+plot(res2_yd, ploty=[1])
+\end{minted}
+
+the new controller is able to recuperate more energy from the pendulum (i.e. negative work):
+
+\begin{minted}{julia}
+Dict(:W_nmpc => calcW(res_yd), :W_empc => calcW(res2_yd))
+\end{minted}
+\spacerepl
+\begin{minted}{julia-repl}
+Dict{Symbol, Float64} with 2 entries:
+  :W_empc => -0.149044
+  :W_nmpc => -0.112247
+\end{minted}
+
+Of course, this gain is only exploitable if the motor electronic includes some kind of regenerative circuitry.
