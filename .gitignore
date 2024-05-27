@@ -29,3 +29,6 @@ fig/mpcPackageJulia-figure1.pdf
 mpcPackageJulia.auxlock
 fig/yo/pendulum.svg
 fig/yo/cstr.svg
+.vscode/
+julia/.vscode
+matlab/.vscode
