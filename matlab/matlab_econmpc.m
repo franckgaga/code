@@ -1,6 +1,5 @@
 % Exectued on:
 % MATLAB Version: 24.1.0.2603908 (R2024a) Update 3
-% MATLAB License Number: 968398
 % Operating System: Linux 6.8.0-76060800daily20240311-generic 
 
 Ts = 0.1;
@@ -65,12 +64,12 @@ W_empc_track = calcW(X, U, Ts) %#ok<NOPTS>
 mympc.Optimization.SolverOptions.Algorithm = "interior-point";
 myf = @() test_mpc(mympc, opt, ukf, ...
     par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_empc_track_solver_IP = repeated_timeit(myf, 10) %#ok<NOPTS> 
+btime_empc_track_solver_IP = repeated_timeit(myf, 50) %#ok<NOPTS> 
 
 mympc.Optimization.SolverOptions.Algorithm = "sqp";
 myf = @() test_mpc(mympc, opt, ukf, ...
     par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_empc_track_solver_SQ = repeated_timeit(myf, 10) %#ok<NOPTS> 
+btime_empc_track_solver_SQ = repeated_timeit(myf, 50) %#ok<NOPTS> 
 
 x0 = [pi; 0];
 xhat0 = [pi; 0; 0];
@@ -90,13 +89,13 @@ W_empc_regul = calcW(X, U, Ts) %#ok<NOPTS>
 
 mympc.Optimization.SolverOptions.Algorithm = "interior-point";
 myf = @() test_mpc(mympc, opt, ukf, ...
-    par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_empc_regul_solver_IP = repeated_timeit(myf, 10) %#ok<NOPTS> 
+    par_plant, par, Ts, u, x0, xhat0, Phat0, 10);
+btime_empc_regul_solver_IP = repeated_timeit(myf, 50) %#ok<NOPTS> 
 
 mympc.Optimization.SolverOptions.Algorithm = "sqp";
 myf = @() test_mpc(mympc, opt, ukf, ...
-    par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_empc_regul_solver_SQ = repeated_timeit(myf, 10) %#ok<NOPTS> 
+    par_plant, par, Ts, u, x0, xhat0, Phat0, 10);
+btime_empc_regul_solver_SQ = repeated_timeit(myf, 50) %#ok<NOPTS> 
 
 function E_JE = economic_term(X,U,~,~,~,Ts)
     E = 3.5e3;

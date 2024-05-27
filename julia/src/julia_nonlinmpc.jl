@@ -71,8 +71,8 @@ savefig(p, "$(@__DIR__())/../../fig/plot_NonLinMPC2.pdf")
 ## =========================================
 using BenchmarkTools
 x_0 = [0, 0]; x̂_0 = [0, 0, 0]
-bm = @benchmark sim!($nmpc, $N, [180]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0) samples= seconds=5*60
-display(bm)
+bm = @benchmark sim!($mpc, $N, [180]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0) samples=10 seconds=5*60
+@show btime_solver_IP = median(bm)
 
 ## =========================================
 x_0 = [π, 0]; x̂_0 = [π, 0, 0]
@@ -94,8 +94,8 @@ savefig(p, "$(@__DIR__())/../../fig/plot_NonLinMPC3.pdf")
 ## =========================================
 using BenchmarkTools
 x_0 = [π, 0]; x̂_0 = [π, 0, 0]
-bm = @benchmark sim!($nmpc, $N, [180.0]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0, y_step=[10]) seconds=30
-display(bm)
+bm = @benchmark sim!($mpc, $N, [180.0]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0, y_step=[10]) seconds=30
+@show btime_solver_IP = median(bm)
 
 #=
 ## =========================================

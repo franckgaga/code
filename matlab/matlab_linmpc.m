@@ -1,6 +1,5 @@
 % Exectued on:
 % MATLAB Version: 24.1.0.2603908 (R2024a) Update 3
-% MATLAB License Number: 968398
 % Operating System: Linux 6.8.0-76060800daily20240311-generic 
 
 G = [ tf(1.90, [18, 1]) tf(1.90, [18, 1]);

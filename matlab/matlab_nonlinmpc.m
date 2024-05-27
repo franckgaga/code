@@ -1,6 +1,5 @@
 % Exectued on:
 % MATLAB Version: 24.1.0.2603908 (R2024a) Update 3
-% MATLAB License Number: 968398
 % Operating System: Linux 6.8.0-76060800daily20240311-generic 
 
 Ts = 0.1;
@@ -85,12 +84,12 @@ hold off
 mympc.Optimization.SolverOptions.Algorithm = "interior-point";
 myf = @() test_mpc(mympc, opt, ukf, ...
     par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_nmpc_track_solver_IP = repeated_timeit(myf, 10) %#ok<NOPTS> 
+btime_nmpc_track_solver_IP = repeated_timeit(myf, 50) %#ok<NOPTS> 
 
 mympc.Optimization.SolverOptions.Algorithm = "sqp";
 myf = @() test_mpc(mympc, opt, ukf, ...
    par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_nmpc_track_solver_SQ = repeated_timeit(myf, 10) %#ok<NOPTS> 
+btime_nmpc_track_solver_SQ = repeated_timeit(myf, 50) %#ok<NOPTS> 
 
 x0 = [pi; 0];
 xhat0 = [pi; 0; 0];
@@ -108,13 +107,13 @@ hold off
 
 mympc.Optimization.SolverOptions.Algorithm = "interior-point";
 myf = @() test_mpc(mympc, opt, ukf, ...
-    par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_nmpc_regul_solver_IP = repeated_timeit(myf, 10) %#ok<NOPTS> 
+    par_plant, par, Ts, u, x0, xhat0, Phat0, 10);
+btime_nmpc_regul_solver_IP = repeated_timeit(myf, 50) %#ok<NOPTS> 
 
 mympc.Optimization.SolverOptions.Algorithm = "sqp";
 myf = @() test_mpc(mympc, opt, ukf, ...
-    par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_nmpc_regul_solver_SQ = repeated_timeit(myf, 10) %#ok<NOPTS> 
+    par_plant, par, Ts, u, x0, xhat0, Phat0, 10);
+btime_nmpc_regul_solver_SQ = repeated_timeit(myf, 50) %#ok<NOPTS> 
 
 function [Y, Yhat, U, X, Xhat] = test_ukf(ukf, ...
     par_plant, par, Ts, u, x0, xhat0, Phat0, ynoise)
