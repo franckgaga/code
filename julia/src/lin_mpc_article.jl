@@ -35,7 +35,6 @@ U_data, Y_data, Ry_data = test_mpc(mpc, model)
 res = SimResult(mpc, U_data, Y_data; Ry_data)
 using Plots; plot(res)
 
-
 ## =========================================
 ## ========= Plot PDF ======================
 ## =========================================
@@ -45,14 +44,23 @@ default(fontfamily="Computer Modern")
 p = plot(res, size=(425, 225), legend=:bottomleft)
 yticks!(p[4], [20, 24, 28, 32])
 display(p)
-savefig(p, "$(@__DIR__())/plot_LinMPC1.pdf")
+savefig(p, "$(@__DIR__())/../../fig/plot_LinMPC1.pdf")
 
 ## =========================================
 ## ========= Benchmark =====================
 ## =========================================
 using BenchmarkTools
-bm = @benchmark test_mpc($mpc, $model)
-display(bm)
+using JuMP, OSQP, DAQP
+
+optim = JuMP.Model(OSQP.Optimizer)
+mpc_osqp = setconstraint!(LinMPC(model; optim), ymin=[45, -Inf])
+bm = @benchmark test_mpc($mpc_osqp, $model) samples=1000
+@show btime_solver_OS = median(bm)
+
+optim = JuMP.Model(DAQP.Optimizer)
+mpc_daqp = setconstraint!(LinMPC(model; optim), ymin=[45, -Inf])
+bm = @benchmark test_mpc($mpc_daqp, $model) samples=1000
+@show btime_solver_AS = median(bm)
 
 ## =========================================
 ## ========= Feedforward ===================
@@ -92,13 +100,21 @@ default(fontfamily="Computer Modern")
 p = plot(res, size=(425, 225), legend=:bottomleft)
 yticks!(p[4], [20, 24, 28, 32])
 display(p)
-savefig(p, "$(@__DIR__())/plot_LinMPC2.pdf")
+savefig(p, "$(@__DIR__())/../../fig/plot_LinMPC2.pdf")
 
 
 ## =========================================
 ## ========= Benchmark =====================
 ## =========================================
 using BenchmarkTools
-bm = @benchmark test_mpc_d($mpc_d, $model)
-display(bm)
+using JuMP, OSQP, DAQP
 
+optim = JuMP.Model(OSQP.Optimizer)
+mpc_d_osqp = setconstraint!(LinMPC(model_d; optim), ymin=[45, -Inf])
+bm = @benchmark test_mpc_d($mpc_d_osqp, $model) samples=1000
+@show btime_solver_OS = median(bm)
+
+optim = JuMP.Model(DAQP.Optimizer)
+mpc_d_daqp = setconstraint!(LinMPC(model_d; optim), ymin=[45, -Inf])
+bm = @benchmark test_mpc_d($mpc_d_daqp, $model) samples=1000
+@show btime_solver_AS = median(bm)
