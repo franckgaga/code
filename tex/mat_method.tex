@@ -116,7 +116,7 @@ Linear model predictive controller without constraints, see \texttt{LinMPC} for 
 
 \subsubsection{\textnormal{\texttt{NonLinMPC}}}
 Nonlinear model predictive controller with constraints. The objective function includes an additional term for economic MPC:
-\begin{equation}
+\begin{equation}\label{eq:J_NMPC}
 J_{\mathit{NMPC}} = J_{\mathit{MPC}} 
     + E J_E\big(\mathbf{U}_E, \mathbf{\hat{Y}}_E, \mathbf{\hat{D}}_E\big)
 \end{equation}
