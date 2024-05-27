@@ -1,0 +1,11 @@
+name = "julia"
+uuid = "40f51472-6bfe-41b1-95f5-f3e8a4278bf5"
+authors = ["franckgaga <franckgaga2@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+ControlSystemsBase = "aaaaaaaa-a6ca-5380-bf3e-84a91bcd477e"
+DAQP = "c47d62df-3981-49c8-9651-128b1cd08617"
+KNITRO = "67920dd8-b58e-52a8-8622-53c4cffbe346"
+ModelPredictiveControl = "61f9bdb8-6ae4-484a-811f-bbf86720c31c"

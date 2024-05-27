@@ -67,7 +67,7 @@ SteadyKalmanFilter estimator and:
   0 unmeasured outputs yu
   0 measured disturbances d
 \end{minted}
-By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} \citep{osqp} to solve the problem, soft constraints on output predictions $\mathbf{\hat y}$ to ensure feasibility, and a \texttt{SteadyKalmanFilter} to estimate the plant states\footnote{As an alternative to state observers, an internal model structure can be used with \texttt{estim = InternalModel(model)} and \texttt{mpc = setconstraint!(LinMPC(estim); ymin=[45, -Inf])}. It was tested on this example and it gave similar results.}. The default predictive and control horizons are $H_p = 10 + n_k$ and $H_c = 2$, respectively, where $n_k$ is the number of delays in the linear model.\added{ The $H_c$ value is small by default to reduce the computational burden and the agressiveness \citep{henson1997nonlinear}.} An attentive reader will also notice that the Kalman filter estimates two additional states compared to the plant model. These are the integrating states for the unmeasured plant disturbances, and they are automatically added at the model output $\mathbf{y}$ by default if observability is preserved.
+By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} \citep{osqp} to solve the problem, soft constraints on output predictions $\mathbf{\hat y}$ to ensure feasibility, and a \texttt{SteadyKalmanFilter} to estimate the plant states\footnote{As an alternative to state observers, an internal model structure can be used with \texttt{estim = InternalModel(model)} and \texttt{mpc = setconstraint!(LinMPC(estim); ymin=[45, -Inf])}. It was tested on this example and it gave similar results.}. The default predictive and control horizons are $H_p = 10 + n_k$ and $H_c = 2$, respectively, where $n_k$ is the number of delays in the linear model.\added{ The $H_c$ value is small by default to reduce the computational burden and the agressiveness \citep{mpcHcAnalysis}.} An attentive reader will also notice that the Kalman filter estimates two additional states compared to the plant model. These are the integrating states for the unmeasured plant disturbances, and they are automatically added at the model output $\mathbf{y}$ by default if observability is preserved.
 
 Before closing the loop, the actual plant inputs and measurements should initialize the estimates with \texttt{initstate!} to ensure a bumpless transfer. Since the plant is the linear model here, its output will initialize the states. \texttt{LinModel} objects are callable for this purpose. Once done, imposing step changes on the setpoint \texttt{ry} and on a load disturbance \texttt{ul} tests the closed-loop performance of \texttt{mpc}:
 \begin{minted}{julia}
@@ -240,7 +240,8 @@ using Plots; plot(res, plotu=false, plotxwithx̂=true)
 
 \subsubsection{Nonlinear Model Predictive Controller}
 
-As the motor torque is limited to \num{-1.5} to \SI{1.5}{\newton\meter}, the input constraints are incorporated to a \texttt{NonLinMPC} object:
+
+As the motor torque is limited to \num{-1.5} to \SI{1.5}{\newton\meter}, the input constraints are incorporated \replaced{in a nonlinear model predictive controller (NMPC) using \texttt{NonLinMPC}:}{to a \texttt{NonLinMPC} object}:
 \begin{minted}{julia}
 mpc = NonLinMPC(estim, Hp=20, Hc=2, Mwt=[0.5], Nwt=[2.5])
 mpc = setconstraint!(mpc, umin=[-1.5], umax=[+1.5])
@@ -286,9 +287,9 @@ plot(res)
     \label{fig:plot_NonLinMPC3}
 \end{figure}
 
-\replaced{The next section presents an econimic predictive control on the pendulum.}{See the package documentation for more advanced examples like economic MPC of the pendulum.}
+\replaced{The next section presents an economic predictive controller on the pendulum.}{See the package documentation for more advanced examples like economic MPC of the pendulum.}
 
-\comment{The following section is new.}
+\comment{The following sections are all new (except conclusion).}
 
 \subsection{Economic model predictive control}
 
@@ -401,11 +402,13 @@ Of course, this gain is only exploitable if the motor electronic includes some k
 
 The 
 
+\subsection{Benchmarks}
 
+\citep{knitro}
 
 \begin{table}
     \centering
-    \caption{Julia and MATLAB Benchmarks for the Case Studies. -- Julia MPC, Solver A: \texttt{DAQP}, Solver B: \texttt{OSQP} -- MATLAB MPC, Solver A: \texttt{active-set}, Solver B: \texttt{interior-point} -- Julia N/EMPC, Solver A: \texttt{IPOPT}, Solver B: \texttt{KNITRO SQP} -- N/EMPC MATLAB, Solver A: \texttt{interior-point}, Solver B: \texttt{SQP}.}
+    \caption{Julia and MATLAB Benchmarks on the Case Studies. OS solvers: \texttt{OSQP} (Julia) and \texttt{admm} (MATLAB), AS solvers: \texttt{DAQP} (Julia) and \texttt{active-set} (MATLAB), IP solvers: \texttt{IPOPT} (Julia) and \texttt{interior-point} (MATLAB), SQ solvers: \texttt{KNITRO} (Julia) and \texttt{sqp} (MATLAB).}
     \label{tab:benchamrks}
     \centering
 	\input{tab/benchmarks.tex}

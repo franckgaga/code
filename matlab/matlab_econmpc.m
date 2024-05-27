@@ -65,12 +65,12 @@ W_empc_track = calcW(X, U, Ts) %#ok<NOPTS>
 mympc.Optimization.SolverOptions.Algorithm = "interior-point";
 myf = @() test_mpc(mympc, opt, ukf, ...
     par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_empc_track_solver_IP = repeated_timeit(myf, 1) %#ok<NOPTS> 
+btime_empc_track_solver_IP = repeated_timeit(myf, 10) %#ok<NOPTS> 
 
 mympc.Optimization.SolverOptions.Algorithm = "sqp";
 myf = @() test_mpc(mympc, opt, ukf, ...
     par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_empc_track_solver_SQ = repeated_timeit(myf, 1) %#ok<NOPTS> 
+btime_empc_track_solver_SQ = repeated_timeit(myf, 10) %#ok<NOPTS> 
 
 x0 = [pi; 0];
 xhat0 = [pi; 0; 0];
@@ -91,12 +91,12 @@ W_empc_regul = calcW(X, U, Ts) %#ok<NOPTS>
 mympc.Optimization.SolverOptions.Algorithm = "interior-point";
 myf = @() test_mpc(mympc, opt, ukf, ...
     par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_empc_regul_solver_IP = repeated_timeit(myf, 1) %#ok<NOPTS> 
+btime_empc_regul_solver_IP = repeated_timeit(myf, 10) %#ok<NOPTS> 
 
 mympc.Optimization.SolverOptions.Algorithm = "sqp";
 myf = @() test_mpc(mympc, opt, ukf, ...
     par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_empc_regul_solver_SQ = repeated_timeit(myf, 1) %#ok<NOPTS> 
+btime_empc_regul_solver_SQ = repeated_timeit(myf, 10) %#ok<NOPTS> 
 
 function E_JE = economic_term(X,U,~,~,~,Ts)
     E = 3.5e3;

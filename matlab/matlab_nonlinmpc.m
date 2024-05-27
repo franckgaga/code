@@ -85,12 +85,12 @@ hold off
 mympc.Optimization.SolverOptions.Algorithm = "interior-point";
 myf = @() test_mpc(mympc, opt, ukf, ...
     par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_nmpc_track_solver_IP = repeated_timeit(myf, 1) %#ok<NOPTS> 
+btime_nmpc_track_solver_IP = repeated_timeit(myf, 10) %#ok<NOPTS> 
 
 mympc.Optimization.SolverOptions.Algorithm = "sqp";
 myf = @() test_mpc(mympc, opt, ukf, ...
    par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_nmpc_track_solver_SQ = repeated_timeit(myf, 1) %#ok<NOPTS> 
+btime_nmpc_track_solver_SQ = repeated_timeit(myf, 10) %#ok<NOPTS> 
 
 x0 = [pi; 0];
 xhat0 = [pi; 0; 0];
@@ -109,12 +109,12 @@ hold off
 mympc.Optimization.SolverOptions.Algorithm = "interior-point";
 myf = @() test_mpc(mympc, opt, ukf, ...
     par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_nmpc_regul_solver_IP = repeated_timeit(myf, 1) %#ok<NOPTS> 
+btime_nmpc_regul_solver_IP = repeated_timeit(myf, 10) %#ok<NOPTS> 
 
 mympc.Optimization.SolverOptions.Algorithm = "sqp";
 myf = @() test_mpc(mympc, opt, ukf, ...
     par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
-btime_nmpc_regul_solver_SQ = repeated_timeit(myf, 1) %#ok<NOPTS> 
+btime_nmpc_regul_solver_SQ = repeated_timeit(myf, 10) %#ok<NOPTS> 
 
 function [Y, Yhat, U, X, Xhat] = test_ukf(ukf, ...
     par_plant, par, Ts, u, x0, xhat0, Phat0, ynoise)
