@@ -5,14 +5,14 @@ using ModelPredictiveControl
 function pendulum(par, x, u)
     g, L, K, m = par     # [m/s²], [m], [kg/s], [kg]
     θ, ω = x[1], x[2]    # [rad], [rad/s]
-    τ = u[1]             # [N m]
+    τ = u[1]             # [Nm]
     return [ω, -g/L*sin(θ) - K/m*ω + τ/m/L^2]
 end
 par = (9.8, 0.4, 1.2, 0.3); Ts = 0.1; nu = 1; nx = 2; ny = 1
 f(x, u, _ ) = pendulum(par, x, u)
 h(x, _ )    = [180/π*x[1]]  # [°]
 model = NonLinModel(f, h, Ts, nu, nx, ny)
-vu = ["\$τ\$ (N m)"]
+vu = ["\$τ\$ (Nm)"]
 vx = ["\$θ\$ (rad)", "\$ω\$ (rad/s)"]
 vy = ["\$θ\$ (°)"]
 model = setname!(model; u=vu, x=vx, y=vy)
@@ -34,32 +34,21 @@ using Plots; plot(res, plotu=false, plotxwithx̂=true)
 using PlotThemes, Plots.PlotMeasures
 theme(:default)
 default(fontfamily="Computer Modern");
-p = plot(res, plotu=false, plotxwithx̂=true, size=(475, 275), legend=:topright)
-yticks!(p[2], [0, 0.2, 0.4, 0.6])
-yticks!(p[3], [-0.5, 0.5, 1.5])
-yticks!(p[4], [-0.03, 0, 0.03])
+p = plot(res, plotu=false, plotxwithx̂=true, size=(475, 300))
+yticks!(p[2], [0.0, 0.1, 0.2, 0.3, 0.4, 0.5])
+yticks!(p[3], [-0.3, 0.0, 0.3, 0.6, 0.9, 1.2])
+yticks!(p[4], [-0.075, -0.05, -0.025, 0.0, 0.025, 0.05, 0.075])
 display(p)
-savefig(p, "$(@__DIR__())/plot_NonLinMPC1.pdf")
+savefig(p, "$(@__DIR__())/../../fig/plot_NonLinMPC1.pdf")
 
 ## ==========================================
 ## ========== CONTROLLER ====================
 ## ==========================================
 
 ## =========================================
-#using JuMP, KNITRO
-#optim = Model(KNITRO.Optimizer)
-#set_attribute(optim, "outlev", 0)
-#set_attribute(optim, "algorithm", 4)
-
-#using JuMP, MadNLP
-#optim = Model(MadNLP.Optimizer)
-
-mpc = NonLinMPC(estim, Hp=20, Hc=2, Mwt=[0.5], Nwt=[2.5], Cwt=Inf)#, optim=optim)
+Hp, Hc, Mwt, Nwt = 20, 2, [0.5], [2.5]
+mpc = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt=Inf)
 mpc = setconstraint!(mpc, umin=[-1.5], umax=[+1.5]) 
-
-
-#using JuMP; unset_silent(mpc.optim)
-#set_attribute(mpc.optim, "timing_statistics", "yes")
 
 ## =========================================
 x_0 = [0, 0]; x̂_0 = [0, 0, 0]
@@ -73,16 +62,16 @@ plot(res_ry)
 using PlotThemes, Plots.PlotMeasures 
 theme(:default)
 default(fontfamily="Computer Modern")
-p = plot(res_ry, size=(475, 125), left_margin=10px, bottom_margin=13px, legend=:right) #bottom_margin=50
+p = plot(res_ry, size=(425, 200), bottom_margin=10px)
 display(p)
-savefig(p, "$(@__DIR__())/plot_NonLinMPC2.pdf")
+savefig(p, "$(@__DIR__())/../../fig/plot_NonLinMPC2.pdf")
 
 ## =========================================
 ## ========= Benchmark =====================
 ## =========================================
 using BenchmarkTools
 x_0 = [0, 0]; x̂_0 = [0, 0, 0]
-bm = @benchmark sim!($mpc, $N, [180]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0) seconds=60
+bm = @benchmark sim!($mpc, $N, [180]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0) samples= seconds=5*60
 display(bm)
 
 ## =========================================
@@ -93,12 +82,12 @@ plot(res_yd)
 ## =========================================
 ## ========= Plot PDF ======================
 ## =========================================
-using PlotThemes,    Plots.PlotMeasures
+using PlotThemes, Plots.PlotMeasures
 theme(:default)
 default(fontfamily="Computer Modern")
-p = plot(res_yd, size=(475, 125), left_margin=10px, bottom_margin=13px, legend=:right)
+p = plot(res_yd, size=(425, 200), bottom_margin=10px)
 display(p)
-savefig(p, "$(@__DIR__())/plot_NonLinMPC3.pdf")
+savefig(p, "$(@__DIR__())/../../fig/plot_NonLinMPC3.pdf")
 
 ## =========================================
 ## ========= Benchmark =====================

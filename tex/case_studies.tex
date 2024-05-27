@@ -166,7 +166,7 @@ plot(res)
     \label{fig:pendulum}
 \end{figure}
 
-For this case study, the goal is to control the angular position $\theta$ of a pendulum attached to a motor, thus $\mathbf{y} = \theta$. The manipulated input is the motor torque $\mathbf{u} = \tau$. \cref{fig:pendulum} depicts the system. The model is:
+For this case study, the goal is to control the angular position $\theta$ of a pendulum attached to a motor, thus $\mathbf{y} = \theta$. The manipulated input is the motor torque $\mathbf{u} = \tau$ in \si{\newton\meter}. \cref{fig:pendulum} depicts the system. The model is:
 \begin{subequations}
 \begin{align}
 \dot{\theta}(t) &= \omega(t) \\
@@ -180,14 +180,14 @@ using ModelPredictiveControl
 function pendulum(par, x, u)
     g, L, K, m = par     # [m/s²], [m], [kg/s], [kg]
     θ, ω = x[1], x[2]    # [rad], [rad/s]
-    τ = u[1]             # [N m]
+    τ = u[1]             # [Nm]
     return [ω, -g/L*sin(θ) - K/m*ω + τ/m/L^2]
 end
 par = (9.8, 0.4, 1.2, 0.3); Ts = 0.1; nu = 1; nx = 2; ny = 1
 f(x, u, _ ) = pendulum(par, x, u)
 h(x, _ )    = [180/π*x[1]]  # [°]
 model = NonLinModel(f, h, Ts, nu, nx, ny)
-vu = ["\$τ\$ (N m)"]
+vu = ["\$τ\$ (Nm)"]
 vx = ["\$θ\$ (rad)", "\$ω\$ (rad/s)"]
 vy = ["\$θ\$ (°)"]
 model = setname!(model; u=vu, x=vx, y=vy)
@@ -263,8 +263,7 @@ optimizer, UnscentedKalmanFilter estimator and:
 
 The keyword arguments \texttt{Mwt} and \texttt{Nwt} are the output setpoint tracking and move suppression weights, respectively.\added{ The option \texttt{Cwt=Inf} disables the slack variable $\epsilon$.} An angular setpoint of \SI{180}{\degree} (inverted position) tests \texttt{mpc} performance on the plant:
 \begin{minted}{julia}
-x0 = [0, 0]; x̂0 = [0, 0,
- 0]
+x0 = [0, 0]; x̂0 = [0, 0, 0]
 res = sim!(mpc, N, [180]; plant, x0, x̂0)
 plot(res)
 \end{minted}
