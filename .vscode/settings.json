@@ -50,5 +50,6 @@
         "umin",
         "updatestate",
         "ŷmin"
-    ]
+    ],
+    "julia.environmentPath": "/home/francis/Dropbox/Article/mpcPackageJulia/code/julia"
 }
