@@ -1,7 +1,7 @@
 % Exectued on:
-% MATLAB Version: 9.11.0.2358333 (R2021b) Update 7
+% MATLAB Version: 24.1.0.2603908 (R2024a) Update 3
+% MATLAB License Number: 968398
 % Operating System: Linux 6.8.0-76060800daily20240311-generic 
-%   #202403110203~1715181801~22.04~aba43ee SMP PREEMPT_DYNAMIC Wed M x86_64
 
 Ts = 0.1;
 par = [9.8; 0.4; 1.2; 0.3];
@@ -11,11 +11,12 @@ par_plant(3) = par(3)*1.25;
 xhat0 = [0; 0; 0];
 ukf = unscentedKalmanFilter(@fhat, @hhat, xhat0);
 ukf.Alpha = 0.01;
-ukf.StateCovariance = [
+Phat0 = [
     (1/2)^2  0.0      0.0;
     0.0      (1/2)^2  0.0;
     0.0      0.0      (1)^2;
 ];
+ukf.StateCovariance = Phat0;
 ukf.ProcessNoise = [
     (0.1)^2  0.0      0.0;
     0.0      (0.5)^2  0.0;
@@ -48,7 +49,7 @@ x0 = [0; 0];
 xhat0 = [0; 0; 0];
 u = 0.0;
 [R, Y, ~, U, X, ~] = test_mpc(mympc, opt, ukf, ...
-    par_plant, par, Ts, u, x0, xhat0, 0);
+    par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
 T = Ts*(0:length(Y)-1);
 figure();
 subplot(121)
@@ -63,19 +64,19 @@ W_empc_track = calcW(X, U, Ts) %#ok<NOPTS>
 
 mympc.Optimization.SolverOptions.Algorithm = "interior-point";
 myf = @() test_mpc(mympc, opt, ukf, ...
-    par_plant, par, Ts, u, x0, xhat0, 0);
-btime_empc_track_solverA = repeated_timeit(myf, 1) %#ok<NOPTS> 
+    par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
+btime_empc_track_solver_IP = repeated_timeit(myf, 1) %#ok<NOPTS> 
 
 mympc.Optimization.SolverOptions.Algorithm = "sqp";
 myf = @() test_mpc(mympc, opt, ukf, ...
-    par_plant, par, Ts, u, x0, xhat0, 0);
-btime_empc_track_solverB = repeated_timeit(myf, 1) %#ok<NOPTS> 
+    par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
+btime_empc_track_solver_SQ = repeated_timeit(myf, 1) %#ok<NOPTS> 
 
 x0 = [pi; 0];
 xhat0 = [pi; 0; 0];
 u = 0.0;
 [R, Y, Yhat, U, X, Xhat] = test_mpc(mympc, opt, ukf, ...
-    par_plant, par, Ts, u, x0, xhat0, 10);
+    par_plant, par, Ts, u, x0, xhat0, Phat0, 10);
 figure();
 subplot(121)
 plot(T, Y, T, R, '--')
@@ -89,29 +90,29 @@ W_empc_regul = calcW(X, U, Ts) %#ok<NOPTS>
 
 mympc.Optimization.SolverOptions.Algorithm = "interior-point";
 myf = @() test_mpc(mympc, opt, ukf, ...
-    par_plant, par, Ts, u, x0, xhat0, 0);
-btime_empc_regul_solverA = repeated_timeit(myf, 1) %#ok<NOPTS> 
+    par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
+btime_empc_regul_solver_IP = repeated_timeit(myf, 1) %#ok<NOPTS> 
 
 mympc.Optimization.SolverOptions.Algorithm = "sqp";
 myf = @() test_mpc(mympc, opt, ukf, ...
-    par_plant, par, Ts, u, x0, xhat0, 0);
-btime_empc_regul_solverB = repeated_timeit(myf, 1) %#ok<NOPTS> 
+    par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
+btime_empc_regul_solver_SQ = repeated_timeit(myf, 1) %#ok<NOPTS> 
 
 function E_JE = economic_term(X,U,~,~,~,Ts)
     E = 3.5e3;
-    tau = U(:,1);
-    omega = X(:,2);
+    tau = U(1:end-1,1);
+    omega = X(1:end-1,2);
     E_JE = E*Ts*sum(tau.*omega);
 end
 
 function W = calcW(X, U, Ts)
-    tau = U;
-    omega = X(2,:);
+    tau = U(1, 1:end-1);
+    omega = X(2, 1:end-1);
     W = Ts*sum(tau.*omega);
 end
 
 function [R, Y, Yhat, U, X, Xhat] = test_mpc(mympc, opt, ukf, ...
-    par_plant, par, Ts, u, x0, xhat0, ystep)
+    par_plant, par, Ts, u, x0, xhat0, Phat0, ystep)
     N = 35;
     R = zeros(1,N);
     Y = zeros(1, N);
@@ -121,6 +122,7 @@ function [R, Y, Yhat, U, X, Xhat] = test_mpc(mympc, opt, ukf, ...
     Xhat = zeros(3, N);
     x = x0;
     xhat = xhat0;
+    ukf.StateCovariance = Phat0;
     r = 180;
     for i=1:N
         y = h(x) + ystep;

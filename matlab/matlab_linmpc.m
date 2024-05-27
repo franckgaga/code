@@ -1,7 +1,7 @@
 % Exectued on:
-% MATLAB Version: 9.11.0.2358333 (R2021b) Update 7
+% MATLAB Version: 24.1.0.2603908 (R2024a) Update 3
+% MATLAB License Number: 968398
 % Operating System: Linux 6.8.0-76060800daily20240311-generic 
-%   #202403110203~1715181801~22.04~aba43ee SMP PREEMPT_DYNAMIC Wed M x86_64
 
 G = [ tf(1.90, [18, 1]) tf(1.90, [18, 1]);
       tf(-0.74,[8, 1])  tf(0.74, [8, 1]) ];
@@ -64,15 +64,15 @@ hold on;
 stairs(t_data, U_data(2,:))
 hold off;
 
+mympc.Optimizer.Algorithm = "admm";
+f = @() test_mpc(mympc, myestim, ...
+    Khat, Ahat, Bhat, Chat, A, B, C, uop, yop);
+btime_solver_OS = repeated_timeit(f, 100) %#ok<NOPTS> 
+
 mympc.Optimizer.Algorithm = "active-set";
 f = @() test_mpc(mympc, myestim, ...
     Khat, Ahat, Bhat, Chat, A, B, C, uop, yop);
-btime_solverA = repeated_timeit(f, 10) %#ok<NOPTS> 
-
-mympc.Optimizer.Algorithm = "interior-point";
-f = @() test_mpc(mympc, myestim, ...
-    Khat, Ahat, Bhat, Chat, A, B, C, uop, yop);
-btime_solverB = repeated_timeit(f, 10) %#ok<NOPTS> 
+btime_solver_AS = repeated_timeit(f, 100) %#ok<NOPTS> 
 
 Ahat = [
  0.894839  0.0       0.0       0.0       0.0  0.0;
@@ -144,15 +144,15 @@ hold on;
 stairs(t_data, U_data(2,:))
 hold off;
 
+mympc_d.Optimizer.Algorithm = "admm";
+f_d = @() test_mpc_d(mympc_d, myestim_d, ...
+    Khat, Ahat, Bhatu, Bhatd, Chat, Dhatd, A, B, C, uop, yop, dop);
+btime_d_solver_OS = repeated_timeit(f_d, 100) %#ok<NOPTS> 
+
 mympc_d.Optimizer.Algorithm = "active-set";
 f_d = @() test_mpc_d(mympc_d, myestim_d, ...
     Khat, Ahat, Bhatu, Bhatd, Chat, Dhatd, A, B, C, uop, yop, dop);
-btime_d_solverA = timeit(f_d) %#ok<NOPTS> 
-
-mympc_d.Optimizer.Algorithm = "interior-point";
-f_d = @() test_mpc_d(mympc_d, myestim_d, ...
-    Khat, Ahat, Bhatu, Bhatd, Chat, Dhatd, A, B, C, uop, yop, dop);
-btime_d_solverB = timeit(f_d) %#ok<NOPTS> 
+btime_d_solver_AS = repeated_timeit(f_d, 100) %#ok<NOPTS> 
 
 function [U_data, Y_data, R_data] = test_mpc(mympc, myestim, ...
     Khat, Ahat, Bhat, Chat, A, B, C, uop, yop)
