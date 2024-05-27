@@ -47,7 +47,7 @@ LinModel with a sample time Ts = 2.0 s and:
  2 outputs y
  0 measured disturbances d
 \end{minted}
-The \texttt{model} object is used for two purposes : to construct our controller and as a plant simulator to test the design. \added{The \texttt{setname!} function allows customized Y-axis labels in the plots.}
+The \texttt{model} object is used for two purposes : to construct our controller and as a plant simulator to test the design. \added{The \texttt{setname!} function allows customized $y$-axis labels in the plots.}
 
 \subsubsection{Linear Model Predictive Controller}
 
@@ -61,8 +61,9 @@ LinMPC controller with a sample time Ts = 2.0 s, OSQP optimizer,
 SteadyKalmanFilter estimator and:
  10 prediction steps Hp
   2 control steps Hc
+  1 slack variable ϵ (control constraints)
   2 manipulated inputs u (0 integrating states)
-  4 states x̂
+  4 estimated states x̂
   2 measured outputs ym (2 integrating states)
   0 unmeasured outputs yu
   0 measured disturbances d
@@ -240,28 +241,30 @@ using Plots; plot(res, plotu=false, plotxwithx̂=true)
 
 \subsubsection{Nonlinear Model Predictive Controller}
 
-
 As the motor torque is limited to \num{-1.5} to \SI{1.5}{\newton\meter}, the input constraints are incorporated \replaced{in a nonlinear model predictive controller (NMPC) using \texttt{NonLinMPC}:}{to a \texttt{NonLinMPC} object}:
 \begin{minted}{julia}
-mpc = NonLinMPC(estim, Hp=20, Hc=2, Mwt=[0.5], Nwt=[2.5])
+Hp, Hc, Mwt, Nwt = 20, 2, [0.5], [2.5]
+mpc = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt=Inf)
 mpc = setconstraint!(mpc, umin=[-1.5], umax=[+1.5])
 \end{minted}
-
+\spacerepl
 \begin{minted}{julia-repl}
 NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt
 optimizer, UnscentedKalmanFilter estimator and:
  20 prediction steps Hp
   2 control steps Hc
+  0 slack variable ϵ (control constraints)
   1 manipulated inputs u (1 integrating states)
-  3 states x̂
+  3 estimated states x̂
   1 measured outputs ym (0 integrating states)
   0 unmeasured outputs yu
   0 measured disturbances d
 \end{minted}
 
-The keyword arguments \texttt{Mwt} and \texttt{Nwt} are the output setpoint tracking and move suppression weights, respectively. An angular setpoint of \SI{180}{\degree} (inverted position) tests \texttt{mpc} performance on the plant:
+The keyword arguments \texttt{Mwt} and \texttt{Nwt} are the output setpoint tracking and move suppression weights, respectively.\added{ The option \texttt{Cwt=Inf} disables the slack variable $\epsilon$.} An angular setpoint of \SI{180}{\degree} (inverted position) tests \texttt{mpc} performance on the plant:
 \begin{minted}{julia}
-x0 = [0, 0]; x̂0 = [0, 0, 0]
+x0 = [0, 0]; x̂0 = [0, 0,
+ 0]
 res = sim!(mpc, N, [180]; plant, x0, x̂0)
 plot(res)
 \end{minted}
@@ -408,7 +411,7 @@ The
 
 \begin{table}
     \centering
-    \caption{Julia and MATLAB Benchmarks on the Case Studies. OS solvers: \texttt{OSQP} (Julia) and \texttt{admm} (MATLAB), AS solvers: \texttt{DAQP} (Julia) and \texttt{active-set} (MATLAB), IP solvers: \texttt{IPOPT} (Julia) and \texttt{interior-point} (MATLAB), SQ solvers: \texttt{KNITRO} (Julia) and \texttt{sqp} (MATLAB).}
+    \caption{Julia and MATLAB Benchmarks on the Case Studies. OS solvers: \texttt{OSQP.jl} (Julia) and \texttt{admm} (MATLAB), AS solvers: \texttt{DAQP.jl} (Julia) and \texttt{active-set} (MATLAB), IP solvers: \texttt{Iopot.jl} (Julia) and \texttt{interior-point} (MATLAB), SQ solvers: \texttt{KNITRO.jl} (Julia) and \texttt{sqp} (MATLAB).}
     \label{tab:benchamrks}
     \centering
 	\input{tab/benchmarks.tex}
