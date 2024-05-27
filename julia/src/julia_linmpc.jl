@@ -41,8 +41,7 @@ using Plots; plot(res)
 using PlotThemes, Plots.PlotMeasures
 theme(:default)
 default(fontfamily="Computer Modern")
-p = plot(res, size=(425, 225), legend=:bottomleft)
-yticks!(p[4], [20, 24, 28, 32])
+p = plot(res, size=(425, 250), legend=:bottomleft)
 display(p)
 savefig(p, "$(@__DIR__())/../../fig/plot_LinMPC1.pdf")
 
@@ -97,8 +96,7 @@ plot(res)
 using PlotThemes, Plots.PlotMeasures
 theme(:default)
 default(fontfamily="Computer Modern")
-p = plot(res, size=(425, 225), legend=:bottomleft)
-yticks!(p[4], [20, 24, 28, 32])
+p = plot(res, size=(425, 250), legend=:bottomleft)
 display(p)
 savefig(p, "$(@__DIR__())/../../fig/plot_LinMPC2.pdf")
 

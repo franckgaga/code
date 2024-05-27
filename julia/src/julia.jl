@@ -1,5 +1,5 @@
 module julia
 
-greet() = print("Hello World!")
+# dummy file, not used
 
 end # module julia
