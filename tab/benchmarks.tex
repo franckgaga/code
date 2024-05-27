@@ -1,21 +1,25 @@
-\begin{tabular}{lllcccc}
+\begin{tabular}{llllll}
 	
 \toprule %=======================================================================
 
-	  &	& & \multicolumn{4}{c}{Median Time (s)} \\ \cmidrule(l){4-7}
-	  & & & \multicolumn{2}{c}{Julia} & \multicolumn{2}{c}{MATLAB}  \\ 
-	  \cmidrule(lr){4-5} \cmidrule(l){6-7} 
-	  & & & \multicolumn{2}{c}{Solver} & \multicolumn{2}{c}{Solver} \\
-	  \cmidrule(lr){4-5} \cmidrule(l){6-7} 
-Plant & Controller & Test & A & B & A & B \\
+	  &	& & & \multicolumn{2}{c}{Median Time (s)} \\ \cmidrule(l){5-6}
+Plant & Controller & Test & Solver & Julia & MATLAB \\
 \midrule %--------------------------------------------------------------------
 
-CSTR		& MPC	& W/o  $\mathbf{d}$		& \num{78.4} & \num{50.4} & \num{50.4} & \num{50.4} \\
-CSTR		& MPC	& With $\mathbf{d}$ 	& \num{76.3} & \num{84.0}  	\\
-Pendulum 	& NMPC	& Track. 	   			& \num{76.0} & \num{78.2}  	\\
-Pendulum    & NMPC	& Regul. 				& \num{76.0} & \num{78.2} 	\\
-Pendulum    & EMPC	& Track.				& \num{76.0} & \num{78.2} 	\\
-Pendulum	& EMPC	& Regul. 				& \num{76.0} & \num{78.2}  	\\
+CSTR		& MPC	& W/O $\mathbf{d}$	& AS & \num{0.00} & \num{0.00}	\\
+CSTR		& MPC	& W/O $\mathbf{d}$	& IP & \num{0.00} & \num{0.00}	\\
+CSTR		& MPC	& W/O $\mathbf{d}$	& OS & \num{0.00} & \num{0.00}	\\
+CSTR		& MPC	& With $\mathbf{d}$ & AS & \num{0.00} & \num{0.00}	\\
+CSTR		& MPC	& With $\mathbf{d}$ & IP & \num{0.00} & \num{0.00}	\\
+CSTR		& MPC	& With $\mathbf{d}$ & OS & \num{0.00} & \num{0.00}	\\
+Pendulum 	& NMPC	& Track. 	   		& IP & \num{0.00} & \num{0.00}	\\
+Pendulum 	& NMPC	& Track. 	   		& SQ & \num{0.00} & \num{0.00}	\\
+Pendulum    & NMPC	& Regul. 			& IP & \num{0.00} & \num{0.00} 	\\
+Pendulum    & NMPC	& Regul. 			& SQ & \num{0.00} & \num{0.00} 	\\
+Pendulum    & EMPC	& Track.			& IP & \num{0.00} & \num{0.00} 	\\
+Pendulum    & EMPC	& Track.			& SQ & \num{0.00} & \num{0.00} 	\\
+Pendulum	& EMPC	& Regul. 			& IP & \num{0.00} & \num{0.00}  \\
+Pendulum	& EMPC	& Regul. 			& SQ & \num{0.00} & \num{0.00}  \\
 	
 \bottomrule %====================================================================
 	
