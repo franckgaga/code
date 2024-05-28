@@ -53,11 +53,13 @@ using JuMP, OSQP, DAQP
 
 optim = JuMP.Model(OSQP.Optimizer)
 mpc_osqp = setconstraint!(LinMPC(model; optim), ymin=[45, -Inf])
+JuMP.unset_time_limit_sec(mpc_osqp.optim)
 bm = @benchmark test_mpc($mpc_osqp, $model) samples=1000
 @show btime_solver_OS = median(bm)
 
 optim = JuMP.Model(DAQP.Optimizer)
 mpc_daqp = setconstraint!(LinMPC(model; optim), ymin=[45, -Inf])
+JuMP.unset_time_limit_sec(mpc_daqp.optim)
 bm = @benchmark test_mpc($mpc_daqp, $model) samples=1000
 @show btime_solver_AS = median(bm)
 
@@ -109,10 +111,12 @@ using JuMP, OSQP, DAQP
 
 optim = JuMP.Model(OSQP.Optimizer)
 mpc_d_osqp = setconstraint!(LinMPC(model_d; optim), ymin=[45, -Inf])
+JuMP.unset_time_limit_sec(mpc_d_osqp.optim)
 bm = @benchmark test_mpc_d($mpc_d_osqp, $model) samples=1000
 @show btime_solver_OS = median(bm)
 
 optim = JuMP.Model(DAQP.Optimizer)
 mpc_d_daqp = setconstraint!(LinMPC(model_d; optim), ymin=[45, -Inf])
+JuMP.unset_time_limit_sec(mpc_d_daqp.optim)
 bm = @benchmark test_mpc_d($mpc_d_daqp, $model) samples=1000
 @show btime_solver_AS = median(bm)

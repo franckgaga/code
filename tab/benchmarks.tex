@@ -3,21 +3,21 @@
 \toprule %=======================================================================
 
 	  &	& & & \multicolumn{2}{c}{Median Time (s)} \\ \cmidrule(l){5-6}
-Plant & Controller & Test & Solver & Julia & MATLAB \\
+Plant & Control & Test & Solver & Julia & MATLAB \\
 \midrule %--------------------------------------------------------------------
 
-CSTR		& MPC	& W/O $\mathbf{d}$	& OS & \num{0.00} & \num{0.0196}	\\
-CSTR		& MPC	& W/O $\mathbf{d}$	& AS & \num{0.00} & \num{0.0170}	\\
-CSTR		& MPC	& With $\mathbf{d}$ & OS & \num{0.00} & \num{0.0190}	\\
-CSTR		& MPC	& With $\mathbf{d}$ & AS & \num{0.00} & \num{0.0166}	\\
-Pendulum 	& NMPC	& Track. 	   		& IP & \num{0.00} & \num{0.0000}	\\
-Pendulum 	& NMPC	& Track. 	   		& SQ & \num{0.00} & \num{0.0000}	\\
-Pendulum    & NMPC	& Regul. 			& IP & \num{0.00} & \num{0.0000} 	\\
-Pendulum    & NMPC	& Regul. 			& SQ & \num{0.00} & \num{0.0000} 	\\
-Pendulum    & EMPC	& Track.			& IP & \num{0.00} & \num{0.0000} 	\\
-Pendulum    & EMPC	& Track.			& SQ & \num{0.00} & \num{0.0000} 	\\
-Pendulum	& EMPC	& Regul. 			& IP & \num{0.00} & \num{0.0000}  	\\
-Pendulum	& EMPC	& Regul. 			& SQ & \num{0.00} & \num{0.0000}  	\\
+CSTR		& MPC	& W/O $\mathbf{d}$	& OS & \num{0.0014} & \num{0.0193}	\\
+CSTR		& MPC	& W/O $\mathbf{d}$	& AS & \num{0.0044} & \num{0.0169}	\\
+CSTR		& MPC	& With $\mathbf{d}$ & OS & \num{0.0014} & \num{0.0191}	\\
+CSTR		& MPC	& With $\mathbf{d}$ & AS & \num{0.0045} & \num{0.0165}	\\
+Pendulum 	& NMPC	& Track. 	   		& IP & \num{0.00} & \num{1.3210}	\\
+Pendulum 	& NMPC	& Track. 	   		& SQ & \num{0.00} & \num{0.6391}	\\
+Pendulum    & NMPC	& Regul. 			& IP & \num{0.00} & \num{1.4252} 	\\
+Pendulum    & NMPC	& Regul. 			& SQ & \num{0.00} & \num{0.5701} 	\\
+Pendulum    & EMPC	& Track.			& IP & \num{0.00} & \num{1.0836} 	\\
+Pendulum    & EMPC	& Track.			& SQ & \num{0.00} & \num{0.7487} 	\\
+Pendulum	& EMPC	& Regul. 			& IP & \num{0.00} & \num{0.8575}  	\\
+Pendulum	& EMPC	& Regul. 			& SQ & \num{0.00} & \num{0.6717}  	\\
 	
 \bottomrule %====================================================================
 	

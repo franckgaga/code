@@ -46,9 +46,9 @@ savefig(p, "$(@__DIR__())/../../fig/plot_NonLinMPC1.pdf")
 ## ==========================================
 
 ## =========================================
-Hp, Hc, Mwt, Nwt = 20, 2, [0.5], [2.5]
-nmpc = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt=Inf)
-nmpc = setconstraint!(nmpc, umin=[-1.5], umax=[+1.5]) 
+Hp, Hc, Mwt, Nwt, Cwt = 20, 2, [0.5], [2.5], Inf
+nmpc = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt)
+nmpc = setconstraint!(nmpc, umin=[-1.5], umax=[+1.5])
 
 ## =========================================
 x_0 = [0, 0]; x̂_0 = [0, 0, 0]
@@ -70,9 +70,31 @@ savefig(p, "$(@__DIR__())/../../fig/plot_NonLinMPC2.pdf")
 ## ========= Benchmark =====================
 ## =========================================
 using BenchmarkTools
-x_0 = [0, 0]; x̂_0 = [0, 0, 0]
-bm = @benchmark sim!($mpc, $N, [180]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0) samples=10 seconds=5*60
+using JuMP, Ipopt, KNITRO
+
+optim = JuMP.Model(Ipopt.Optimizer)
+nmpc_ipopt = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt, optim)
+nmpc_ipopt = setconstraint!(nmpc_ipopt, umin=[-1.5], umax=[+1.5])
+JuMP.unset_time_limit_sec(nmpc_ipopt.optim)
+bm = @benchmark(
+        sim!($nmpc_ipopt, $N, $[180]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0),
+        samples=50, 
+        seconds=10*60
+    )
 @show btime_solver_IP = median(bm)
+
+optim = JuMP.Model(KNITRO.Optimizer)
+set_attribute(optim, "algorithm", "4") # 4th algorithm is SQP
+nmpc_knitro = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt, optim)
+nmpc_knitro = setconstraint!(nmpc_knitro, umin=[-1.5], umax=[+1.5])
+JuMP.unset_time_limit_sec(nmpc_knitro.optim)
+bm = @benchmark(
+        sim!($nmpc_knitro, $N, $[180]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0),
+        samples=50,
+        seconds=10*60
+    )
+@show btime_solver_SQ = median(bm)
+
 
 ## =========================================
 x_0 = [π, 0]; x̂_0 = [π, 0, 0]
@@ -93,40 +115,27 @@ savefig(p, "$(@__DIR__())/../../fig/plot_NonLinMPC3.pdf")
 ## ========= Benchmark =====================
 ## =========================================
 using BenchmarkTools
-x_0 = [π, 0]; x̂_0 = [π, 0, 0]
-bm = @benchmark sim!($mpc, $N, [180.0]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0, y_step=[10]) seconds=30
+using JuMP, Ipopt, KNITRO
+
+optim = JuMP.Model(Ipopt.Optimizer)
+nmpc_ipopt = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt, optim)
+nmpc_ipopt = setconstraint!(nmpc_ipopt, umin=[-1.5], umax=[+1.5])
+JuMP.unset_time_limit_sec(nmpc_ipopt.optim)
+bm = @benchmark(
+        sim!($nmpc_ipopt, $N, $[180.0]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0, y_step=$[10]),
+        samples=50,
+        seconds=10*60
+    )
 @show btime_solver_IP = median(bm)
 
-#=
-## =========================================
-## ========= EMPC ==========================
-## =========================================
-
-h2(x, _ ) = [180/π*x[1], x[2]]
-nu, nx, ny = 1, 2, 2
-model2 = NonLinModel(f      , h2, Ts, nu, nx, ny)
-plant2 = NonLinModel(f_plant, h2, Ts, nu, nx, ny)
-estim2 = UnscentedKalmanFilter(model2; σQ, σR, nint_u, σQint_u, i_ym=[1])
-
-function JE(UE, ŶE, _ )
-    τ, ω = UE[1:end-1], ŶE[2:2:end-1]
-    return Ts*sum(τ.*ω)
-end
-empc = NonLinMPC(estim2, Hp=20, Hc=2, Mwt=[0.5, 0], Nwt=[2.5], Cwt=Inf, Ewt=3.5e3, JE=JE)
-empc = setconstraint!(empc, umin=[-1.5], umax=[+1.5])
-
-using JuMP; unset_time_limit_sec(empc.optim) # hide
-res2_ry = sim!(empc, N, [180, 0], plant=plant2, x0=[0, 0], x̂0=[0, 0, 0])
-plot(res2_ry)
-
-function calcW(res)
-    τ, ω = res.U_data[1, 1:end-1], res.X_data[2, 1:end-1]
-    return Ts*sum(τ.*ω)
-end
-Dict(:W_nmpc => calcW(res_ry), :W_empc => calcW(res2_ry))
-
-res2_yd = sim!(empc, N, [180; 0]; plant=plant2, x0=[π, 0], x̂0=[π, 0, 0], y_step=[10, 0])
-plot(res2_yd)
-
-Dict(:W_nmpc => calcW(res_yd), :W_empc => calcW(res2_yd))
-=#
+optim = JuMP.Model(KNITRO.Optimizer)
+set_attribute(optim, "algorithm", "4") # 4th algorithm is SQP
+nmpc_knitro = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt, optim)
+nmpc_knitro = setconstraint!(nmpc_knitro, umin=[-1.5], umax=[+1.5])
+JuMP.unset_time_limit_sec(nmpc_knitro.optim)
+bm = @benchmark(
+        sim!($nmpc_knitro, $N, $[180.0]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0, y_step=$[10]),
+        samples=50,
+        seconds=10*60
+    )
+@show btime_solver_SQ = median(bm)

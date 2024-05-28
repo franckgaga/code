@@ -394,11 +394,17 @@ Dict{Symbol, Float64} with 2 entries:
 
 Of course, this gain is only exploitable if the motor electronic includes some kind of regenerative circuitry.
 
-\comment{Should I also include the successive linearization MPC example of \texttt{https://tinyurl.com/493ckw2f} ? Its benchmark would certainly standout in Table 1. There is however no direct equivalent in MATLAB since there is no automatic differentiation. I would need to analytically compute the Jacobian of}
+\comment{Should I also include the successive linearization MPC example of \texttt{https://tinyurl.com/493ckw2f}? Its benchmark would certainly standout in Table 1. There is two minor issues.} 
+
+\comment{First, there is no direct equivalent in MATLAB since there is no automatic differentiation (AD). I would need to analytically find the Jacobians of the pendulum model and implement a function that evaluates them at the operating point. It's not an equivalent algorithm however since AD is inherently slightly heavier in computation (the derivation part is done by the computer, not me). I could otherwise use symbolic differentiation with \texttt{https://tinyurl.com/4xvadp3y}? I would avoid finite difference Jacobians since the closed-loop response would be too different.} 
+
+\comment{Second, the Julia OS solver (OSQP) does not work well for this case study without major modification in the optimization parameters. I would only put AS solver (DAQP) results for this example.}
 
 \subsection{Benchmarks}
 
 \citep{knitro}
+
+It is worth mentioning that the closed-loop responses in Julia and MATLAB are all identical for all the case studies. The repository at \texttt{https://github.com/franckgaga/mpcPackageJulia.tex} provides the code to reproduce the results.
 
 \begin{table}
     \centering
