@@ -239,13 +239,14 @@ using Plots; plot(res, plotu=false, plotxwithx̂=true)
 
 \cref{fig:plot_NonLinMPC1} indicates that the Kalman filter performance seems sufficient for control. The estimate $\hat{x}_3$ is the integrating state on the torque $\tau$ that compensates for static errors. 
 
-\subsubsection{Nonlinear Model Predictive Controller}
+\subsubsection{Nonlinear Model Predictive Controller (NMPC)}
 
-As the motor torque is limited to \num{-1.5} to \SI{1.5}{\newton\meter}, the input constraints are incorporated \replaced[comment={introduce table 1 abbreviation}]{in a nonlinear model predictive controller (NMPC) using \texttt{NonLinMPC}:}{to a \texttt{NonLinMPC} object}:
+As the motor torque is limited to \num{-1.5} to \SI{1.5}{\newton\meter}, the input constraints are incorporated to a \texttt{NonLinMPC} object:
 \begin{minted}{julia}
 Hp, Hc, Mwt, Nwt, Cwt = 20, 2, [0.5], [2.5], Inf
 nmpc = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt)
-nmpc = setconstraint!(nmpc, umin=[-1.5], umax=[+1.5])
+umin, umax = [-1.5], [+1.5]
+nmpc = setconstraint!(nmpc; umin, umax)
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
@@ -263,9 +264,9 @@ optimizer, UnscentedKalmanFilter estimator and:
 
 The keyword arguments \texttt{Mwt} and \texttt{Nwt} are the output setpoint tracking and move suppression weights, respectively.\added{ The option \texttt{Cwt=Inf} disables the slack variable $\epsilon$.} An angular setpoint of \SI{180}{\degree} (inverted position) tests \texttt{mpc} performance on the plant:
 \begin{minted}{julia}
-x0 = [0, 0]; x̂0 = [0, 0, 0]
-res = sim!(nmpc, N, [180]; plant, x0, x̂0)
-plot(res)
+x_0 = [0, 0]; x̂_0 = [0, 0, 0]; ry = [180]
+res_ry = sim!(nmpc, N, ry; plant, x_0, x̂_0)
+plot(res_ry)
 \end{minted}
 
 \begin{figure}[h]
@@ -277,9 +278,9 @@ plot(res)
 
 The result in \cref{fig:plot_NonLinMPC2} suggests that the controller is robust enough to variations on the $K$ coefficient. Starting from this inverted position, \cref{fig:plot_NonLinMPC3} shows the closed-loop response to a step disturbances of \SI{10}{\degree} is satisfactory:
 \begin{minted}{julia}
-x0 = [π, 0]; x̂0 = [π, 0, 0]
-res = sim!(nmpc, N, [180.0]; plant, x0, x̂0, y_step=[10])
-plot(res)
+x0 = [π, 0]; x̂0 = [π, 0, 0]; y_step = [10]
+res_yd = sim!(nmpc, N, [180.0]; plant, x0, x̂0, y_step)
+plot(res_yd)
 \end{minted}
 
 \begin{figure}[h]
@@ -291,11 +292,11 @@ plot(res)
 
 \replaced{The next section presents an economic predictive controller on the pendulum.}{See the package documentation for more advanced examples like economic MPC of the pendulum.}
 
-\comment{The following sections are all new in the manuscript (except conclusion).}
+\textbf{\comment{The following sections are all new in the manuscript (except conclusion).}}
 
-\subsection{Economic model predictive control}
+\subsubsection{Economic model predictive control (EMPC)}
 
-Economic model predictive control (EMPC) can achieve the same objective but with lower economical costs. For this case study, the controller will aim to reduce the energy consumed by the motor. The power (\si{\watt}) transmitted by the motor to the pendulum is:
+For this case study, the controller will aim to reduce the energy consumed by the motor. The power (\si{\watt}) transmitted by the motor to the pendulum is:
 
 \begin{equation}
 \dot{W}(t) = \tau(t) \omega(t) 
@@ -318,22 +319,23 @@ The objective will now include an additive term that penalizes the work done by 
 \begin{minted}{julia}
 h2(x, _ ) = [180/π*x[1], x[2]]
 nu, nx, ny = 1, 2, 2
-model2 = NonLinModel(f      , h2, Ts, nu, nx, ny)
-plant2 = NonLinModel(f_plant, h2, Ts, nu, nx, ny)
-model2 = setname!(model2, u=vu, x=vx, y=[vy; vx[2])
-plant2 = setname!(plant2, u=vu, x=vx, y=[vy; vx[2])
-estim2 = UnscentedKalmanFilter(model2; σQ, σR, nint_u, 
+model = NonLinModel(f      , h2, Ts, nu, nx, ny)
+plant = NonLinModel(f_plant, h2, Ts, nu, nx, ny)
+model = setname!(model, u=vu, x=vx, y=[vy; vx[2]])
+plant = setname!(plant, u=vu, x=vx, y=[vy; vx[2]])
+estim = UnscentedKalmanFilter(model; σQ, σR, nint_u, 
                                        σQint_u, i_ym=[1])
 \end{minted}
 
-The \texttt{plant2} object based on \texttt{h2} is also required since \texttt{sim!} expects that the plant output vector $\mathbf{y}$ corresponds to the controller model output vector. We can now define the $J_E$ function and the controller:
+The \texttt{plant} object based on \texttt{h2} is also required since \texttt{sim!} expects that the plant output vector $\mathbf{y}$ corresponds to the controller model output vector. We can now define the $J_E$ function and the controller:
 
 \begin{minted}{julia}
 function JE(UE, ŶE, _ )
     τ, ω = UE[1:end-1], ŶE[2:2:end-1]
     return Ts*sum(τ.*ω)
 end
-empc = NonLinMPC(estim2; Hp, Hc, Nwt, Mwt, Cwt, JE, Ewt=3.5e3)
+Mwt, Ewt = [0.5, 0.0], 3.5e3
+empc = NonLinMPC(estim; Hp, Hc, Nwt, Mwt, Cwt, JE, Ewt)
 empc = setconstraint!(empc; umin, umax)
 \end{minted}
 \spacerepl
@@ -353,7 +355,8 @@ optimizer, UnscentedKalmanFilter estimator and:
 The keyword argument \texttt{Ewt} is the $E$ weight in \eqref{eq:J_NMPC}. The economic term must be large enough to be significant but a too high value can lead to a static error on the angle setpoint. The second element of \texttt{Mwt} is zero since the speed $\omega$ is not requested to track a setpoint. The closed-loop response to a \SI{180}{\degree} setpoint is similar:
 
 \begin{minted}{julia}
-res2_ry = sim!(empc, N, [180, 0], plant=plant2, x_0=[0, 0], x̂_0=[0, 0, 0])
+x_0 = [0, 0]; x̂_0 = [0, 0, 0]; ry = [180; 0]
+res2_ry = sim!(empc, N, ry; plant, x_0, x̂_0)
 plot(res2_ry, ploty=[1])
 \end{minted}
 
@@ -376,7 +379,8 @@ Dict{Symbol, Float64} with 2 entries:
 Also, for a \SI{10}{\degree} step disturbance:
 
 \begin{minted}{julia}
-res2_yd = sim!(empc, N, [180; 0]; plant=plant2, x_0=[π, 0], x̂_0=[π, 0, 0], y_step=[10, 0])
+x_0 = [π, 0]; x̂_0 = [π, 0, 0]; y_step = [10; 0]
+res2_yd = sim!(empc, N, ry; plant, x_0, x̂_0, y_step)
 plot(res2_yd, ploty=[1])
 \end{minted}
 
@@ -402,13 +406,33 @@ Of course, this gain is only exploitable if the motor electronic includes some k
 
 \subsection{Benchmarks}
 
-\citep{knitro}
-
 It is worth mentioning that the closed-loop responses in Julia and MATLAB are all identical for all the case studies. The repository at \texttt{https://github.com/franckgaga/mpcPackageJulia.tex} provides the code to reproduce the results.
+
+The benchmarks results test four types of quadratic and nonlinear solvers. The operator splitting (OS) methods are: 
+\begin{itemize}
+    \item \texttt{OSQP.jl} package in Julia \citep{osqp}
+    \item \texttt{admm} solver in MATLAB \citep{admm}
+\end{itemize}
+for active set (AS) methods, the optimizers are: 
+\begin{itemize}
+    \item \texttt{DAQP.jl} package in Julia \citep{daqp}
+    \item \texttt{active-set} option in MATLAB \citep{activeset}
+\end{itemize}
+for interior point (IP) methods, the solvers are: 
+\begin{itemize}
+    \item \texttt{Ipopt.jl} package in Julia \citep{ipopt}
+    \item \texttt{interior-point} option in MATLAB \citep{interiorpoint}
+\end{itemize}
+and, lastly, the sequential quadratic (SQ) methods are:
+\begin{itemize}
+    \item \texttt{KNITRO.jl} package in Julia \citep{knitro}
+    \item \texttt{sqp} option in MATLAB \citep{sqp}
+\end{itemize}
+
 
 \begin{table}
     \centering
-    \caption{Julia and MATLAB Benchmarks on the Case Studies. OS solvers: \texttt{OSQP.jl} (Julia) and \texttt{admm} (MATLAB), AS solvers: \texttt{DAQP.jl} (Julia) and \texttt{active-set} (MATLAB), IP solvers: \texttt{Iopot.jl} (Julia) and \texttt{interior-point} (MATLAB), SQ solvers: \texttt{KNITRO.jl} (Julia) and \texttt{sqp} (MATLAB).}
+    \caption{Julia and MATLAB Benchmarks on the Case Studies.}
     \label{tab:benchamrks}
     \centering
 	\input{tab/benchmarks.tex}
