@@ -398,27 +398,30 @@ Dict{Symbol, Float64} with 2 entries:
 
 Of course, this gain is only exploitable if the motor electronic includes some kind of regenerative circuitry.
 
-\comment{Should I also include the successive linearization MPC example of \texttt{https://tinyurl.com/493ckw2f}? Its benchmark would certainly standout in Table 1. There is two minor issues.} 
+\comment{Should I also include the successive linearization MPC example of \texttt{https://tinyurl.com/493ckw2f} ? Its benchmark would certainly standout in Table 1. There is however two minor issues.} 
 
-\comment{First, there is no direct equivalent in MATLAB since there is no automatic differentiation (AD). I would need to analytically find the Jacobians of the pendulum model and implement a function that evaluates them at the operating point. It's not an equivalent algorithm however since AD is inherently slightly heavier in computation (the derivation part is done by the computer, not me). I could otherwise use symbolic differentiation with \texttt{https://tinyurl.com/4xvadp3y}? I would avoid finite difference Jacobians since the closed-loop response would be too different.} 
+\comment{First, there is no direct equivalent in MATLAB since there is no automatic differentiation (AD). I would need to analytically find the Jacobians of the pendulum model and implement a function that evaluates them at the operating point. It's not an equivalent algorithm however since AD is inherently slightly heavier in computation (the derivation part is done by the computer, not me). I could otherwise use symbolic differentiation with \texttt{https://tinyurl.com/4xvadp3y} ? I would avoid finite difference Jacobians since the closed-loop response would be too different.} 
 
-\comment{Second, the Julia OS solver (OSQP) does not work well for this case study without major modification in the optimization parameters. I would only put AS solver (DAQP) results for this example.}
+\comment{Second, the Julia OS solver (OSQP.jl) does not work well for this case study without major modification in the optimization parameters (because of the unstable pole). I would only put AS solver (DAQP) results for this example.}
 
 \subsection{Benchmarks}
 
-It is worth mentioning that the closed-loop responses in Julia and MATLAB are all identical for all the case studies. The repository at \texttt{https://github.com/franckgaga/mpcPackageJulia.tex} provides the code to reproduce the results.
 
-The benchmarks results test four types of quadratic and nonlinear solvers. The operator splitting (OS) methods are: 
+
+
+It is worth mentioning that the closed-loop responses in Julia and MATLAB are all identical for all the case studies. 
+
+The benchmarks results test four types of quadratic and nonlinear solvers. The operator-splitting (OS) methods are: 
 \begin{itemize}
     \item \texttt{OSQP.jl} package in Julia \citep{osqp}
     \item \texttt{admm} solver in MATLAB \citep{admm}
 \end{itemize}
-for active set (AS) methods, the optimizers are: 
+for active-set (AS) methods, the optimizers are: 
 \begin{itemize}
     \item \texttt{DAQP.jl} package in Julia \citep{daqp}
     \item \texttt{active-set} option in MATLAB \citep{activeset}
 \end{itemize}
-for interior point (IP) methods, the solvers are: 
+for interior-point (IP) methods, the solvers are: 
 \begin{itemize}
     \item \texttt{Ipopt.jl} package in Julia \citep{ipopt}
     \item \texttt{interior-point} option in MATLAB \citep{interiorpoint}
@@ -429,6 +432,9 @@ and, lastly, the sequential quadratic (SQ) methods are:
     \item \texttt{sqp} option in MATLAB \citep{sqp}
 \end{itemize}
 
+Note that all the solvers in Julia are free and open-source, except for \texttt{KNITRO.jl} which requires a license. A laptop with an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark} i7-1165G7 (8 cores at \SI{4.70}{\giga\hertz}) and a Linux v6.8.0 kernel runs the benchmarks. The repository at \texttt{https://github.com/franckgaga/mpcPackageJulia.tex} provides the code to reproduce the results. The benchmark scripts are executed on Julia v1.10.3 and MATLAB R2024a.
+
+The results are presented in \cref{tab:benchamrks}.
 
 \begin{table}
     \centering
@@ -437,4 +443,8 @@ and, lastly, the sequential quadratic (SQ) methods are:
     \centering
 	\input{tab/benchmarks.tex}
 \end{table}
+
+Many built-in MATLAB functions are not purely interpreted but contains call to specialized compiled code. This is presumably the case for MATLAB \texttt{fmincon} solvers, the function used by MATLAB NMPC toolset. This probably explain why NMPC and EMPC are only twice as fast as MATLAB counterpart on average. Since the pendulum model is simple, this is not performance bottleneck. It is expected that the speed gap between the two languages would be larger for more complex plant models.
+
+
 
