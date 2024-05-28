@@ -99,7 +99,7 @@ using Plots; plot(res)
 \begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_LinMPC1.pdf}
-    \caption{CSTR closed-loop simulation\deleted{: $y_1=y_L$, $y_2=y_T$, $u_1=u_c$, and $u_2=u_h$}.}
+    \caption{CSTR closed-loop simulation\replaced{ (MPC)}{: $y_1=y_L$, $y_2=y_T$, $u_1=u_c$, and $u_2=u_h$}.}
     \label{fig:plot_LinMPC1}
 \end{figure}
 
@@ -148,7 +148,7 @@ plot(res)
 \begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_LinMPC2.pdf}
-    \caption{CSTR closed-loop simulation with feedforward\deleted{: $y_1=y_L$, $y_2=y_T$, $u_1=u_c$, and $u_2=u_h$}.}
+    \caption{CSTR closed-loop simulation with feedforward\replaced{ (MPC)}{: $y_1=y_L$, $y_2=y_T$, $u_1=u_c$, and $u_2=u_h$}.}
     \label{fig:plot_LinMPC2}
 \end{figure}
 
@@ -272,7 +272,7 @@ plot(res_ry)
 \begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC2.pdf}
-    \caption{Pendulum output setpoint tracking\deleted{: $y_1 = \theta$ in \si{\degree} and $u_1 = \tau$ in \si{\newton\meter}.}}
+    \caption{Pendulum output setpoint tracking\replaced{ (NMPC)}{: $y_1 = \theta$ in \si{\degree} and $u_1 = \tau$ in \si{\newton\meter}}.}
     \label{fig:plot_NonLinMPC2}
 \end{figure}
 
@@ -286,7 +286,7 @@ plot(res_yd)
 \begin{figure}[h]
     \centering
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC3.pdf}
-    \caption{Pendulum output disturbance rejection\deleted{: $y_1 = \theta$ in \si{\degree} and $u_1 = \tau$ in \si{\newton\meter}}.}
+    \caption{Pendulum output disturbance rejection\replaced{ (NMPC)}{: $y_1 = \theta$ in \si{\degree} and $u_1 = \tau$ in \si{\newton\meter}}.}
     \label{fig:plot_NonLinMPC3}
 \end{figure}
 
@@ -360,6 +360,13 @@ res2_ry = sim!(empc, N, ry; plant, x_0, x̂_0)
 plot(res2_ry, ploty=[1])
 \end{minted}
 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\columnwidth]{fig/plot_EconomMPC1.pdf}
+    \caption{Pendulum output setpoint tracking (EMPC).}
+    \label{fig:plot_EconomMPC1}
+\end{figure}
+
 and the energy consumption is slightly lower:
 
 \begin{minted}{julia}
@@ -383,6 +390,13 @@ x_0 = [π, 0]; x̂_0 = [π, 0, 0]; y_step = [10; 0]
 res2_yd = sim!(empc, N, ry; plant, x_0, x̂_0, y_step)
 plot(res2_yd, ploty=[1])
 \end{minted}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\columnwidth]{fig/plot_EconomMPC2.pdf}
+    \caption{Pendulum output disturbance rejection (EMPC).}
+    \label{fig:plot_EconomMPC2}
+\end{figure}
 
 the new controller is able to recuperate more energy from the pendulum (i.e. negative work):
 

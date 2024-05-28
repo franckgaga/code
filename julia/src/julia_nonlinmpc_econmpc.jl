@@ -34,10 +34,10 @@ using Plots; plot(res, plotu=false, plotxwithx̂=true)
 using PlotThemes, Plots.PlotMeasures
 theme(:default)
 default(fontfamily="Computer Modern");
-p = plot(res, plotu=false, plotxwithx̂=true, size=(475, 300))
-yticks!(p[2], [0.0, 0.1, 0.2, 0.3, 0.4, 0.5])
-yticks!(p[3], [-0.3, 0.0, 0.3, 0.6, 0.9, 1.2])
-yticks!(p[4], [-0.075, -0.05, -0.025, 0.0, 0.025, 0.05, 0.075])
+p = plot(res, plotu=false, plotxwithx̂=true, size=(425, 275))
+yticks!(p[2], [0.0, 0.25, 0.5, 0.75])
+yticks!(p[3], [-0.5, 0, 0.5, 1.0, 1.5])
+yticks!(p[4], [-0.10, -0.05, 0, 0.05, 0.1])
 display(p)
 savefig(p, "$(@__DIR__())/../../fig/plot_NonLinMPC1.pdf")
 
@@ -219,7 +219,7 @@ theme(:default)
 default(fontfamily="Computer Modern")
 p = plot(res2_yd, ploty=[1], size=(425, 200), bottom_margin=10px)
 display(p)
-savefig(p, "$(@__DIR__())/../../fig/plot_EconomMPC1.pdf")
+savefig(p, "$(@__DIR__())/../../fig/plot_EconomMPC2.pdf")
 
 ## =========================================
 ## ========= Benchmark =====================
@@ -232,11 +232,11 @@ bm = @benchmark(
         samples=50,
         seconds=10*60
     )
-@show btime_solver_IP = median(bm)
+@show btime_EMPC_regul_solver_IP = median(bm)
 
 bm = @benchmark(
-        sim!($empc_knitro, $N, $[180.0]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0, y_step=$[10]),
+        sim!($empc_knitro, $N, $ry; plant=$plant, x_0=$x_0, x̂_0=$x̂_0, y_step=$y_step),
         samples=50,
         seconds=10*60
     )
-@show btime_solver_SQ = median(bm)
+@show btime_EMPC_regul_solver_SQ = median(bm)
