@@ -30,7 +30,7 @@ At the steady-state operating point $u_c=u_h=20$, $y_L=50$, and $y_T=30$, the fo
     \frac{-0.74}{8s+1} & \frac{0.74}{8s+1}
 \end{bmatrix}
 \end{equation}
-The syntax to construct a linear model with a sample time of $\SI{2}{\second}$ is: \comment{added \texttt{setname!} call for y-axis labels in the plots (new feature)}
+The syntax to construct a linear model with a sample time of $\SI{2}{\second}$ is: \comment{cahnges in the code: added \texttt{setname!} call for y-axis labels in the plots (new feature)}
 \begin{minted}{julia}
 using ModelPredictiveControl, ControlSystemsBase
 G = [ tf(1.90, [18, 1]) tf(1.90, [18, 1]);
@@ -173,20 +173,22 @@ For this case study, the goal is to control the angular position $\theta$ of a p
 \dot{\omega}(t) &= -\frac{g}{L}\sin\big(\theta(t)\big) -\frac{K}{m}\omega(t) + \frac{1}{m L^2}\tau(t) \label{eq.pendulum_speed}
 \end{align}
 \end{subequations}
-in which $g$ is the gravitational acceleration in \si{\meter\per\second\squared}, $L$, the pendulum length in \si{\meter}, $K$, the friction coefficient at the pivot point in \si{\kilogram\per\second}, and $m$, the mass attached at the end of the pendulum in \si{\kilogram}. \replaced{By default, the \texttt{NonLinModel} constructor assumes continuous-time equations and discretizes them with Runge-Kutta:}{Here, the explicit Euler method discretizes the system to construct a \texttt{NonLinModel}}:
+in which $g$ is the gravitational acceleration in \si{\meter\per\second\squared}, $L$, the pendulum length in \si{\meter}, $K$, the friction coefficient at the pivot point in \si{\kilogram\per\second}, and $m$, the mass attached at the end of the pendulum in \si{\kilogram}. \replaced{By default, the \texttt{NonLinModel} constructor assumes continuous-time equations and discretizes them with Runge-Kutta:}{Here, the explicit Euler method discretizes the system to construct a \texttt{NonLinModel}}: \comment{changes in the code: using the new in-place/mutating syntax for NonLinModel, using the new builtin RK4 solver, using setname! to clarify the y-axis labels in the plots}
 \vspace*{-5pt}
 \begin{minted}{julia}
 using ModelPredictiveControl
-function pendulum(par, x, u)
+function pendulum!(ẋ, x, u, par)
     g, L, K, m = par     # [m/s²], [m], [kg/s], [kg]
     θ, ω = x[1], x[2]    # [rad], [rad/s]
     τ = u[1]             # [Nm]
-    return [ω, -g/L*sin(θ) - K/m*ω + τ/m/L^2]
+    ẋ[1] = ω
+    ẋ[2] = -g/L*sin(θ) - K/m*ω + τ/m/L^2
+    return nothing
 end
 par = (9.8, 0.4, 1.2, 0.3); Ts = 0.1; nu = 1; nx = 2; ny = 1
-f(x, u, _ ) = pendulum(par, x, u)
-h(x, _ )    = [180/π*x[1]]  # [°]
-model = NonLinModel(f, h, Ts, nu, nx, ny)
+f!(ẋ, x, u, _ ) = pendulum!(ẋ, x, u, par)
+h!(y, x, _ ) = (y[1] = 180/π*x[1])   # [°]
+model = NonLinModel(f!, h!, Ts, nu, nx, ny)
 vu = ["\$τ\$ (Nm)"]
 vx = ["\$θ\$ (rad)", "\$ω\$ (rad/s)"]
 vy = ["\$θ\$ (°)"]
@@ -201,7 +203,7 @@ NonLinModel with a sample time Ts = 0.1 s, RungeKutta solver and:
  0 measured disturbances d
 \end{minted}
 
-The output function $\mathbf{h}$ converts the $\theta$ angle to degrees.
+The output function $\mathbf{h}$ converts the $\theta$ angle to degrees. \added{The plant model relies on mutating state-space functions to reduce the memory allocations and the computational burden as well. The more intuitive non-mutating syntax can still be used by providing functions with one less argument, e.g.: \texttt{f(x,u,d)=x+u+d} and \texttt{h(x,d)=x+d}.}
 
 \subsubsection{Nonlinear State Estimator}
 
@@ -223,8 +225,8 @@ NonLinModel and:
 The vectors \texttt{σQ} and \texttt{σR} are the standard deviations of the process and sensor noises, respectively. The value for the velocity $\omega$ is higher here (\texttt{σQ} second value) since \eqref{eq.pendulum_speed} includes an uncertain parameter: the friction coefficient $K$. Also, the argument \texttt{nint\_u} explicitly adds one integrating state at the model input, the motor torque $\tau$, with an associated standard deviation \texttt{σQint\_u} of $\SI{0.1}{\newton\meter}$. Custom models for the unmeasured disturbances will be added in a future release (other than integrators). The estimator tuning is tested on a plant with a \SI{25}{\percent} larger friction coefficient $K$:
 \begin{minted}{julia}
 par_plant = (par[1], par[2], 1.25*par[3], par[4])
-f_plant(x, u, _) = x + Ts*pendulum(par_plant, x, u)
-plant = NonLinModel(f_plant, h, Ts, nu, nx, ny)
+f_plant!(ẋ, x, u, _) = pendulum!(ẋ, x, u, par_plant)
+plant = NonLinModel(f_plant!, h!, Ts, nu, nx, ny)
 N = 35; u = [0.5]; y_noise = [0.5]
 res = sim!(estim, N, u; plant, y_noise)
 using Plots; plot(res, plotu=false, plotxwithx̂=true)
@@ -314,20 +316,20 @@ With the sampling time $T_s$ in \si{\second} and the prediction horizon $H_p$ in
 W = T_s \sum_{j = 0}^{H_p - 1} \tau(k+j) \omega(k+j) 
 \end{equation}
 
-The objective will now include an additive term that penalizes the work done by the motor $W$ to reduce the energy consumption. Notice that \eqref{eq:pendulum_W} is a function of the manipulated input $\tau$ and the angular speed $\omega$, a state that is not measured (only the angle $\theta$ is measured here). As the arguments of the economic function $J_E$ in \eqref{eq:J_NMPC} do not include the states, the speed is now defined as an unmeasured output to design a Kalman filter similar to the previous one ($\mathbf{y^m} = \theta$ and $\mathbf{y^u} = \omega$):
+The objective will now include an additive term that penalizes the work done by the motor $W$ to reduce the energy consumption. Notice that \eqref{eq:pendulum_W} is a function of the manipulated input $\tau$ and the angular speed $\omega$, a state that is not measured (only the angle $\theta$ is measured here). As the arguments of the economic function $J_E$ in \eqref{eq:J_NMPC} do not include the states, the speed is now defined as an unmeasured output to design a Kalman filter similar to the previous one ($\mathbf{y^m} = \theta$ and $\mathbf{y^u} = \omega$): \comment{changes in the code: use the new mutating syntax, added setname! calls to clarify the y-axis labels in the plots}
 
 \begin{minted}{julia}
-h2(x, _ ) = [180/π*x[1], x[2]]
+h2!(y, x, _ ) = (y[1] = 180/π*x[1]; y[2]=x[2])
 nu, nx, ny = 1, 2, 2
-model = NonLinModel(f      , h2, Ts, nu, nx, ny)
-plant = NonLinModel(f_plant, h2, Ts, nu, nx, ny)
+model = NonLinModel(f!      , h2!, Ts, nu, nx, ny)
+plant = NonLinModel(f_plant!, h2!, Ts, nu, nx, ny)
 model = setname!(model, u=vu, x=vx, y=[vy; vx[2]])
 plant = setname!(plant, u=vu, x=vx, y=[vy; vx[2]])
 estim = UnscentedKalmanFilter(model; σQ, σR, nint_u, 
                                        σQint_u, i_ym=[1])
 \end{minted}
 
-The \texttt{plant} object based on \texttt{h2} is also required since \texttt{sim!} expects that the plant output vector $\mathbf{y}$ corresponds to the controller model output vector. We can now define the $J_E$ function and the controller:
+The \texttt{plant} object based on \texttt{h2!} is also required since \texttt{sim!} expects that the plant output vector $\mathbf{y}$ corresponds to the controller model output vector. We can now define the $J_E$ function and the controller:
 
 \begin{minted}{julia}
 function JE(UE, ŶE, _ )
@@ -423,7 +425,7 @@ Of course, this gain is only exploitable if the motor electronic includes some k
 
 The time required to simulate the previous case studies is a benchmark of MPC performance in term of computational cost (the cost to simulate the plant being negligible). The case studies are reproduced on MATLAB to compare the performance of the two framework. A special care is taken to ensure that that the closed-loop solution in MATLAB is identical to Julia’s counterpart. \comment{(Not-So-Fun Fact: This part was surprisingly long. Do you know that the MPC weight parameters in MATLAB are in fact the square root of the final matrices ? For example, if we chose a move suppression weight of 0.5, the associated matrix will be 0.25 in the objective function. I understand this choice, but I would have saved tons of time if they mentioned that in the doc!)}. The median simulation time of 1000 simulations, for MPC, and 50 simulations, for NMPC and EMPC, provide a performance benchmark robust to outliers. It must be emphasized that the reported values are the total time to simulate the whole scenario, that is $N=75$ time steps for the CSTR, and $N=35$, for the pendulum.
 
-The MATLAB implementations use the model predictive control toolbox. Additional licenses to the control system and optimization toolboxes are needed to design and execute MPCs. Note that all the scripts are executed as is in the interpreter. Code generation is typically required to produce fast dedicated code. But, as mentioned in the introduction, it creates other problems like extra licensing fees (e.g.: MATLAB/Simulink Coder).
+The MATLAB implementations use the model predictive control toolbox. Additional licenses to the control system and optimization toolboxes are needed to design and execute MPCs. Note that all the scripts are executed as is, in the interpreter. Code generation is typically required to produce fast dedicated code. But, as mentioned in the introduction, it creates other problems like extra licensing fees (e.g.: MATLAB/Simulink Coder). Also note that MATLAB only supports the less efficient non-mutating syntax for the nonlinear state-space functions.
 
 Since the performance is solver-dependent, multiple optimization algorithms are tested. The results include four types of quadratic and nonlinear solvers. The operator-splitting (OS) methods are: 
 \begin{itemize}
@@ -446,7 +448,7 @@ And, lastly, the sequential quadratic (SQ) methods are:
     \item \texttt{sqp} option in MATLAB \citep{sqp}
 \end{itemize}
 
-All the solvers in Julia are free and open-source, except for \texttt{KNITRO.jl} which requires a license. A keyword argument in the constructors allows customizing the solver. For example on the CSTR, to install \texttt{DAQP.jl} and construct a \texttt{LinMPC} based on this optimizer, the syntax is:
+All the solvers in Julia are free and open-source, except for \texttt{KNITRO.jl} which is commercial. A keyword argument in the controller constructors allows customizing the solver. For example on the CSTR, to install \texttt{DAQP.jl} and construct a \texttt{LinMPC} based on this optimizer, the syntax is:
 
 \begin{minted}{julia}
 using Pkg; Pkg.add(["JuMP","DAQP"]) # install JuMP and DAQP
@@ -468,7 +470,7 @@ SteadyKalmanFilter estimator and:
   0 measured disturbances d
 \end{minted}
 
-Disabling the bridges slightly reduce the overhead when the constraints are natively supported by the solver, which is true for all case studies here. A laptop with an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark} i7-1165G7 (8 cores at \SI{4.70}{\giga\hertz}) and a Linux v6.8.0 kernel runs the benchmarks. The scripts are executed on Julia v1.10.3 and MATLAB R2024a. A public repository at \texttt{https://github.com/franckgaga/mpcPackageJulia.tex} provides the code to reproduce the results. 
+Disabling the bridges slightly reduce the overhead when the constraints are natively supported by the solver, which is true for all the case studies here. A laptop with an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark} i7-1165G7 (8 cores at \SI{4.70}{\giga\hertz}) and a Linux v6.8.0 kernel runs the benchmarks. The scripts are executed on Julia v1.10.3 and MATLAB R2024a. A public repository at \texttt{https://github.com/franckgaga/mpcPackageJulia.tex} provides the code to reproduce the results. 
 
 \begin{table}
     \centering
@@ -478,6 +480,6 @@ Disabling the bridges slightly reduce the overhead when the constraints are nati
 	\input{tab/benchmarks.tex}
 \end{table}
 
-The benchmark results are presented in \cref{tab:benchamrks}. The linear MPC is significantly faster in Julia, approximately from 4 to 15 times faster. This result is however amplified by \texttt{OSQP.jl}, a modern and fast OS quadratic optimizer, which seems to perform considerably better than the MATLAB's counterpart (\texttt{admm}). But the authors would argue that it is a consequence of \texttt{ModelPredictiveControl.jl} modular design. Any modern optimization tools can be leverage with minimal effort and without any package update, presuming that they offer a \texttt{JuMP.jl} interface. Using a custom optimization algorithm in MATLAB MPC toolbox is possible but not straightforward. \comment{FYI: I mentionned a 50 times gain in an old email. I was wrong. It's because I simulated the CSTR plant using \texttt{xnext = sys.A*x + sys.B*u} in MATLAB. Doing \texttt{sys.A} is incredibly slow in MATLAB. It's way faster to directly use the matrices with \texttt{xnext = A*x + B*u}.}
+The benchmarks are presented in \cref{tab:benchamrks}. The linear MPC is significantly faster in Julia, approximately from 4 to 15 times faster. This result is however amplified by \texttt{OSQP.jl}, a modern and fast OS quadratic optimizer, which seems to perform considerably better than MATLAB's counterpart (\texttt{admm}). But the authors would argue that it is a consequence of \texttt{ModelPredictiveControl.jl} modular design. Any modern optimization tools can be leverage with minimal effort and without any package update, presuming that they offer a \texttt{JuMP.jl} interface. Using a custom optimization algorithm in MATLAB MPC toolbox is possible but not straightforward. \comment{I mentionned a 50 times gain in an old email. I was wrong. It's because I simulated the CSTR plant using \texttt{xnext = sys.A*x + sys.B*u} in MATLAB. Doing \texttt{sys.A} is incredibly slow in MATLAB. It's way faster to directly use the matrices with \texttt{xnext = A*x + B*u}.}
 
-The NMPC and EMPC are approximately twice as fast as MATLAB counterpart on average. This is presumably explained by MATLAB's internal and the pendulum model. Indeed, many built-in MATLAB functions are not purely interpreted but contains call to specialized compiled code. This is probably the case for \texttt{fmincon} solvers, the function used by MATLAB NMPC toolset. And, since the pendulum model is trivially simple, this is not a performance bottleneck. Thus, in both languages, the majority of the time is spent in the optimization algorithms, both implemented in machine code for the most parts. It is expected that the speed gap between the two languages would be larger for more complex plant models, since this part is interpreted in MATLAB.
+The NMPC and EMPC are approximately twice as fast as MATLAB counterpart on average. This is presumably explained by MATLAB's internal and the pendulum model. Indeed, many built-in MATLAB functions are not purely interpreted but contains call to specialized compiled code. This is probably the case for \texttt{fmincon} solvers, the function used by MATLAB NMPC toolset. And, since the pendulum model is trivially simple, computing the predictions is not a performance bottleneck. Thus, in both languages, the majority of the time is spent in the optimization algorithms, both implemented in machine code for most parts. It is expected that the speed gap between the two languages would be larger for more complex plant models, since this part mainly interpreted in MATLAB.

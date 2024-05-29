@@ -35,7 +35,7 @@ Discrete nonlinear state-space representations of the plant. \replaced[comment={
     \mathbf{y}(k)   &= \mathbf{h}\big( \mathbf{x}(k), \mathbf{d}(k) \big)
 \end{align}
 \end{subequations}
-It is worth mentioning that the state update $\mathbf{f}$ and output $\mathbf{h}$ functions must be in pure Julia to design nonlinear MPCs from them, since the implementation rely on automatic differentiation.
+It is worth mentioning that the state update $\mathbf{f}$ and output $\mathbf{h}$ functions must be in pure Julia to design nonlinear MPCs from them, since the implementation rely on \added{the forward-mode} automatic differentiation \added{of \texttt{ForwardDiff.jl} \citep{forwardDiff}}.
 
 \subsection{State Estimators}
 
@@ -80,7 +80,7 @@ This approach allows incorporating additional physical information on the proces
     \mathbf{\hat{W}_{min} - C_{\hat{w}_{min}}} \epsilon &\le \mathbf{\hat{W}} &&\le \mathbf{\hat{W}_{max} + C_{\hat{w}_{max}}} \epsilon \\
     \mathbf{\hat{V}_{min} - C_{\hat{v}_{min}}} \epsilon &\le \mathbf{\hat{V}} &&\le \mathbf{\hat{V}_{max} + C_{\hat{v}_{max}}} \epsilon
 \end{alignat}
-and also $\epsilon \ge 0$. The $\mathbf{\hat{X}}$ vectors gather the state estimates over the window. The $\mathbf{C}$ vectors are non-negative values that specify the softness of the associated bound, and $C$ globally weights the slack $\epsilon$ (equal concern for relaxation). The problem \eqref{eq:J_MHE} is treated as a quadratic program for \texttt{LinModel}, and a nonlinear optimization, for \texttt{NonLinModel}.
+and also $\epsilon \ge 0$. The $\mathbf{\hat{X}}$ vector gathers the state estimates over the window. The $\mathbf{C}$ vectors are non-negative values that specify the softness of the associated bound, and $C$ globally weights the slack $\epsilon$ (equal concern for relaxation). The problem \eqref{eq:J_MHE} is treated as a quadratic program for \texttt{LinModel}, and a nonlinear optimization, for \texttt{NonLinModel}.
 }%
 
 \subsubsection{\textnormal{\texttt{InternalModel}}}
