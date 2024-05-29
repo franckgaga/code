@@ -75,12 +75,12 @@ savefig(p, "$(@__DIR__())/../../fig/plot_NonLinMPC2.pdf")
 using BenchmarkTools
 using JuMP, Ipopt, KNITRO
 
-optim = JuMP.Model(Ipopt.Optimizer)
+optim = JuMP.Model(Ipopt.Optimizer, add_bridges=false)
 nmpc_ipopt = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt, optim)
 nmpc_ipopt = setconstraint!(nmpc_ipopt; umin, umax)
 JuMP.unset_time_limit_sec(nmpc_ipopt.optim)
 
-optim = JuMP.Model(KNITRO.Optimizer)
+optim = JuMP.Model(KNITRO.Optimizer, add_bridges=false)
 set_attribute(optim, "algorithm", "4") # 4th algorithm is SQP
 nmpc_knitro = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt, optim)
 nmpc_knitro = setconstraint!(nmpc_knitro; umin, umax)
@@ -181,12 +181,12 @@ Dict(:W_nmpc => calcW(res_ry), :W_empc => calcW(res2_ry))
 ## =========================================
 ## ========= Benchmark =====================
 ## =========================================
-optim = JuMP.Model(Ipopt.Optimizer)
+optim = JuMP.Model(Ipopt.Optimizer, add_bridges=false)
 empc_ipopt = NonLinMPC(estim; Hp, Hc, Nwt, Mwt, Cwt, JE, Ewt, optim)
 empc_ipopt = setconstraint!(empc_ipopt; umin, umax)
 JuMP.unset_time_limit_sec(empc_ipopt.optim)
 
-optim = JuMP.Model(KNITRO.Optimizer)
+optim = JuMP.Model(KNITRO.Optimizer, add_bridges=false)
 set_attribute(optim, "algorithm", "4") # 4th algorithm is SQP
 empc_knitro = NonLinMPC(estim; Hp, Hc, Nwt, Mwt, Cwt, JE, Ewt, optim)
 empc_knitro = setconstraint!(empc_knitro; umin, umax)
