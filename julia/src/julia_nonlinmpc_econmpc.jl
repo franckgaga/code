@@ -2,16 +2,18 @@
 # ========== STATE ESTIMATOR ===============
 # ==========================================
 using ModelPredictiveControl
-function pendulum(par, x, u)
+function pendulum!(ẋ, x, u, par)
     g, L, K, m = par     # [m/s²], [m], [kg/s], [kg]
     θ, ω = x[1], x[2]    # [rad], [rad/s]
     τ = u[1]             # [Nm]
-    return [ω, -g/L*sin(θ) - K/m*ω + τ/m/L^2]
+    ẋ[1] = ω
+    ẋ[2] = -g/L*sin(θ) - K/m*ω + τ/m/L^2
+    return nothing
 end
 par = (9.8, 0.4, 1.2, 0.3); Ts = 0.1; nu = 1; nx = 2; ny = 1
-f(x, u, _ ) = pendulum(par, x, u)
-h(x, _ )    = [180/π*x[1]]  # [°]
-model = NonLinModel(f, h, Ts, nu, nx, ny)
+f!(ẋ, x, u, _ ) = pendulum!(ẋ, x, u, par)
+h!(y, x, _ ) = (y[1] = 180/π*x[1])   # [°]
+model = NonLinModel(f!, h!, Ts, nu, nx, ny)
 vu = ["\$τ\$ (Nm)"]
 vx = ["\$θ\$ (rad)", "\$ω\$ (rad/s)"]
 vy = ["\$θ\$ (°)"]
@@ -23,8 +25,8 @@ estim = UnscentedKalmanFilter(model; α, σQ, σR, nint_u, σQint_u)
 
 ## =========================================
 par_plant = (par[1], par[2], 1.25*par[3], par[4])
-f_plant(x, u, _) = pendulum(par_plant, x, u)
-plant = NonLinModel(f_plant, h, Ts, nu, nx, ny)
+f_plant!(ẋ, x, u, _) = pendulum!(ẋ, x, u, par_plant)
+plant = NonLinModel(f_plant!, h!, Ts, nu, nx, ny)
 N = 35; u=[0.5]; res = sim!(estim, N, u; plant, y_noise=[0.5])
 using Plots; plot(res, plotu=false, plotxwithx̂=true)
 
@@ -136,10 +138,10 @@ bm = @benchmark(
 # ==========================================
 # ========== ECONOMIC MPC ==================
 # ==========================================
-h2(x, _ ) = [180/π*x[1], x[2]]
+h2!(y, x, _ ) = (y[1] = 180/π*x[1]; y[2]=x[2])
 nu, nx, ny = 1, 2, 2
-model = NonLinModel(f      , h2, Ts, nu, nx, ny)
-plant = NonLinModel(f_plant, h2, Ts, nu, nx, ny)
+model = NonLinModel(f!      , h2!, Ts, nu, nx, ny)
+plant = NonLinModel(f_plant!, h2!, Ts, nu, nx, ny)
 model = setname!(model, u=vu, x=vx, y=[vy; vx[2]])
 plant = setname!(plant, u=vu, x=vx, y=[vy; vx[2]])
 estim = UnscentedKalmanFilter(model; σQ, σR, nint_u, σQint_u, i_ym=[1])
