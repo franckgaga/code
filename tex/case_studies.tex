@@ -412,43 +412,63 @@ Dict{Symbol, Float64} with 2 entries:
 
 Of course, this gain is only exploitable if the motor electronic includes some kind of regenerative circuitry.
 
-\comment{Should I also include the successive linearization MPC example of \texttt{https://tinyurl.com/493ckw2f} ? Its benchmark would certainly standout in Table 1. There is however two minor issues.} 
+\comment{Should I add the successive linearization MPC example of the online doc \texttt{https://tinyurl.com/493ckw2f} ? Its benchmark would certainly standout in Table 1. There is however two minor issues.} 
 
 \comment{First, there is no direct equivalent in MATLAB since there is no automatic differentiation (AD). I would need to analytically find the Jacobians of the pendulum model and implement a function that evaluates them at the operating point. It's not an equivalent algorithm however since AD is inherently slightly heavier in computation (the derivation part is done by the computer, not me). I could otherwise use symbolic differentiation with \texttt{https://tinyurl.com/4xvadp3y} ? I would avoid finite difference Jacobians since the closed-loop response would be too different.} 
 
 \comment{Second, the Julia OS solver (OSQP.jl) does not work well for this case study without major modification in the optimization parameters (because of the unstable pole). I would only put AS solver (DAQP) results for this example.}
 
 \subsection{Benchmarks}
+\label{sec:benchmarks}
 
+The time required to simulate the previous case studies is a benchmark of MPC performance in term of computational cost (the cost to simulate the plant being negligible). The case studies are reproduced on MATLAB to compare the performance of the two framework. A special care is taken to ensure that that the closed-loop solution in MATLAB is identical to Julia’s counterpart. \comment{(Not-So-Fun Fact: This part was surprisingly long. Do you know that the MPC weight parameters in MATLAB are in fact the square root of the final matrices ? For example, if we chose a move suppression weight of 0.5, the associated matrix will be 0.25 in the objective function. I understand this choice, but I would have saved tons of time if they mentioned that in the doc!)}. The median simulation time of 1000 simulations, for MPC, and 50 simulations, for NMPC and EMPC, provide a performance benchmark robust to outliers. It must be emphasized that the reported values are the total time to simulate the whole scenario, that is $N=75$ time steps for the CSTR, and $N=35$, for the pendulum.
 
+The MATLAB implementations use the model predictive control toolbox. Additional licenses to the control system and optimization toolboxes are needed to design and execute MPCs. Note that all the scripts are executed as is in the interpreter. Code generation is typically required to produce fast dedicated code. But, as mentioned in the introduction, it creates other problems like extra licensing fees (e.g.: MATLAB/Simulink Coder).
 
-
-It is worth mentioning that the closed-loop responses in Julia and MATLAB are all identical for all the case studies. 
-
-The benchmarks results test four types of quadratic and nonlinear solvers. The operator-splitting (OS) methods are: 
+Since the performance is solver-dependent, multiple optimization algorithms are tested. The results include four types of quadratic and nonlinear solvers. The operator-splitting (OS) methods are: 
 \begin{itemize}
     \item \texttt{OSQP.jl} package in Julia \citep{osqp}
     \item \texttt{admm} solver in MATLAB \citep{admm}
 \end{itemize}
-for active-set (AS) methods, the optimizers are: 
+For active-set (AS) methods, the optimizers are: 
 \begin{itemize}
     \item \texttt{DAQP.jl} package in Julia \citep{daqp}
     \item \texttt{active-set} option in MATLAB \citep{activeset}
 \end{itemize}
-for interior-point (IP) methods, the solvers are: 
+For interior-point (IP) methods, the solvers are: 
 \begin{itemize}
     \item \texttt{Ipopt.jl} package in Julia \citep{ipopt}
     \item \texttt{interior-point} option in MATLAB \citep{interiorpoint}
 \end{itemize}
-and, lastly, the sequential quadratic (SQ) methods are:
+And, lastly, the sequential quadratic (SQ) methods are:
 \begin{itemize}
     \item \texttt{KNITRO.jl} package in Julia \citep{knitro}
     \item \texttt{sqp} option in MATLAB \citep{sqp}
 \end{itemize}
 
-Note that all the solvers in Julia are free and open-source, except for \texttt{KNITRO.jl} which requires a license. A laptop with an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark} i7-1165G7 (8 cores at \SI{4.70}{\giga\hertz}) and a Linux v6.8.0 kernel runs the benchmarks. The repository at \texttt{https://github.com/franckgaga/mpcPackageJulia.tex} provides the code to reproduce the results. The benchmark scripts are executed on Julia v1.10.3 and MATLAB R2024a.
+All the solvers in Julia are free and open-source, except for \texttt{KNITRO.jl} which requires a license. A keyword argument in the constructors allows customizing the solver. For example on the CSTR, to install \texttt{DAQP.jl} and construct a \texttt{LinMPC} based on this optimizer, the syntax is:
 
-The results are presented in \cref{tab:benchamrks}.
+\begin{minted}{julia}
+using Pkg; Pkg.add(["JuMP","DAQP"]) # install JuMP and DAQP
+using JuMP, DAQP
+optim = JuMP.Model(DAQP.Optimizer, add_bridge=false)
+mpc = setconstraint!(LinMPC(model; optim), ymin=[45, -Inf])
+\end{minted}
+\spacerepl
+\begin{minted}{julia-repl}
+LinMPC controller with a sample time Ts = 2.0 s, DAQP optimizer,
+SteadyKalmanFilter estimator and:
+ 10 prediction steps Hp
+  2 control steps Hc
+  1 slack variable ϵ (control constraints)
+  2 manipulated inputs u (0 integrating states)
+  4 estimated states x̂
+  2 measured outputs ym (2 integrating states)
+  0 unmeasured outputs yu
+  0 measured disturbances d
+\end{minted}
+
+Disabling the bridges slightly reduce the overhead when the constraints are natively supported by the solver, which is true for all case studies here. A laptop with an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark} i7-1165G7 (8 cores at \SI{4.70}{\giga\hertz}) and a Linux v6.8.0 kernel runs the benchmarks. The scripts are executed on Julia v1.10.3 and MATLAB R2024a. A public repository at \texttt{https://github.com/franckgaga/mpcPackageJulia.tex} provides the code to reproduce the results. 
 
 \begin{table}
     \centering
@@ -458,7 +478,6 @@ The results are presented in \cref{tab:benchamrks}.
 	\input{tab/benchmarks.tex}
 \end{table}
 
-Many built-in MATLAB functions are not purely interpreted but contains call to specialized compiled code. This is presumably the case for MATLAB \texttt{fmincon} solvers, the function used by MATLAB NMPC toolset. This probably explain why NMPC and EMPC are only twice as fast as MATLAB counterpart on average. Since the pendulum model is simple, this is not performance bottleneck. It is expected that the speed gap between the two languages would be larger for more complex plant models.
+The benchmark results are presented in \cref{tab:benchamrks}. The linear MPC is significantly faster in Julia, approximately from 4 to 15 times faster. This result is however amplified by \texttt{OSQP.jl}, a modern and fast OS quadratic optimizer, which seems to perform considerably better than the MATLAB's counterpart (\texttt{admm}). But the authors would argue that it is a consequence of \texttt{ModelPredictiveControl.jl} modular design. Any modern optimization tools can be leverage with minimal effort and without any package update, presuming that they offer a \texttt{JuMP.jl} interface. Using a custom optimization algorithm in MATLAB MPC toolbox is possible but not straightforward. \comment{FYI: I mentionned a 50 times gain in an old email. I was wrong. It's because I simulated the CSTR plant using \texttt{xnext = sys.A*x + sys.B*u} in MATLAB. Doing \texttt{sys.A} is incredibly slow in MATLAB. It's way faster to directly use the matrices with \texttt{xnext = A*x + B*u}.}
 
-
-
+The NMPC and EMPC are approximately twice as fast as MATLAB counterpart on average. This is presumably explained by MATLAB's internal and the pendulum model. Indeed, many built-in MATLAB functions are not purely interpreted but contains call to specialized compiled code. This is probably the case for \texttt{fmincon} solvers, the function used by MATLAB NMPC toolset. And, since the pendulum model is trivially simple, this is not a performance bottleneck. Thus, in both languages, the majority of the time is spent in the optimization algorithms, both implemented in machine code for the most parts. It is expected that the speed gap between the two languages would be larger for more complex plant models, since this part is interpreted in MATLAB.
