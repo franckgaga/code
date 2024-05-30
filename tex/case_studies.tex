@@ -68,12 +68,14 @@ SteadyKalmanFilter estimator and:
   0 unmeasured outputs yu
   0 measured disturbances d
 \end{minted}
-By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} \citep{osqp} to solve the problem, soft constraints on output predictions $\mathbf{\hat y}$ to ensure feasibility, and a \texttt{SteadyKalmanFilter} to estimate the plant states\footnote{As an alternative to state observers, an internal model structure can be used with \texttt{estim = InternalModel(model)} and \texttt{mpc = setconstraint!(LinMPC(estim); ymin=[45, -Inf])}. It was tested on this example and it gave similar results.}. The default predictive and control horizons are $H_p = 10 + n_k$ and $H_c = 2$, respectively, where $n_k$ is the number of delays in the linear model.\added{ The $H_c$ value is small by default to reduce the computational burden and the agressiveness \citep{mpcHcAnalysis}.} An attentive reader will also notice that the Kalman filter estimates two additional states compared to the plant model. These are the integrating states for the unmeasured plant disturbances, and they are automatically added at the model output $\mathbf{y}$ by default if observability is preserved.
+By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} \citep{osqp} to solve the problem, soft constraints on output predictions $\mathbf{\hat y}$ to ensure feasibility, and a \texttt{SteadyKalmanFilter} to estimate the plant states. The default predictive and control horizons are $H_p = 10 + n_k$ and $H_c = 2$, respectively, where $n_k$ is the number of delays in the linear model.\added{ The $H_c$ value is small by default to reduce the computational burden and the agressiveness \citep{mpcHcAnalysis}.} An attentive reader will also notice that the Kalman filter estimates two additional states compared to the plant model. These are the integrating states for the unmeasured plant disturbances, and they are automatically added at the model output $\mathbf{y}$ by default if observability is preserved.
 
-Before closing the loop, the actual plant inputs and measurements should initialize the estimates with \texttt{initstate!} to ensure a bumpless transfer. Since the plant is the linear model here, its output will initialize the states. \texttt{LinModel} objects are callable for this purpose. Once done, imposing step changes on the setpoint \texttt{ry} and on a load disturbance \texttt{ul} tests the closed-loop performance of \texttt{mpc}:
+\added{On a side note, an internal model structure could have been used with \texttt{estim = InternalModel(model)} and \texttt{mpc = setconstraint!(LinMPC(estim); ymin=[45, -Inf])}, as an alternative to state estimator. It was tested on this example and it gave similar results.}\comment{moved footnote in text since the guideline does not allow them.}
+
+Before closing the loop, the actual plant input \added{$\mathbf{u}$ }and measurement \added{$\mathbf{y^m}$ }should initialize the estimates\replaced{ $\mathbf{\hat{x}}$ at the steady-state solution that leads to $\mathbf{\hat{y}^m}(0)=\mathbf{y^m}(0)$. This approach results in a bumpless transfer, especially with estimators in the predictor form. The \texttt{initstate!} function finds this solution for \texttt{LinModel}.}{and measurements should initialize the estimates with \texttt{initstate!} to ensure a bumpless transfer. } \comment{There is multiple steady-state for a given $\mathbf{u}$ value because of the integrating states. There is however only one steady-state solution that leads to $\mathbf{\hat{y}^m}(0)=\mathbf{y^m}(0)$ (with the default unmeasured disturbance model). We need to solve a linear system for that, see the internal doc \texttt{https://tinyurl.com/mrv37fhh}. This is done by the \texttt{initstate!} function. Note this call is useless in this simple example, since the state estimate already starts at the plant value, that is, zero.} Since the plant is the \deleted{linear }model here, its output will initialize the states. \texttt{LinModel} objects are callable for this purpose. Once done, imposing step changes on the setpoint \texttt{ry} and on a load disturbance \texttt{ul} tests the closed-loop performance of \texttt{mpc}:
 \begin{minted}{julia}
 function test_mpc(mpc, plant)
-    plant.x[:] .= 0; y = plant() # or evaloutput(plant)
+    plant.x .= 0; y = plant() # or evaloutput(plant)
     initstate!(mpc, plant.uop, y)
     N = 75; ry = [50, 30]; ul = 0
     U, Y, Ry = zeros(2, N), zeros(2, N), zeros(2, N)
@@ -125,7 +127,7 @@ The simulation needs a new \texttt{LinMPC} object based on \texttt{model\_d} and
 \begin{minted}{julia}
 mpc_d = setconstraint!(LinMPC(model_d), ymin=[45, -Inf])
 function test_mpc_d(mpc_d, plant)
-    plant.x[:] .= 0; y = plant(); d = [20]
+    plant.x .= 0; y = plant(); d = [20]
     initstate!(mpc_d, plant.uop, y, d)
     N = 75; ry = [50, 30]; ul = 0
     U, Y, Ry = zeros(2, N), zeros(2, N), zeros(2, N)
@@ -431,7 +433,7 @@ The MATLAB implementations use the model predictive control toolbox. Additional 
 Since the performance is solver-dependent, multiple optimization algorithms are tested. The results include four types of quadratic and nonlinear solvers. The operator-splitting (OS) methods are: 
 \begin{itemize}
     \item \texttt{OSQP.jl} package in Julia \citep{osqp}
-    \item \texttt{admm} solver in MATLAB \citep{admm}
+    \item \texttt{admm} option in MATLAB \citep{admm}
 \end{itemize}
 For active-set (AS) methods, the optimizers are: 
 \begin{itemize}

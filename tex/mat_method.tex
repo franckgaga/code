@@ -99,7 +99,7 @@ J_{\mathit{MPC}} =
     + \mathbf{\big(\hat{R}_u - U\big)}^\intercal \mathbf{L}_{H_p} \mathbf{\big(\hat{R}_u - U\big)} 
     + C \epsilon^2
 \end{multline}
-with the decision variables $\mathbf{ΔU}$ and $\epsilon$, the inputs increments over the control horizon $H_c$ and the slack variable\deleted{ for relaxation}, respectively. The vectors $\mathbf{\hat{Y}}$ and $\mathbf{\hat{R}_y}$ encompass the predictions of the outputs and their setpoints over the horizon $H_p$, respectively. The variables $\mathbf{U}$ and $\mathbf{\hat{R}_u}$ are similar but for the input setpoints. The matrices $\mathbf{M}_{H_p}$, $\mathbf{N}_{H_c}$ and $\mathbf{L}_{H_p}$ are \replaced[comment={no longer restricted to diagonal}]{Hermitian}{diagonal} weights \deleted[comment={move above in the new MHE section}]{, and $C$ is a scalar weight}. 
+with the decision variables $\mathbf{ΔU}$ and $\epsilon$, the inputs increments over the control horizon $H_c$ and the slack variable\deleted{ for relaxation}, respectively. The vectors $\mathbf{\hat{Y}}$ and $\mathbf{\hat{R}_y}$ encompass the predictions of the outputs and their setpoints over the horizon $H_p$, respectively. The variables $\mathbf{U}$ and $\mathbf{\hat{R}_u}$ are similar but for the input setpoints. The matrices $\mathbf{M}_{H_p}$, $\mathbf{N}_{H_c}$ and $\mathbf{L}_{H_p}$ are \replaced[comment={no longer restricted to diagonal}]{Hermitian}{diagonal} weights \deleted[comment={move above in the new MHE section}]{, and $C$ is a scalar weight}. \added{In particular, if $\mathbf{M}_{H_p}$ is a block diagonal matrix, the last block allows specifying a terminal penalty different from the running weights.}
 
 The problem is subject to the following constraints:
 \begin{alignat}{3}
