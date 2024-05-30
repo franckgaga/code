@@ -185,9 +185,10 @@ function pendulum!(ẋ, x, u, par)
     ẋ[2] = -g/L*sin(θ) - K/m*ω + τ/m/L^2
     return nothing
 end
-par = (9.8, 0.4, 1.2, 0.3); Ts = 0.1; nu = 1; nx = 2; ny = 1
+const par = (9.8, 0.4, 1.2, 0.3)
 f!(ẋ, x, u, _ ) = pendulum!(ẋ, x, u, par)
 h!(y, x, _ ) = (y[1] = 180/π*x[1])   # [°]
+nu = 1; nx = 2; ny = 1; Ts = 0.1
 model = NonLinModel(f!, h!, Ts, nu, nx, ny)
 vu = ["\$τ\$ (Nm)"]
 vx = ["\$θ\$ (rad)", "\$ω\$ (rad/s)"]

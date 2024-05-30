@@ -10,9 +10,10 @@ function pendulum!(ẋ, x, u, par)
     ẋ[2] = -g/L*sin(θ) - K/m*ω + τ/m/L^2
     return nothing
 end
-par = (9.8, 0.4, 1.2, 0.3); Ts = 0.1; nu = 1; nx = 2; ny = 1
+const par = (9.8, 0.4, 1.2, 0.3)
 f!(ẋ, x, u, _ ) = pendulum!(ẋ, x, u, par)
 h!(y, x, _ ) = (y[1] = 180/π*x[1])   # [°]
+nu = 1; nx = 2; ny = 1; Ts = 0.1
 model = NonLinModel(f!, h!, Ts, nu, nx, ny)
 vu = ["\$τ\$ (Nm)"]
 vx = ["\$θ\$ (rad)", "\$ω\$ (rad/s)"]
@@ -24,7 +25,7 @@ model = setname!(model; u=vu, x=vx, y=vy)
 estim = UnscentedKalmanFilter(model; α, σQ, σR, nint_u, σQint_u)
 
 ## =========================================
-par_plant = (par[1], par[2], 1.25*par[3], par[4])
+const par_plant = (par[1], par[2], 1.25*par[3], par[4])
 f_plant!(ẋ, x, u, _) = pendulum!(ẋ, x, u, par_plant)
 plant = NonLinModel(f_plant!, h!, Ts, nu, nx, ny)
 N = 35; u=[0.5]; res = sim!(estim, N, u; plant, y_noise=[0.5])
