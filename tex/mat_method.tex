@@ -7,7 +7,7 @@ The functions of this package dispatch over three abstract types :
 \begin{description}
     \item[SimModel] (2 subtypes) -- Discrete state-space models of the plant, including linear and nonlinear representations. Constructors automatically discretize 
     continuous-time linear systems. Instances of \texttt{SimModel} serves as a wrapper to construct \texttt{StateEstimator} and \texttt{PredictiveController} objects, and also as plant simulators to test the designs.
-    \item[StateEstimator] (\replaced{7}{6} subtypes) -- Open loop and closed-loop state observers, both for deterministic and stochastic systems. They produce the full state feedback for the \texttt{PredictiveController}.
+    \item[StateEstimator] (7 subtypes) -- Open loop and closed-loop state observers, both for deterministic and stochastic systems. They produce the full state feedback for the \texttt{PredictiveController}.
     \item[PredictiveController] (3 subtypes) -- Linear and nonlinear MPC are available. An explicit controller based on matrix algebra is also possible for linear models without constraint.
 \end{description}
 
@@ -28,22 +28,22 @@ in which the vectors $\mathbf{u}$, $\mathbf{d}$, $\mathbf{x}$ and $\mathbf{y}$ a
 
 \subsubsection{\textnormal{\texttt{NonLinModel}}}
 
-Discrete nonlinear state-space representations of the plant. \replaced[comment={now supported}]{A built-in 4th order Runge-Kutta solver with optional supersampling discretizes continuous-time dynamics by default, leading to the following system of equations:}{Continuous-time models are not supported yet but manually calling a differential equation solver can mitigate this (see Section 3.2 example). The user provides the following two functions:}. 
+Discrete nonlinear state-space representations of the plant. A built-in 4th order Runge-Kutta solver with optional supersampling discretizes continuous-time dynamics by default, leading to the following system of equations:. 
 \begin{subequations}
 \begin{align}
     \mathbf{x}(k+1) &= \mathbf{f}\big(\mathbf{x}(k), \mathbf{u}(k), \mathbf{d}(k)\big) \\
     \mathbf{y}(k)   &= \mathbf{h}\big( \mathbf{x}(k), \mathbf{d}(k) \big)
 \end{align}
 \end{subequations}
-It is worth mentioning that the state update $\mathbf{f}$ and output $\mathbf{h}$ functions must be in pure Julia to design nonlinear MPCs from them, since the implementation rely on \added{the forward-mode} automatic differentiation \added{of \texttt{ForwardDiff.jl} \citep{forwardDiff}}.
+It is worth mentioning that the state update $\mathbf{f}$ and output $\mathbf{h}$ functions must be in pure Julia to design nonlinear MPCs from them, since the implementation rely on the forward-mode automatic differentiation of \texttt{ForwardDiff.jl} \citep{forwardDiff}.
 
 \subsection{State Estimators}
 
 The estimators of the package focus on control applications, that is, relying on the estimates to compute a full state feedback. They all incorporate some kind of integral action by default if feasible, since it is generally desired to eliminate the steady-state error with closed-loop control (offset-free tracking). \cref{sec:case_studies} gives details on that matter.
 
-\replaced{At the time of writing, they are all}{They are also} implemented in the predictor form (a.k.a. \replaced{delayed estimator}{observer form}), that is, they all estimates at each discrete time $k$ the states of the next period $\mathbf{\hat{x}}_k(k+1)$, also denoted $\mathbf{\hat{x}}(k+1|k)$. \replaced{This approach induces a one-sample time delay in the feedback and its accuracy is slightly lower than the current form that estimates $\mathbf{\hat{x}}_k(k)$.}{In comparison to the filter form that estimates $\mathbf{\hat{x}}_k(k)$,  is sometimes slightly more accurate.} The predictor form \replaced{is however}{comes in} handy for control applications since the estimations come after the controller computations, without introducing any additional delays. This is especially true if the observer computations are expensive \added{e.g.: the MHE}. \added[comment={will work on that while co-authors revise the manuscript}]{The support for current estimators will be added soon after this submission to let the user chose the appropriate design.}
+At the time of writing, they are all implemented in the predictor form (a.k.a. delayed estimator), that is, they all estimates at each discrete time $k$ the states of the next period $\mathbf{\hat{x}}_k(k+1)$, also denoted $\mathbf{\hat{x}}(k+1|k)$. This approach induces a one-sample time delay in the feedback and its accuracy is slightly lower than the current form that estimates $\mathbf{\hat{x}}_k(k)$. The predictor form is however handy for control applications since the estimations come after the controller computations, without introducing any additional delays. This is especially true if the observer computations are expensive e.g.: the MHE. The support for current estimators will be added soon after this submission to let the user chose the appropriate design.
 
-There \replaced{are seven}{is six} \texttt{StateEstimator} concrete types available at the time of writing, all supporting measured $\mathbf{y^m}$ and unmeasured $\mathbf{y^u}$ model outputs. \deleted{The moving horizon estimator will be added soon after this publication.}The following list presents them.
+There are seven \texttt{StateEstimator} concrete types available at the time of writing, all supporting measured $\mathbf{y^m}$ and unmeasured $\mathbf{y^u}$ model outputs. The following list presents them.
 
 \subsubsection{\textnormal{\texttt{SteadyKalmanFilter}}}
 Steady-state Kalman filter, a.k.a. asymptotic form. The solution to the algebraic Riccati equation pre-compute the Kalman gain \citep{simon}. This is the default state estimator for controllers based on \texttt{LinModel} objects.
@@ -61,7 +61,7 @@ Kalman filter for nonlinear systems relying on the generalized unscented transfo
 Extended form of the time-varying Kalman filter. The Jacobians of the nonlinear state-space functions approximate the propagation of the noise. These matrices are automatically computed by forward mode automatic differentiation.
 
 \subsubsection{\textnormal{\texttt{MovingHorizonEstimator}}}
-\added{%
+
 Also known as receding horizon estimation. It minimizes at each discrete time $k$ the following cost function over an estimation window of $N_k = \min(k+1, H_e)$ steps, where $H_e$ is the estimation horizon:
 \begin{equation}\label{eq:J_MHE}
     J_{\mathit{MHE}} = \bar{\mathbf{x}}^\intercal \bar{\mathbf{P}}^{-1} \bar{\mathbf{x}} 
@@ -71,9 +71,7 @@ Also known as receding horizon estimation. It minimizes at each discrete time $k
 \end{equation}
 The state estimate at arrival $\mathbf{\hat{x}}_k(k-N_k+1)$, the process noise estimates over the window $\mathbf{\hat{W}}$ and the slack variable $\epsilon$ for constraint relaxation are the decision variables. The process and disturbance models compute the sensor noise estimates $\mathbf{\hat{V}}$. The estimation error $\bar{\mathbf{x}} = \mathbf{\hat{x}}_{k-N_k}(k-N_k+1) - \mathbf{\hat{x}}_{k}(k-N_k+1)$ and its covariance $\bar{\mathbf{P}} = \mathbf{\hat{P}}_{k-N_k}(k-N_k+1)$
 evaluate the arrival costs. The block diagonal matrices $\mathbf{\hat{Q}}_{N_k}$ and $\mathbf{\hat{R}}_{N_k}$ comprise the noise covariances.
-}%
 
-\added{%
 This approach allows incorporating additional physical information on the process an its disturbances, in the form of constraints on the state and noise estimates:
 \begin{alignat}{3}
     \mathbf{\hat{X}_{min} - C_{\hat{x}_{min}}} \epsilon &\le \mathbf{\hat{X}} &&\le \mathbf{\hat{X}_{max} + C_{\hat{x}_{max}}} \epsilon \\
@@ -81,7 +79,6 @@ This approach allows incorporating additional physical information on the proces
     \mathbf{\hat{V}_{min} - C_{\hat{v}_{min}}} \epsilon &\le \mathbf{\hat{V}} &&\le \mathbf{\hat{V}_{max} + C_{\hat{v}_{max}}} \epsilon
 \end{alignat}
 and also $\epsilon \ge 0$. The $\mathbf{\hat{X}}$ vector gathers the state estimates over the window. The $\mathbf{C}$ vectors are non-negative values that specify the softness of the associated bound, and $C$ globally weights the slack $\epsilon$ (equal concern for relaxation). The problem \eqref{eq:J_MHE} is treated as a quadratic program for \texttt{LinModel}, and a nonlinear optimization, for \texttt{NonLinModel}.
-}%
 
 \subsubsection{\textnormal{\texttt{InternalModel}}}
 Allows the design of predictive controllers based on an internal model structure. It is based on the general approach of \citet{globPC}. The stochastic model of the unmeasured disturbances defaults to integrating white noise for each measured output (customizable). This is the equivalent of assuming that the disturbances are constant over the prediction horizon, similarly to dynamic matrix control (DMC). It supports asymptotically stable \texttt{LinModel} or \texttt{NonLinModel}.
@@ -99,7 +96,7 @@ J_{\mathit{MPC}} =
     + \mathbf{\big(\hat{R}_u - U\big)}^\intercal \mathbf{L}_{H_p} \mathbf{\big(\hat{R}_u - U\big)} 
     + C \epsilon^2
 \end{multline}
-with the decision variables $\mathbf{ΔU}$ and $\epsilon$, the inputs increments over the control horizon $H_c$ and the slack variable\deleted{ for relaxation}, respectively. The vectors $\mathbf{\hat{Y}}$ and $\mathbf{\hat{R}_y}$ encompass the predictions of the outputs and their setpoints over the horizon $H_p$, respectively. The variables $\mathbf{U}$ and $\mathbf{\hat{R}_u}$ are similar but for the input setpoints. The matrices $\mathbf{M}_{H_p}$, $\mathbf{N}_{H_c}$ and $\mathbf{L}_{H_p}$ are \replaced[comment={no longer restricted to diagonal}]{Hermitian}{diagonal} weights \deleted[comment={move above in the new MHE section}]{, and $C$ is a scalar weight}. \added{In particular, if $\mathbf{M}_{H_p}$ is a block diagonal matrix, the last block allows specifying a terminal penalty different from the running weights.}
+with the decision variables $\mathbf{ΔU}$ and $\epsilon$, the inputs increments over the control horizon $H_c$ and the slack variable, respectively. The vectors $\mathbf{\hat{Y}}$ and $\mathbf{\hat{R}_y}$ encompass the predictions of the outputs and their setpoints over the horizon $H_p$, respectively. The variables $\mathbf{U}$ and $\mathbf{\hat{R}_u}$ are similar but for the input setpoints. The matrices $\mathbf{M}_{H_p}$, $\mathbf{N}_{H_c}$ and $\mathbf{L}_{H_p}$ are Hermitian weights. In particular, if $\mathbf{M}_{H_p}$ is a block diagonal matrix, the last block allows specifying a terminal penalty different from the running weights.
 
 The problem is subject to the following constraints:
 \begin{alignat}{3}
@@ -107,12 +104,12 @@ The problem is subject to the following constraints:
     \mathbf{ΔU_{min} - C_{Δu_{min}}} \epsilon &\le \mathbf{ΔU} &&\le \mathbf{ΔU_{max} + C_{Δu_{max}}} \epsilon \\
     \mathbf{Y_{min}  - C_{y_{min}}}  \epsilon &\le \mathbf{\hat{Y}} &&\le \mathbf{Y_{max}  + C_{y_{max}}}  \epsilon
 \end{alignat}
-and also $\epsilon \ge 0$. \deleted[comment={moved above in the new MHE section}]{The $\mathbf{C}$ vectors are non-negative values that specify the softness of the associated bound (equal concern for relaxation).} Box constraints on the terminal states are also possible: $\mathbf{\hat{x}_{min}} {-} \mathbf{c_{\hat{x}_{min}}}\epsilon \le \mathbf{\hat{x}}_{k-1}(k{+}H_p) \le \mathbf{\hat{x}_{max}} + \mathbf{c_{\hat{x}_{max}}}\epsilon$. Note that changing the bounds at runtime and time-varying constraints over the horizons are supported.
+and also $\epsilon \ge 0$. Box constraints on the terminal states are also possible: $\mathbf{\hat{x}_{min}} {-} \mathbf{c_{\hat{x}_{min}}}\epsilon \le \mathbf{\hat{x}}_{k-1}(k{+}H_p) \le \mathbf{\hat{x}_{max}} + \mathbf{c_{\hat{x}_{max}}}\epsilon$. Note that changing the bounds at runtime and time-varying constraints over the horizons are supported.
 
-The default optimizer is \texttt{OSQP.jl} that efficiently handles sparse problems \citep{osqp}, but the \texttt{JuMP.jl} interface allows switching among many quadratic solvers. For example, the dual active-set method of \citet{daqp} is sometimes faster on small and dense matrices. Testing this solver only takes \replaced{two lines}{one line} of code\added{ (see \cref{sec:benchmarks} for an example)}.
+The default optimizer is \texttt{OSQP.jl} that efficiently handles sparse problems \citep{osqp}, but the \texttt{JuMP.jl} interface allows switching among many quadratic solvers. For example, the dual active-set method of \citet{daqp} is sometimes faster on small and dense matrices. Testing this solver only takes two lines of code (see \cref{sec:benchmarks} for an example).
 
 \subsubsection{\textnormal{\texttt{ExplicitMPC}}}
-Linear model predictive controller without constraints, see \texttt{LinMPC} for the cost function. The computational costs are extremely low (\added{the analytical solution of the quadratic problem leads to a single} array division), therefore suitable for applications that require small sample times. \added{It produces a control law similar to a finite-horizon linear-quadratic regulator (LQR), but with the control horizon $H_c$, the move suppression $\mathbf{N}_{H_c}$ and the input setpoint tracking $\mathbf{L}_{H_p}$ weights available as additional tuning parameters.}
+Linear model predictive controller without constraints, see \texttt{LinMPC} for the cost function. The computational costs are extremely low (the analytical solution of the quadratic problem leads to a single array division), therefore suitable for applications that require small sample times. It produces a control law similar to a finite-horizon linear-quadratic regulator (LQR), but with the control horizon $H_c$, the move suppression $\mathbf{N}_{H_c}$ and the input setpoint tracking $\mathbf{L}_{H_p}$ weights available as additional tuning parameters.
 
 \subsubsection{\textnormal{\texttt{NonLinMPC}}}
 Nonlinear model predictive controller with constraints. The objective function includes an additional term for economic MPC:
