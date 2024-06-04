@@ -97,7 +97,7 @@ res = SimResult(mpc, U_data, Y_data; Ry_data)
 using Plots; plot(res)
 \end{minted}
 
-\begin{figure}[h]
+\begin{figure}[b]
     \centering
     \caption{CSTR closed-loop simulation (MPC).}
     \includegraphics[width=0.5\columnwidth]{fig/plot_LinMPC1.pdf}
@@ -109,6 +109,7 @@ using Plots; plot(res)
 \subsubsection{Feedforward Compensation}
 
 Suppose that the load disturbance $u_l$ is in fact caused by a separate hot water pipe that discharges into the tank. Measuring this flow rate allows us to incorporate feedforward compensation with $\mathbf{d}=u_l$. The new plant model, named \texttt{model\_d}, is:
+
 \begin{minted}{julia}
 model_d = LinModel([G G[1:2, 2]], 2.0; i_d=[3])
 model_d = setop!(model_d; uop=[20,20], yop=[50,30], dop=[20])
@@ -122,7 +123,9 @@ Discrete-time linear model with a sample time Ts = 2.0 s and:
  2 outputs y
  1 measured disturbances d
 \end{minted}
+
 The simulation needs a new \texttt{LinMPC} object based on \texttt{model\_d} and a new test function that explicitly employs the current disturbance measurement:
+
 \begin{minted}{julia}
 mpc_d = setconstraint!(LinMPC(model_d), ymin=[45, -Inf])
 function test_mpc_d(mpc_d, plant)
@@ -146,7 +149,7 @@ res = SimResult(mpc, U_data, Y_data; Ry_data)
 plot(res)
 \end{minted}
 
-\begin{figure}[h]
+\begin{figure}[b]
     \centering
     \caption{CSTR closed-loop simulation with feedforward (MPC).}
     \includegraphics[width=0.5\columnwidth]{fig/plot_LinMPC2.pdf}
@@ -160,7 +163,16 @@ plot(res)
 
 \subsubsection{Nonlinear Model}
 
-For this case study, the goal is to control the angular position $\theta$ of a pendulum attached to a motor, thus $\mathbf{y} = \theta$. The manipulated input is the motor torque $\mathbf{u} = \tau$ in \si{\newton\meter}. \cref{fig:pendulum} depicts the system. The model is:
+For this case study, the goal is to control the angular position $\theta$ of a pendulum attached to a motor, thus $\mathbf{y} = \theta$. The manipulated input is the motor torque $\mathbf{u} = \tau$ in \si{\newton\meter}. \cref{fig:pendulum} depicts the system. 
+
+\begin{figure}
+    \centering
+    \caption{Inverted pendulum.}
+    \input{fig/pendulum.tikz}
+    \label{fig:pendulum}
+\end{figure}
+
+The model is:
 \begin{subequations}
 \begin{align}
 \dot{\theta}(t) &= \omega(t) \\
@@ -200,16 +212,9 @@ NonLinModel with a sample time Ts = 0.1 s, RungeKutta solver and:
 
 The output function $\mathbf{h}$ converts the $\theta$ angle to degrees. The plant model relies on mutating state-space functions to reduce the memory allocations and the computational burden as well. The more intuitive non-mutating syntax can still be used by providing functions with one less argument, e.g.: \texttt{f(x,u,d)=x+u+d} and \texttt{h(x,d)=x+d}.
 
-\begin{figure}
-    \centering
-    \caption{Inverted pendulum.}
-    \input{fig/pendulum.tikz}
-    \label{fig:pendulum}
-\end{figure}
-
 \subsubsection{Nonlinear State Estimator}
 
-The state estimates produced by an \texttt{UnscentedKalmanFilter} will feed the controller:
+The state estimates of an \texttt{UnscentedKalmanFilter} will feed the controller:
 \begin{minted}{julia}
 σQ = [0.1, 0.5]; σR=[0.5]; nint_u=[1]; σQint_u=[0.1]
 estim = UnscentedKalmanFilter(model; σQ, σR, nint_u, σQint_u)
@@ -263,53 +268,45 @@ NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt optimizer, UnscentedKa
   0 unmeasured outputs yu
   0 measured disturbances d
 \end{minted}
-
 The keyword arguments \texttt{Mwt} and \texttt{Nwt} are the output setpoint tracking and move suppression weights, respectively. The option \texttt{Cwt=Inf} disables the slack variable $\epsilon$. An angular setpoint of \SI{180}{\degree} (inverted position) tests \texttt{mpc} performance on the plant:
 \begin{minted}{julia}
 x_0 = [0, 0]; x̂_0 = [0, 0, 0]; ry = [180]
 res_ry = sim!(nmpc, N, ry; plant, x_0, x̂_0)
 plot(res_ry)
 \end{minted}
-
-\begin{figure}[h]
-    \centering
-    \caption{Pendulum output setpoint tracking (NMPC).}
-    \includegraphics[width=0.5\columnwidth]{fig/plot_NonLinMPC2.pdf}
-    \label{fig:plot_NonLinMPC2}
-\end{figure}
-
 The result in \cref{fig:plot_NonLinMPC2} suggests that the controller is robust enough to variations on the $K$ coefficient. Starting from this inverted position, \cref{fig:plot_NonLinMPC3} shows the closed-loop response to a step disturbances of \SI{10}{\degree} is satisfactory:
 \begin{minted}{julia}
 x0 = [π, 0]; x̂0 = [π, 0, 0]; y_step = [10]
 res_yd = sim!(nmpc, N, [180.0]; plant, x0, x̂0, y_step)
 plot(res_yd)
 \end{minted}
+The next section presents an economic predictive controller on the pendulum.
 
-\begin{figure}[h]
+\begin{figure}[t]
+    \centering
+    \caption{Pendulum output setpoint tracking (NMPC).}
+    \includegraphics[width=0.5\columnwidth]{fig/plot_NonLinMPC2.pdf}
+    \label{fig:plot_NonLinMPC2}
+\end{figure}
+
+\begin{figure}[t]
     \centering
     \caption{Pendulum output disturbance rejection (NMPC).}
     \includegraphics[width=0.5\columnwidth]{fig/plot_NonLinMPC3.pdf}
     \label{fig:plot_NonLinMPC3}
 \end{figure}
 
-The next section presents an economic predictive controller on the pendulum.
-
 \subsubsection{Economic model predictive control (EMPC)}
 
 For this case study, the controller will aim to reduce the energy consumed by the motor. The power (\si{\watt}) transmitted by the motor to the pendulum is:
-
 \begin{equation}
 \dot{W}(t) = \tau(t) \omega(t) 
 \end{equation}
-
 Thus, the work (\si{\joule}) done by the motor from $t_0$ to $t_{end}$ is:
-
 \begin{equation}
 W = \int_{t_0}^{t_{end}} \dot{W}(t) \mathrm{d}t 
 \end{equation}
-
 With the sampling time $T_s$ in \si{\second} and the prediction horizon $H_p$ in time steps, computing the integral with the left-endpoint rectangle method and defining the limits as $t_0=k$ and $t_{end} = (k + H_p) T_s$ give:
-
 \begin{equation}\label{eq:pendulum_W}
 W = T_s \sum_{j = 0}^{H_p - 1} \tau(k+j) \omega(k+j) 
 \end{equation}
@@ -325,9 +322,7 @@ model = setname!(model, u=vu, x=vx, y=[vy; vx[2]])
 plant = setname!(plant, u=vu, x=vx, y=[vy; vx[2]])
 estim = UnscentedKalmanFilter(model; σQ, σR, nint_u, σQint_u, i_ym=[1])
 \end{minted}
-
 The \texttt{plant} object based on \texttt{h2!} is also required since \texttt{sim!} expects that the plant output vector $\mathbf{y}$ corresponds to the controller model output vector. We can now define the $J_E$ function and the controller:
-
 \begin{minted}{julia}
 function JE(UE, ŶE, _ )
     τ, ω = UE[1:end-1], ŶE[2:2:end-1]
@@ -350,23 +345,13 @@ NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt optimizer, UnscentedKa
   0 measured disturbances d
 \end{minted}
 
-The keyword argument \texttt{Ewt} is the $E$ weight in \eqref{eq:J_NMPC}. The economic term must be large enough to be significant but a too high value can lead to a static error on the angle setpoint. The second element of \texttt{Mwt} is zero since the speed $\omega$ is not requested to track a setpoint. The closed-loop response to a \SI{180}{\degree} setpoint is similar:
-
+The keyword argument \texttt{Ewt} is the $E$ weight in \eqref{eq:J_NMPC}. The economic term must be large enough to be significant but a too high value can lead to a static error on the angle setpoint. The second element of \texttt{Mwt} is zero since the speed $\omega$ is not requested to track a setpoint. \cref{fig:plot_EconomMPC1} shows that closed-loop response to a \SI{180}{\degree} setpoint is similar:
 \begin{minted}{julia}
 x_0 = [0, 0]; x̂_0 = [0, 0, 0]; ry = [180; 0]
 res2_ry = sim!(empc, N, ry; plant, x_0, x̂_0)
 plot(res2_ry, ploty=[1])
 \end{minted}
-
-\begin{figure}[h]
-    \centering
-    \caption{Pendulum output setpoint tracking (EMPC).}
-    \includegraphics[width=0.5\columnwidth]{fig/plot_EconomMPC1.pdf}
-    \label{fig:plot_EconomMPC1}
-\end{figure}
-
 and the energy consumption is slightly lower:
-
 \begin{minted}{julia}
 function calcW(res)
     τ, ω = res.U_data[1, 1:end-1], res.X_data[2, 1:end-1]
@@ -380,24 +365,13 @@ Dict{Symbol, Float64} with 2 entries:
   :W_empc => 3.89437
   :W_nmpc => 3.91597
 \end{minted}
-
-Also, for a \SI{10}{\degree} step disturbance:
-
+Also, for a \SI{10}{\degree} step disturbance (results depicted in \cref{fig:plot_EconomMPC2}):
 \begin{minted}{julia}
 x_0 = [π, 0]; x̂_0 = [π, 0, 0]; y_step = [10; 0]
 res2_yd = sim!(empc, N, ry; plant, x_0, x̂_0, y_step)
 plot(res2_yd, ploty=[1])
 \end{minted}
-
-\begin{figure}[h]
-    \centering
-    \caption{Pendulum output disturbance rejection (EMPC).}
-    \includegraphics[width=0.5\columnwidth]{fig/plot_EconomMPC2.pdf}
-    \label{fig:plot_EconomMPC2}
-\end{figure}
-
 the new controller is able to recuperate more energy from the pendulum (i.e. negative work):
-
 \begin{minted}{julia}
 Dict(:W_nmpc => calcW(res_yd), :W_empc => calcW(res2_yd))
 \end{minted}
@@ -407,8 +381,21 @@ Dict{Symbol, Float64} with 2 entries:
   :W_empc => -0.149044
   :W_nmpc => -0.112247
 \end{minted}
-
 Of course, this gain is only exploitable if the motor electronic includes some kind of regenerative circuitry.
+
+\begin{figure}[ht]
+    \centering
+    \caption{Pendulum output setpoint tracking (EMPC).}
+    \includegraphics[width=0.5\columnwidth]{fig/plot_EconomMPC1.pdf}
+    \label{fig:plot_EconomMPC1}
+\end{figure}
+%
+\begin{figure}[ht]
+    \centering
+    \caption{Pendulum output disturbance rejection (EMPC).}
+    \includegraphics[width=0.5\columnwidth]{fig/plot_EconomMPC2.pdf}
+    \label{fig:plot_EconomMPC2}
+\end{figure}
 
 \subsection{Benchmarks}
 \label{sec:benchmarks}
