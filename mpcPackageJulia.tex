@@ -1,17 +1,24 @@
 % !TeX spellcheck = en_US
 % !TeX encoding = UTF-8
 % !LW recipe=latexmk (latexmkrc)
-\documentclass{ifacconf}
 
-% ------------------- debug cleveref and ifacconf -----------------------------
-\newcounter{part}
-\counterwithin*{section}{part}
-%% ===================== packages ===========================================
+
+\documentclass[ijoc,nonblindrev]{informs4}
+
 \usepackage{amsmath,amssymb,fontspec,mathtools,siunitx,etoolbox}
-\usepackage{enumitem,graphicx,minted,xcolor,colortbl,natbib,booktabs,tikz,chemplants}
-\usepackage{tablefootnote}
+\usepackage{enumitem,graphicx,xcolor,booktabs,tikz,chemplants}
+\usepackage{minted}
 \usepackage[capitalize]{cleveref}
-\usepackage[commentmarkup=uwave,defaultcolor=red]{changes}
+
+% Natbib setup for author-year style
+\usepackage{natbib}
+ \bibpunct[, ]{(}{)}{,}{a}{}{,}%
+ \def\bibfont{\small}%
+ \def\bibsep{\smallskipamount}%
+ \def\bibhang{24pt}%
+ \def\newblock{\ }%
+ \def\BIBand{and}%
+
 %% =============== preamble ==================================================
 %% ---------------- tikz -----------------------------------------------------
 \usetikzlibrary{arrows, arrows.meta}
@@ -30,45 +37,57 @@
 }
 \newcommand*{\spacerepl}{\vspace*{-28pt}}
 %% ----------------- enumitem ------------------------------------------------
-\setlist[description]{font={\ttfamily\mdseries}} % bfseries
+\setlist[description]{font={\ttfamily}} % bfseries
 \AtBeginEnvironment{minted}{\let\itshape\relax}
 %% ============================================================================
 
 
+% For new submissions, leave this number blank.
+% For revisions, input the manuscript number assigned by the on-line
+% system along with a suffix ".Rx" where x is the revision number.
+\MANUSCRIPTNO{MOOR-0001-2024.00}
+
+%%%%%%%%%%%%%%%%
 \begin{document}
-\begin{frontmatter}
+%%%%%%%%%%%%%%%%
 
-\title{ModelPredictiveControl.jl: advanced\\process control made easy in Julia}
+\RUNAUTHOR{Gagnon et al.}
 
-\author[First]{Francis Gagnon} 
-\author[First]{Alex Thivierge} 
-\author[Second]{André Desbiens}
-\author[Third]{Fredrik Bagge Carlson}
+\RUNTITLE{ModelPredictiveControl.jl: advanced process control made easy in Julia}
 
-\address[First]{Jumine Inc., Quebec City, QC, G1S 2K4, Canada}
-\address[Second]{Process Observation and Optimization Laboratory (LOOP), Université Laval, Quebec City, QC, G1V 0A6, Canada}
-\address[Third]{JuliaHub Inc., Cambridge, MA, 02139, United States}
+\TITLE{ModelPredictiveControl.jl: advanced process control made easy in Julia}
 
-\begin{abstract} 
+\ARTICLEAUTHORS{%
+\AUTHOR{Francis Gagnon,\textsuperscript{a} Alex Thivierge,\textsuperscript{b}}
+\AFF{\textsuperscript{a}Jumine, Quebec City, QC, G1S 2K4, Canada, \EMAIL{francis.gagnon@jumine.ca}; \textsuperscript{b}\EMAIL{alex.thivierge@jumine.ca}}
+\AUTHOR{André Desbiens}
+\AFF{Process Observation and Optimization Laboratory (LOOP), Université Laval, Quebec City, QC, G1V 0A6, Canada, \EMAIL{andre.desbien@gel.ulaval.ca}}
+\AUTHOR{Fredrik Bagge Carlson}
+\AFF{JuliaHub, Cambridge, MA, 02139, United States, \EMAIL{info@juliahub.com}}
+} % end of the block
+
+\ABSTRACT{%
+% Enter your abstract
 Proprietary closed-source software is still the norm in advanced process control. Transparency and reproducibility are key aspects of scientific research. Free and open-source toolkit can contribute to the development, sharing and advancement of  new and efficient control approaches, and the industrial sector will certainly benefit from them. This paper presents ModelPredictiveControl.jl, an open-source software package for designing model predictive controllers in the Julia programming language. It is designed to be easy to use and modular, while providing advanced features like nonlinear control and moving horizon estimation. It relies on powerful control system and mathematical optimization frameworks to simplify the construction and testing of state estimators and predictive controllers. It also integrates with the standard plotting library to quickly visualize closed-loop data. The paper presents the main functionalities and illustrates them with two case studies in simulation. The first example is a continuously stirred tank reactor described by linear dynamics. The second one implements a nonlinear model predictive controller for an inverted pendulum, both with setpoint tracking and economic objectives. The solving times are benchmarked against equivalent implementations in MATLAB to show the efficiency of the package.
-\end{abstract}
+}%
 
-\begin{keyword}
-Model Predictive Control; Advanced Process Control; State Estimation; Kalman Filter; Moving Horizon Estimation; Computer-Aided Control Systems Design; Julia Programming Language
-\end{keyword}
+\KEYWORDS{Dynamic programming-optimal control : Applications; Engineering, Applications; Manufacturing : Automated systems; Programming, Quadratic; Programming, Nonlinear} 
+\HISTORY{Received: Month DD, YYYY; Accepted: Month DD, YYYY; Published Online: Month DD, YYYY}
 
-\end{frontmatter}
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \input{tex/intro}
 \input{tex/mat_method}
 \input{tex/case_studies}
 \input{tex/conclu}
 
-\begin{ack}
-The authors would like to acknowledge all the developers involved in the control system and optimization frameworks of Julia. Their ease of use and intuitiveness  significantly accelerated the programming of this package.
-\end{ack}
+\ACKNOWLEDGMENT{The authors would like to acknowledge all the developers involved in the control system and optimization frameworks of Julia. Their ease of use and intuitiveness  significantly accelerated the programming of this package.}
 
-\bibliography{mpcPackageJulia_bibfile}
+\bibliographystyle{informs2014} 
+\bibliography{mpcPackageJulia_bibfile} 
 
 
+%%%%%%%%%%%%%%%%%
 \end{document}
+%%%%%%%%%%%%%%%%%
