@@ -57,8 +57,7 @@ mpc = setconstraint!(LinMPC(model), ymin=[45, -Inf])
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-LinMPC controller with a sample time Ts = 2.0 s, OSQP optimizer,
-SteadyKalmanFilter estimator and:
+LinMPC controller with a sample time Ts = 2.0 s, OSQP optimizer, SteadyKalmanFilter estimator and:
  10 prediction steps Hp
   2 control steps Hc
   1 slack variable ϵ (control constraints)
@@ -68,7 +67,7 @@ SteadyKalmanFilter estimator and:
   0 unmeasured outputs yu
   0 measured disturbances d
 \end{minted}
-By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} \citep{osqp} to solve the problem, soft constraints on output predictions $\mathbf{\hat y}$ to ensure feasibility, and a \texttt{SteadyKalmanFilter} to estimate the plant states. The default predictive and control horizons are $H_p = 10 + n_k$ and $H_c = 2$, respectively, where $n_k$ is the number of delays in the linear model. The $H_c$ value is small by default to reduce the computational burden and the agressiveness \citep{mpcHcAnalysis}. An attentive reader will also notice that the Kalman filter estimates two additional states compared to the plant model. These are the integrating states for the unmeasured plant disturbances, and they are automatically added at the model output $\mathbf{y}$ by default if observability is preserved.
+By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} \citep{osqp} to solve the problem, soft constraints on output predictions $\mathbf{\hat y}$ to ensure feasibility, and a \texttt{SteadyKalmanFilter} to estimate the plant states. The default predictive and control horizons are $H_p = 10 + n_k$ and $H_c = 2$, respectively, where $n_k$ is the number of delays in the linear model. The $H_c$ value is small by default to reduce the computational burden and the aggressiveness \citep{mpcHcAnalysis}. An attentive reader will also notice that the Kalman filter estimates two additional states compared to the plant model. These are the integrating states for the unmeasured plant disturbances, and they are automatically added at the model output $\mathbf{y}$ by default if observability is preserved.
 
 On a side note, an internal model structure could have been used with \texttt{estim = InternalModel(model)} and \texttt{mpc = setconstraint!(LinMPC(estim); ymin=[45, -Inf])}, as an alternative to state estimator. It was tested on this example and it gave similar results.
 
@@ -217,8 +216,7 @@ estim = UnscentedKalmanFilter(model; σQ, σR, nint_u, σQint_u)
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-UnscentedKalmanFilter estimator with a sample time Ts = 0.1 s, 
-NonLinModel and:
+UnscentedKalmanFilter estimator with a sample time Ts = 0.1 s, NonLinModel and:
  1 manipulated inputs u (1 integrating states)
  3 states x̂
  1 measured outputs ym (0 integrating states)
@@ -255,8 +253,7 @@ nmpc = setconstraint!(nmpc; umin, umax)
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt
-optimizer, UnscentedKalmanFilter estimator and:
+NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt optimizer, UnscentedKalmanFilter estimator and:
  20 prediction steps Hp
   2 control steps Hc
   0 slack variable ϵ (control constraints)
@@ -326,8 +323,7 @@ model = NonLinModel(f!      , h2!, Ts, nu, nx, ny)
 plant = NonLinModel(f_plant!, h2!, Ts, nu, nx, ny)
 model = setname!(model, u=vu, x=vx, y=[vy; vx[2]])
 plant = setname!(plant, u=vu, x=vx, y=[vy; vx[2]])
-estim = UnscentedKalmanFilter(model; σQ, σR, nint_u, 
-                                       σQint_u, i_ym=[1])
+estim = UnscentedKalmanFilter(model; σQ, σR, nint_u, σQint_u, i_ym=[1])
 \end{minted}
 
 The \texttt{plant} object based on \texttt{h2!} is also required since \texttt{sim!} expects that the plant output vector $\mathbf{y}$ corresponds to the controller model output vector. We can now define the $J_E$ function and the controller:
@@ -343,8 +339,7 @@ empc = setconstraint!(empc; umin, umax)
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt
-optimizer, UnscentedKalmanFilter estimator and:
+NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt optimizer, UnscentedKalmanFilter estimator and:
  20 prediction steps Hp
   2 control steps Hc
   0 slack variable ϵ (control constraints)
@@ -453,8 +448,7 @@ mpc = setconstraint!(LinMPC(model; optim), ymin=[45, -Inf])
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-LinMPC controller with a sample time Ts = 2.0 s, DAQP optimizer,
-SteadyKalmanFilter estimator and:
+LinMPC controller with a sample time Ts = 2.0 s, DAQP optimizer, SteadyKalmanFilter estimator and:
  10 prediction steps Hp
   2 control steps Hc
   1 slack variable ϵ (control constraints)

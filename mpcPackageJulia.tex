@@ -1,16 +1,14 @@
 % !TeX spellcheck = en_US
 % !TeX encoding = UTF-8
 % !LW recipe=latexmk (latexmkrc)
-
-
 \documentclass[ijoc,nonblindrev]{informs4}
 
 \usepackage{amsmath,amssymb,fontspec,mathtools,siunitx,etoolbox}
 \usepackage{enumitem,graphicx,xcolor,booktabs,tikz,chemplants}
 \usepackage{minted}
+\usepackage{hyperref}
 \usepackage[capitalize]{cleveref}
 
-% Natbib setup for author-year style
 \usepackage{natbib}
  \bibpunct[, ]{(}{)}{,}{a}{}{,}%
  \def\bibfont{\small}%
@@ -41,15 +39,11 @@
 \AtBeginEnvironment{minted}{\let\itshape\relax}
 %% ============================================================================
 
-
-% For new submissions, leave this number blank.
 % For revisions, input the manuscript number assigned by the on-line
 % system along with a suffix ".Rx" where x is the revision number.
 \MANUSCRIPTNO{MOOR-0001-2024.00}
 
-%%%%%%%%%%%%%%%%
 \begin{document}
-%%%%%%%%%%%%%%%%
 
 \RUNAUTHOR{Gagnon et al.}
 
@@ -75,7 +69,6 @@ Proprietary closed-source software is still the norm in advanced process control
 \HISTORY{Received: Month DD, YYYY; Accepted: Month DD, YYYY; Published Online: Month DD, YYYY}
 
 \maketitle
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \input{tex/intro}
 \input{tex/mat_method}
@@ -87,7 +80,4 @@ Proprietary closed-source software is still the norm in advanced process control
 \bibliographystyle{informs2014} 
 \bibliography{mpcPackageJulia_bibfile} 
 
-
-%%%%%%%%%%%%%%%%%
 \end{document}
-%%%%%%%%%%%%%%%%%
