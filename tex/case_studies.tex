@@ -13,14 +13,14 @@ The first example details how to apply an MPC on a plant at each discrete time s
 
 \subsubsection{Linear Model}
 
+The example considers a continuously stirred tank reactor (CSTR) with a cold and hot water intakes, fed at a respective flow rate of $u_c$ and $u_h$. The manipulated input vector is thus $\mathbf{u} = [\begin{smallmatrix}u_c & u_h\end{smallmatrix}]^\intercal$. The liquid level $y_L$ and temperature $y_T$ constitute the measured output vector $\mathbf{y} = [\begin{smallmatrix}y_L & y_T\end{smallmatrix}]^\intercal$. \cref{fig:cstr} presents schematically the case study process.
+
 \begin{figure}[b]
     \centering
-    \input{fig/cstr.tikz}
     \caption{CSTR process.}
+    \input{fig/cstr.tikz}
     \label{fig:cstr}
 \end{figure}
-
-The example considers a continuously stirred tank reactor (CSTR) with a cold and hot water intakes, fed at a respective flow rate of $u_c$ and $u_h$. The manipulated input vector is thus $\mathbf{u} = [\begin{smallmatrix}u_c & u_h\end{smallmatrix}]^\intercal$. The liquid level $y_L$ and temperature $y_T$ constitute the measured output vector $\mathbf{y} = [\begin{smallmatrix}y_L & y_T\end{smallmatrix}]^\intercal$. \cref{fig:cstr} presents schematically the case study process.
 
 At the steady-state operating point $u_c=u_h=20$, $y_L=50$, and $y_T=30$, the following linear model accurately describes the plant dynamics:
 \begin{equation}
@@ -100,8 +100,8 @@ using Plots; plot(res)
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\columnwidth]{fig/plot_LinMPC1.pdf}
     \caption{CSTR closed-loop simulation (MPC).}
+    \includegraphics[width=0.5\columnwidth]{fig/plot_LinMPC1.pdf}
     \label{fig:plot_LinMPC1}
 \end{figure}
 
@@ -149,8 +149,8 @@ plot(res)
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\columnwidth]{fig/plot_LinMPC2.pdf}
     \caption{CSTR closed-loop simulation with feedforward (MPC).}
+    \includegraphics[width=0.5\columnwidth]{fig/plot_LinMPC2.pdf}
     \label{fig:plot_LinMPC2}
 \end{figure}
 
@@ -160,13 +160,6 @@ plot(res)
 \label{sec.nonlinear_design}
 
 \subsubsection{Nonlinear Model}
-
-\begin{figure}[b]
-    \centering
-    \input{fig/pendulum.tikz}
-    \caption{Inverted pendulum.}
-    \label{fig:pendulum}
-\end{figure}
 
 For this case study, the goal is to control the angular position $\theta$ of a pendulum attached to a motor, thus $\mathbf{y} = \theta$. The manipulated input is the motor torque $\mathbf{u} = \tau$ in \si{\newton\meter}. \cref{fig:pendulum} depicts the system. The model is:
 \begin{subequations}
@@ -208,6 +201,13 @@ NonLinModel with a sample time Ts = 0.1 s, RungeKutta solver and:
 
 The output function $\mathbf{h}$ converts the $\theta$ angle to degrees. The plant model relies on mutating state-space functions to reduce the memory allocations and the computational burden as well. The more intuitive non-mutating syntax can still be used by providing functions with one less argument, e.g.: \texttt{f(x,u,d)=x+u+d} and \texttt{h(x,d)=x+d}.
 
+\begin{figure}
+    \centering
+    \caption{Inverted pendulum.}
+    \input{fig/pendulum.tikz}
+    \label{fig:pendulum}
+\end{figure}
+
 \subsubsection{Nonlinear State Estimator}
 
 The state estimates produced by an \texttt{UnscentedKalmanFilter} will feed the controller:
@@ -237,8 +237,8 @@ using Plots; plot(res, plotu=false, plotxwithx̂=true)
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\columnwidth]{fig/plot_NonLinMPC1.pdf}
     \caption{Pendulum state estimation.}
+    \includegraphics[width=0.5\columnwidth]{fig/plot_NonLinMPC1.pdf}
     \label{fig:plot_NonLinMPC1}
 \end{figure}
 
@@ -276,8 +276,8 @@ plot(res_ry)
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\columnwidth]{fig/plot_NonLinMPC2.pdf}
     \caption{Pendulum output setpoint tracking (NMPC).}
+    \includegraphics[width=0.5\columnwidth]{fig/plot_NonLinMPC2.pdf}
     \label{fig:plot_NonLinMPC2}
 \end{figure}
 
@@ -290,8 +290,8 @@ plot(res_yd)
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\columnwidth]{fig/plot_NonLinMPC3.pdf}
     \caption{Pendulum output disturbance rejection (NMPC).}
+    \includegraphics[width=0.5\columnwidth]{fig/plot_NonLinMPC3.pdf}
     \label{fig:plot_NonLinMPC3}
 \end{figure}
 
@@ -365,8 +365,8 @@ plot(res2_ry, ploty=[1])
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\columnwidth]{fig/plot_EconomMPC1.pdf}
     \caption{Pendulum output setpoint tracking (EMPC).}
+    \includegraphics[width=0.5\columnwidth]{fig/plot_EconomMPC1.pdf}
     \label{fig:plot_EconomMPC1}
 \end{figure}
 
@@ -396,8 +396,8 @@ plot(res2_yd, ploty=[1])
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\columnwidth]{fig/plot_EconomMPC2.pdf}
     \caption{Pendulum output disturbance rejection (EMPC).}
+    \includegraphics[width=0.5\columnwidth]{fig/plot_EconomMPC2.pdf}
     \label{fig:plot_EconomMPC2}
 \end{figure}
 
