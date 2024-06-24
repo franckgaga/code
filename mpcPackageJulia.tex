@@ -4,7 +4,7 @@
 \documentclass[ijoc,nonblindrev]{informs4}
 
 \usepackage{amsmath,amssymb,fontspec,mathtools,siunitx,etoolbox}
-\usepackage{enumitem,graphicx,xcolor,booktabs,tikz,chemplants}
+\usepackage{titlesec, graphicx,xcolor,booktabs,tikz,chemplants}
 \usepackage{minted}
 \usepackage{hyperref}
 \usepackage[capitalize]{cleveref}
@@ -25,18 +25,17 @@
 %\tikzexternalize[prefix=fig/]
 %% ----------------- fontspec ------------------------------------------------
 \setmonofont{Noto Sans Mono}[Scale=MatchLowercase]
+%% ----------------- titlesec ------------------------------------------------
+\titleformat*{\paragraph}{\bfseries\ttfamily}
 %% ----------------- minted -------------------------------------------------
 \setminted[julia]{%
-    fontsize=\footnotesize,
+    fontsize=\small,
     bgcolor=gray!10,
 }
 \setminted[julia-repl]{%
-    fontsize=\footnotesize,
+    fontsize=\small,
 }
 \newcommand*{\spacerepl}{\vspace*{-28pt}}
-%% ----------------- enumitem ------------------------------------------------
-\setlist[description]{font={\ttfamily}} % bfseries
-\AtBeginEnvironment{minted}{\let\itshape\relax}
 %% ============================================================================
 
 % For revisions, input the manuscript number assigned by the on-line
@@ -52,12 +51,12 @@
 \TITLE{ModelPredictiveControl.jl: advanced process control made easy in Julia}
 
 \ARTICLEAUTHORS{%
-\AUTHOR{Francis Gagnon,\textsuperscript{a} Alex Thivierge,\textsuperscript{b}}
-\AFF{\textsuperscript{a}Jumine, Quebec City, QC, G1S 2K4, Canada, \EMAIL{francis.gagnon@jumine.ca}; \textsuperscript{b}\EMAIL{alex.thivierge@jumine.ca}}
+\AUTHOR{Francis Gagnon\textsuperscript{a}, Alex Thivierge\textsuperscript{b}}
+\AFF{\textsuperscript{a}Jumine, Quebec City, Canada, \EMAIL{francis.gagnon@jumine.ca}; \textsuperscript{b}\EMAIL{alex.thivierge@jumine.ca}}
 \AUTHOR{André Desbiens}
-\AFF{Process Observation and Optimization Laboratory (LOOP), Université Laval, Quebec City, QC, G1V 0A6, Canada, \EMAIL{andre.desbien@gel.ulaval.ca}}
+\AFF{Process Observation and Optimization Laboratory (LOOP), Université Laval, Quebec City, Canada, \EMAIL{andre.desbien@gel.ulaval.ca}}
 \AUTHOR{Fredrik Bagge Carlson}
-\AFF{JuliaHub, Cambridge, MA, 02139, United States, \EMAIL{info@juliahub.com}}
+\AFF{JuliaHub, Lund Sweden, \EMAIL{baggepinnen@gmail.com}}
 } % end of the block
 
 \ABSTRACT{%
