@@ -21,8 +21,8 @@ vy = ["\$θ\$ (°)"]
 model = setname!(model; u=vu, x=vx, y=vy)
 
 ## =========================================
-α=0.01; σQ = [0.1, 0.5]; σR=[0.5]; nint_u=[1]; σQint_u=[0.1]
-estim = UnscentedKalmanFilter(model; α, σQ, σR, nint_u, σQint_u)
+σQ = [0.1, 0.5]; σR=[0.5]; nint_u=[1]; σQint_u=[0.1]
+estim = UnscentedKalmanFilter(model; σQ, σR, nint_u, σQint_u)
 
 ## =========================================
 const par_plant = (par[1], par[2], 1.25*par[3], par[4])
@@ -179,7 +179,7 @@ function calcW(res)
     τ, ω = res.U_data[1, 1:end-1], res.X_data[2, 1:end-1]
     return Ts*sum(τ.*ω)
 end
-Dict(:W_nmpc => calcW(res_ry), :W_empc => calcW(res2_ry))
+display(Dict(:W_nmpc => calcW(res_ry), :W_empc => calcW(res2_ry)))
 
 ## =========================================
 ## ========= Benchmark =====================
@@ -213,6 +213,9 @@ bm = @benchmark(
 x_0 = [π, 0]; x̂_0 = [π, 0, 0]; y_step = [10; 0]
 res2_yd = sim!(empc, N, ry; plant, x_0, x̂_0, y_step)
 plot(res2_yd, ploty=[1])
+
+## =========================================
+display(Dict(:W_nmpc => calcW(res_yd), :W_empc => calcW(res2_yd)))
 
 ## =========================================
 ## ========= Plot PDF ======================

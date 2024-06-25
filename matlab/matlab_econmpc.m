@@ -59,8 +59,6 @@ hold on
 plot(T, -1.5*ones(1, length(T)),T,+1.5*ones(1, length(T)))
 hold off
 
-W_empc_track = calcW(X, U, Ts) %#ok<NOPTS> 
-
 mympc.Optimization.SolverOptions.Algorithm = "interior-point";
 myf = @() test_mpc(mympc, opt, ukf, ...
     par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
@@ -85,8 +83,6 @@ hold on
 plot(T, -1.5*ones(1, length(T)),T,+1.5*ones(1, length(T)))
 hold off
 
-W_empc_regul = calcW(X, U, Ts) %#ok<NOPTS> 
-
 mympc.Optimization.SolverOptions.Algorithm = "interior-point";
 myf = @() test_mpc(mympc, opt, ukf, ...
     par_plant, par, Ts, u, x0, xhat0, Phat0, 10);
@@ -102,12 +98,6 @@ function E_JE = economic_term(X,U,~,~,~,Ts)
     tau = U(1:end-1,1);
     omega = X(1:end-1,2);
     E_JE = E*Ts*sum(tau.*omega);
-end
-
-function W = calcW(X, U, Ts)
-    tau = U(1, 1:end-1);
-    omega = X(2, 1:end-1);
-    W = Ts*sum(tau.*omega);
 end
 
 function [R, Y, Yhat, U, X, Xhat] = test_mpc(mympc, opt, ukf, ...

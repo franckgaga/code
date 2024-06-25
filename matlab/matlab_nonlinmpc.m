@@ -1,6 +1,6 @@
 % Exectued on:
-% MATLAB Version: 24.1.0.2603908 (R2024a) Update 3
-% Operating System: Linux 6.8.0-76060800daily20240311-generic 
+% MATLAB Version: 24.1.0.2603908 (R2024a) Update 4
+% Operating System: Linux 6.9.5
 
 Ts = 0.1;
 par = [9.8; 0.4; 1.2; 0.3];
@@ -9,7 +9,6 @@ par_plant(3) = par(3)*1.25;
 
 xhat0 = [0; 0; 0];
 ukf = unscentedKalmanFilter(@fhat, @hhat, xhat0);
-ukf.Alpha = 0.01;
 Phat0 = [
     (1/2)^2  0.0      0.0;
     0.0      (1/2)^2  0.0;
