@@ -24,7 +24,7 @@ Discrete linear state-space representations of the plant. Continuous-time models
     \mathbf{y}(k)   &= \mathbf{C x}(k) + \mathbf{D_d d}(k)
 \end{align}
 \end{subequations}
-in which the vectors $\mathbf{u}$, $\mathbf{d}$, $\mathbf{x}$ and $\mathbf{y}$ are the manipulated input, measured disturbance, state and output of the model, respectively. Objects are constructed with \texttt{ss} or \texttt{tf} functions from \texttt{ControlSystems.jl}, or by providing the fives state-space matrices directly.
+in which the vectors $\mathbf{u}$, $\mathbf{d}$, $\mathbf{x}$ and $\mathbf{y}$ are the manipulated input, measured disturbance, state and output of the model, respectively. Objects are constructed with \texttt{ss} or \texttt{tf} functions from \texttt{ControlSystems.jl}, or by providing the fives state-space matrices directly. All the \texttt{StateEstimator} and \texttt{PredictiveController} objects based on a \texttt{LinModel} representation allow online model modifications (see \cref{sec:successive_linearization} for an example with successive linearizations).
 
 \paragraph{NonLinModel}
 
@@ -49,7 +49,7 @@ There are seven \texttt{StateEstimator} concrete types available at the time of 
 Steady-state Kalman filter, a.k.a. asymptotic form. The solution to the algebraic Riccati equation pre-compute the Kalman gain \citep{simon}. This is the default state estimator for controllers based on \texttt{LinModel} objects.
 
 \paragraph{KalmanFilter}
-Time-varying version of the Kalman filter. It can evaluate the estimation error covariance in real time or be applied in situations where there is no solution to the algebraic Riccati equation.
+Time-varying version of the Kalman filter. It can evaluate the estimation error covariance in real time or be applied when the plant model is not constant like in adaptive control.
 
 \paragraph{Luenberger}
 Deterministic state observer based on closed-loop eigenvalue placement. It pre-computes the observer gain with \texttt{place} function from \texttt{ControlSystems.jl}, that implements the method of \citet{placePoles}.
