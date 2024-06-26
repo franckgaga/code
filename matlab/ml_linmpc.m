@@ -66,12 +66,12 @@ hold off;
 mympc.Optimizer.Algorithm = "admm";
 f = @() test_mpc(mympc, myestim, ...
     Khat, Ahat, Bhat, Chat, A, B, C, uop, yop);
-btime_solver_OS = repeated_timeit(f, 1000) %#ok<NOPTS> 
+btime_solver_OS = repeated_timeit(f, 500) %#ok<NOPTS> 
 
 mympc.Optimizer.Algorithm = "active-set";
 f = @() test_mpc(mympc, myestim, ...
     Khat, Ahat, Bhat, Chat, A, B, C, uop, yop);
-btime_solver_AS = repeated_timeit(f, 1000) %#ok<NOPTS> 
+btime_solver_AS = repeated_timeit(f, 500) %#ok<NOPTS> 
 
 Ahat = [
  0.894839  0.0       0.0       0.0       0.0  0.0;
@@ -146,12 +146,12 @@ hold off;
 mympc_d.Optimizer.Algorithm = "admm";
 f_d = @() test_mpc_d(mympc_d, myestim_d, ...
     Khat, Ahat, Bhatu, Bhatd, Chat, Dhatd, A, B, C, uop, yop, dop);
-btime_d_solver_OS = repeated_timeit(f_d, 1000) %#ok<NOPTS> 
+btime_d_solver_OS = repeated_timeit(f_d, 500) %#ok<NOPTS> 
 
 mympc_d.Optimizer.Algorithm = "active-set";
 f_d = @() test_mpc_d(mympc_d, myestim_d, ...
     Khat, Ahat, Bhatu, Bhatd, Chat, Dhatd, A, B, C, uop, yop, dop);
-btime_d_solver_AS = repeated_timeit(f_d, 1000) %#ok<NOPTS> 
+btime_d_solver_AS = repeated_timeit(f_d, 500) %#ok<NOPTS> 
 
 function [U_data, Y_data, R_data] = test_mpc(mympc, myestim, ...
     Khat, Ahat, Bhat, Chat, A, B, C, uop, yop)

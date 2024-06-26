@@ -57,7 +57,8 @@ mpc = setconstraint!(LinMPC(model), ymin=[45, -Inf])
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-LinMPC controller with a sample time Ts = 2.0 s, OSQP optimizer, SteadyKalmanFilter estimator and:
+LinMPC controller with a sample time Ts = 2.0 s, OSQP optimizer, 
+SteadyKalmanFilter estimator and:
  10 prediction steps Hp
   2 control steps Hc
   1 slack variable ϵ (control constraints)
@@ -258,7 +259,8 @@ nmpc = setconstraint!(nmpc; umin, umax)
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt optimizer, UnscentedKalmanFilter estimator and:
+NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt optimizer, 
+UnscentedKalmanFilter estimator and:
  20 prediction steps Hp
   2 control steps Hc
   0 slack variable ϵ (control constraints)
@@ -316,25 +318,26 @@ The objective will now include an additive term that penalizes the work done by 
 \begin{minted}{julia}
 h2!(y, x, _ ) = (y[1] = 180/π*x[1]; y[2]=x[2])
 nu, nx, ny = 1, 2, 2
-model = NonLinModel(f!      , h2!, Ts, nu, nx, ny)
-plant = NonLinModel(f_plant!, h2!, Ts, nu, nx, ny)
-model = setname!(model, u=vu, x=vx, y=[vy; vx[2]])
-plant = setname!(plant, u=vu, x=vx, y=[vy; vx[2]])
-estim = UnscentedKalmanFilter(model; σQ, σR, nint_u, σQint_u, i_ym=[1])
+model2 = NonLinModel(f!      , h2!, Ts, nu, nx, ny)
+plant2 = NonLinModel(f_plant!, h2!, Ts, nu, nx, ny)
+model2 = setname!(model2, u=vu, x=vx, y=[vy; vx[2]])
+plant2 = setname!(plant2, u=vu, x=vx, y=[vy; vx[2]])
+estim2 = UnscentedKalmanFilter(model2; σQ, σR, nint_u, σQint_u, i_ym=[1])
 \end{minted}
-The \texttt{plant} object based on \texttt{h2!} is also required since \texttt{sim!} expects that the plant output vector $\mathbf{y}$ corresponds to the controller model output vector. We can now define the $J_E$ function and the controller:
+The \texttt{plant2} object based on \texttt{h2!} is also required since \texttt{sim!} expects that the plant output vector $\mathbf{y}$ corresponds to the controller model output vector. We can now define the $J_E$ function and the controller:
 \begin{minted}{julia}
 function JE(UE, ŶE, _ )
     τ, ω = UE[1:end-1], ŶE[2:2:end-1]
     return Ts*sum(τ.*ω)
 end
-Mwt, Ewt = [0.5, 0.0], 3.5e3
-empc = NonLinMPC(estim; Hp, Hc, Nwt, Mwt, Cwt, JE, Ewt)
+Mwt2, Ewt = [Mwt; 0.0], 3.5e3
+empc = NonLinMPC(estim2; Hp, Hc, Nwt, Mwt=Mwt2, Cwt, JE, Ewt)
 empc = setconstraint!(empc; umin, umax)
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt optimizer, UnscentedKalmanFilter estimator and:
+NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt optimizer, 
+UnscentedKalmanFilter estimator and:
  20 prediction steps Hp
   2 control steps Hc
   0 slack variable ϵ (control constraints)
@@ -345,10 +348,10 @@ NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt optimizer, UnscentedKa
   0 measured disturbances d
 \end{minted}
 
-The keyword argument \texttt{Ewt} is the $E$ weight in \eqref{eq:J_NMPC}. The economic term must be large enough to be significant but a too high value can lead to a static error on the angle setpoint. The second element of \texttt{Mwt} is zero since the speed $\omega$ is not requested to track a setpoint. \cref{fig:plot_EconomMPC1} shows that closed-loop response to a \SI{180}{\degree} setpoint is similar:
+The keyword argument \texttt{Ewt} is the $E$ weight in \eqref{eq:J_NMPC}. The economic term must be large enough to be significant but a too high value can lead to a static error on the angle setpoint. The second element of \texttt{Mwt2} is zero since the speed $\omega$ is not requested to track a setpoint. \cref{fig:plot_EconomMPC1} shows that closed-loop response to a \SI{180}{\degree} setpoint is similar:
 \begin{minted}{julia}
 x_0 = [0, 0]; x̂_0 = [0, 0, 0]; ry = [180; 0]
-res2_ry = sim!(empc, N, ry; plant, x_0, x̂_0)
+res2_ry = sim!(empc, N, ry; plant=plant2, x_0, x̂_0)
 plot(res2_ry, ploty=[1])
 \end{minted}
 and the energy consumption is slightly lower:
@@ -368,7 +371,7 @@ Dict{Symbol, Float64} with 2 entries:
 Also, for a \SI{10}{\degree} step disturbance (results depicted in \cref{fig:plot_EconomMPC2}):
 \begin{minted}{julia}
 x_0 = [π, 0]; x̂_0 = [π, 0, 0]; y_step = [10; 0]
-res2_yd = sim!(empc, N, ry; plant, x_0, x̂_0, y_step)
+res2_yd = sim!(empc, N, ry; plant=plant2, x_0, x̂_0, y_step)
 plot(res2_yd, ploty=[1])
 \end{minted}
 the new controller is able to recuperate more energy from the pendulum (i.e. negative work):
@@ -435,7 +438,8 @@ mpc = setconstraint!(LinMPC(model; optim), ymin=[45, -Inf])
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-LinMPC controller with a sample time Ts = 2.0 s, DAQP optimizer, SteadyKalmanFilter estimator and:
+LinMPC controller with a sample time Ts = 2.0 s, DAQP optimizer, 
+SteadyKalmanFilter estimator and:
  10 prediction steps Hp
   2 control steps Hc
   1 slack variable ϵ (control constraints)
