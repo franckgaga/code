@@ -324,7 +324,7 @@ model2 = setname!(model2, u=vu, x=vx, y=[vy; vx[2]])
 plant2 = setname!(plant2, u=vu, x=vx, y=[vy; vx[2]])
 estim2 = UnscentedKalmanFilter(model2; σQ, σR, nint_u, σQint_u, i_ym=[1])
 \end{minted}
-The \texttt{plant2} object based on \texttt{h2!} is also required since \texttt{sim!} expects that the plant output vector $\mathbf{y}$ corresponds to the controller model output vector. We can now define the $J_E$ function and the controller:
+The \texttt{plant2} object based on \texttt{h2!} is also required since \texttt{sim!} expects that the plant output vector $\mathbf{y}$ corresponds to the controller model output vector. Now, these lines define the $J_E$ function and the controller:
 \begin{minted}{julia}
 function JE(UE, ŶE, _ )
     τ, ω = UE[1:end-1], ŶE[2:2:end-1]
@@ -402,6 +402,68 @@ Of course, this gain is only exploitable if the motor electronic includes some k
 
 \subsection{Successive Linearization Model Predictive Control (SLMPC)}
 \label{sec:successive_linearization}
+
+The \texttt{setmodel!} method allows online adaptation of a linear plant model. Combined with the automatic linearization of \texttt{linearize}, a successive linearization MPC can be designed with minimal efforts. First, the default \texttt{LinMPC} solver (\texttt{OSQP.jl}) does not perform as well as \texttt{DAQP.jl} on unstable plant like here \citep{daqp}. The syntax to install it is: 
+\begin{minted}{julia}
+using Pkg; Pkg.add(["JuMP","DAQP"]) # install JuMP and DAQP
+using JuMP, DAQP
+optim = JuMP.Model(DAQP.Optimizer, add_bridges=false)
+\end{minted}
+The \texttt{SteadyKalmanFilter} does not support \texttt{setmodel!}, so we need to use the time-varying \texttt{KalmanFilter} instead:
+\begin{minted}{julia}
+linmodel = linearize(model, x=[0, 0], u=[0])
+kf = KalmanFilter(linmodel; σQ, σR, nint_u, σQint_u)
+mpc3 = LinMPC(kf; Hp, Hc, Mwt, Nwt, Cwt, optim)
+mpc3 = setconstraint!(mpc3; umin, umax)
+\end{minted}
+\spacerepl
+\begin{minted}{julia-repl}
+LinMPC controller with a sample time Ts = 0.1 s, DAQP optimizer, KalmanFilter
+estimator and:
+ 20 prediction steps Hp
+  2 control steps Hc
+  0 slack variable ϵ (control constraints)
+  1 manipulated inputs u (1 integrating states)
+  3 estimated states x̂
+  1 measured outputs ym (0 integrating states)
+  0 unmeasured outputs yu
+  0 measured disturbances d
+\end{minted}
+
+\begin{minted}{julia}
+function sim2!(mpc, nlmodel, N, ry, plant, x_0, x̂_0, y_step)
+    U, Y, Ry = zeros(1, N), zeros(1, N), zeros(1, N)
+    u, x̂ = [0], x̂_0
+    initstate!(mpc, u, plant())
+    setstate!(plant, x_0); setstate!(mpc, x̂_0)
+    linmodel = linearize(nlmodel; u, x=x̂[1:2])
+    setmodel!(mpc, linmodel)
+    for i = 1:N
+        y = plant() + y_step
+        u = mpc(ry)
+        linearize!(linmodel, nlmodel; u, x=x̂[1:2])
+        setmodel!(mpc, linmodel) 
+        U[:,i], Y[:,i], Ry[:,i] = u, y, ry
+        x̂ = updatestate!(mpc, u, y)
+        updatestate!(plant, u)
+    end
+    U_data, Y_data, Ry_data = U, Y, Ry
+    return SimResult(mpc, U_data, Y_data; Ry_data)
+end
+\end{minted}
+
+\begin{minted}{julia}
+x_0 = [0, 0]; x̂_0 = [0, 0, 0]; ry = [180]; y_step=[0]
+res3_ry = sim2!(mpc3, model, N, ry, plant, x_0, x̂_0, y_step)
+plot(res3_ry)
+\end{minted}
+
+\begin{minted}{julia}
+x_0 = [π, 0]; x̂_0 = [π, 0, 0]; ry = [180]; y_step=[10]
+res3_yd = sim2!(mpc3, model, N, ry, plant, x_0, x̂_0, y_step)
+plot(res3_yd)
+\end{minted}
+
 
 \begin{figure}[ht]
     \centering
