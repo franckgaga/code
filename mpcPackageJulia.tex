@@ -31,12 +31,16 @@
 \setminted[julia]{%
     %fontsize=\small,
     bgcolor=gray!10,
+    baselinestretch=0.75
 }
 \setminted[julia-repl]{%
     %fontsize=\small,
     xleftmargin=3pt,
+    baselinestretch=0.75
 }
-\newcommand*{\spacerepl}{\vspace*{-37pt}}
+\newcommand*{\spacerepl}{\vspace*{-20pt}}
+\BeforeBeginEnvironment{minted}{\vspace*{-10pt}}
+%\AfterEndEnvironment{minted}{\vspace*{-0pt}}
 %% ============================================================================
 
 % For revisions, input the manuscript number assigned by the on-line

@@ -409,7 +409,7 @@ using Pkg; Pkg.add(["JuMP","DAQP"]) # install JuMP and DAQP
 using JuMP, DAQP
 optim = JuMP.Model(DAQP.Optimizer, add_bridges=false)
 \end{minted}
-The \texttt{SteadyKalmanFilter} does not support \texttt{setmodel!}, so we need to use the time-varying \texttt{KalmanFilter} instead:
+The bridges are a concept introduced by \texttt{JuMP.jl} to convert the constraints into a form that is natively supported by a specific solver (e.g.: from inequality to equality constraints). Disabling them slightly reduce the overhead when it is not required. The \texttt{SteadyKalmanFilter} does not support \texttt{setmodel!}, so we need to use the time-varying \texttt{KalmanFilter} instead:
 \begin{minted}{julia}
 linmodel = linearize(model, x=[0, 0], u=[0])
 kf = KalmanFilter(linmodel; σQ, σR, nint_u, σQint_u)
@@ -507,36 +507,17 @@ And, lastly, the sequential quadratic (SQ) methods are:
     \item \texttt{sqp} option in MATLAB \citep{sqp}
 \end{itemize}
 
-All the solvers in Julia are free and open-source, except for \texttt{KNITRO.jl} which is commercial. A keyword argument in the controller constructors allows customizing the solver. For example, on the CSTR, to install \texttt{DAQP.jl} and construct a \texttt{LinMPC} based on this optimizer, the syntax is:
+All the solvers in Julia are free and open-source, except for \texttt{KNITRO.jl} which is commercial. A keyword argument in the controller constructors allows customizing the solver (see \cref{sec:successive_linearization} for an example).
 
-\begin{minted}{julia}
-using Pkg; Pkg.add(["JuMP","DAQP"]) # install JuMP and DAQP
-using JuMP, DAQP
-optim = JuMP.Model(DAQP.Optimizer, add_bridge=false)
-mpc = setconstraint!(LinMPC(model; optim), ymin=[45, -Inf])
-\end{minted}
-\spacerepl
-\begin{minted}{julia-repl}
-LinMPC controller with a sample time Ts = 2.0 s, DAQP optimizer, 
-SteadyKalmanFilter estimator and:
- 10 prediction steps Hp
-  2 control steps Hc
-  1 slack variable ϵ (control constraints)
-  2 manipulated inputs u (0 integrating states)
-  4 estimated states x̂
-  2 measured outputs ym (2 integrating states)
-  0 unmeasured outputs yu
-  0 measured disturbances d
-\end{minted}
-
-The bridges are a concept introduced by \texttt{JuMP.jl} to convert the constraints into a form that is natively supported by a specific solver (e.g.: from inequality to equality constraints). Disabling them slightly reduce the overhead when it is not required, which is true for all the case studies here. A laptop with an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark} i7-1165G7 (8 cores at \SI{4.70}{\giga\hertz}) and a Linux v6.9.5 kernel runs the benchmarks. The scripts are executed on Julia v1.10.4 and MATLAB R2024a. A public repository at \url{https://github.com/franckgaga/mpcPackageJulia.tex} provides the code to reproduce the results. 
+A laptop with an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark} i7-1165G7 (8 cores at \SI{4.70}{\giga\hertz}) and a Linux v6.9.5 kernel runs the benchmarks. The scripts are executed on Julia v1.10.4 and MATLAB R2024a. A public repository at \url{https://github.com/franckgaga/mpcPackageJulia.tex} provides the code to reproduce the results. 
 
 \begin{table}
     \centering
     \caption{Julia and MATLAB Benchmarks on the Case Studies.}
     \label{tab:benchamrks}
     \centering
-	\input{tab/benchmarks.tex}
+    \small
+    \input{tab/benchmarks.tex}
 \end{table}
 
 The benchmarks are presented in \cref{tab:benchamrks}. The linear MPC is significantly faster in Julia, approximately from 4 to 15 times faster. This result is however amplified by \texttt{OSQP.jl}, a modern and fast OS quadratic optimizer, which seems to perform considerably better than MATLAB's counterpart (\texttt{admm}). But the authors would argue that it is a consequence of \texttt{ModelPredictiveControl.jl} modular design. Any modern optimization tools can be leveraged with minimal effort and without any package update, presuming that they offer a \texttt{JuMP.jl} interface. Using a custom optimization algorithm in MATLAB MPC toolbox is possible but not straightforward.
