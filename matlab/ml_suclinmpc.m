@@ -12,22 +12,15 @@ x_sym = [theta; omega];
 u_sym = tau;
 f_sym = f(x_sym, u_sym, par, Ts);
 h_sym = h(x_sym);
-A_sym = jacobian(f_sym, x_sym);
-B_sym = jacobian(f_sym, u_sym);
-C_sym = jacobian(h_sym, x_sym);
+A_fun = matlabFunction(jacobian(f_sym, x_sym));
+B_fun = matlabFunction(jacobian(f_sym, u_sym));
+C_fun = matlabFunction(jacobian(h_sym, x_sym));
 
-xop = [0; 0];
-uop = 0.0;
-yop = h(xop);
-dxop = f(xop(1:2), uop, par, Ts) - xop;
-xhatop  = [xop; 0];
-dxhatop = [dxop; 0];
-[A, B, C] = getSSmatrices(A_sym, B_sym, C_sym, theta, omega, tau, xop, uop);
+[A, B, C] = getSSmatrices(A_fun, B_fun, C_fun, [0; 0], 0);
 [Ahat, Bhat, Chat] = getAugSSmatrices(A, B, C);
 
 mpcmodel = ss(Ahat,Bhat,Chat,[],Ts);
-nominal = struct('X', xhatop, 'U', uop, 'Y', yop, 'DX', dxhatop);
-
+nominal = struct('X', [0; 0], 'U', 0, 'Y', 0, 'DX', [0; 0]);
 
 Phat0 = [
     (1/2)^2  0.0      0.0;
@@ -58,9 +51,10 @@ myestim.Plant = [];
 myestim.Disturbance = [];
 myestim.LastMove = [];
 x0 = [0; 0];
+xhat0 = [0; 0; 0];
 [U_data, Y_data, R_data] = test_mpc(mympc, myestim, mpcmodel, nominal, ...
-    Ahat, Bhat, Chat, xhatop, uop, yop, dxhatop, Phat0, Qhat, Rhat, @f, @h, par_plant, x0, Ts, ...
-    A_sym, B_sym, C_sym, theta, omega, tau, par, 0);
+    xhat0, Phat0, Qhat, Rhat, @f, @h, par_plant, x0, Ts, ...
+    A_fun, B_fun, C_fun, par, 0);
 
 T_data= Ts*(0:length(Y_data)-1);
 figure();
@@ -73,26 +67,18 @@ plot(T_data, -1.5*ones(1, length(T_data)),T_data,+1.5*ones(1, length(T_data)))
 hold off
 
 myf = @() test_mpc(mympc, myestim, mpcmodel, nominal, ...
-    Ahat, Bhat, Chat, xhatop, uop, yop, dxhatop, Phat0, Qhat, Rhat, @f, @h, par_plant, x0, Ts, ...
-    A_sym, B_sym, C_sym, theta, omega, tau, par, 0);
-btime_slmpc_track_solver_AS = repeated_timeit(myf, 500) %#ok<NOPTS> 
-
-xop = [pi; 0];
-uop = 0.0;
-yop = h(xop);
-dxop = f(xop(1:2), uop, par, Ts) - xop;
-xhatop  = [xop; 0];
-dxhatop = [dxop; 0];
-[A, B, C] = getSSmatrices(A_sym, B_sym, C_sym, theta, omega, tau, xop, uop);
-[Ahat, Bhat, Chat] = getAugSSmatrices(A, B, C);
+    xhat0, Phat0, Qhat, Rhat, @f, @h, par_plant, x0, Ts, ...
+    A_fun, B_fun, C_fun, par, 0);
+btime_slmpc_track_solver_AS = repeated_timeit(myf, 1) %#ok<NOPTS> 
 
 myestim.Plant = [];
 myestim.Disturbance = [];
 myestim.LastMove = [];
 x0 = [pi; 0];
+xhat0 = [pi; 0; 0];
 [U_data, Y_data, R_data] = test_mpc(mympc, myestim, mpcmodel, nominal, ...
-    Ahat, Bhat, Chat, xhatop, uop, yop, dxhatop, Phat0, Qhat, Rhat, @f, @h, par_plant, x0, Ts, ...
-    A_sym, B_sym, C_sym, theta, omega, tau, par, 10);
+    xhat0, Phat0, Qhat, Rhat, @f, @h, par_plant, x0, Ts, ...
+    A_fun, B_fun, C_fun,  par, 10);
 
 T_data= Ts*(0:length(Y_data)-1);
 figure();
@@ -105,25 +91,48 @@ plot(T_data, -1.5*ones(1, length(T_data)),T_data,+1.5*ones(1, length(T_data)))
 hold off
 
 myf = @() test_mpc(mympc, myestim, mpcmodel, nominal, ...
-    Ahat, Bhat, Chat, xhatop, uop, yop, dxhatop, Phat0, Qhat, Rhat, @f, @h, par_plant, x0, Ts, ...
-    A_sym, B_sym, C_sym, theta, omega, tau, par, 10);
-btime_slmpc_regul_solver_AS = repeated_timeit(myf, 500) %#ok<NOPTS> 
+    xhat0, Phat0, Qhat, Rhat, @f, @h, par_plant, x0, Ts, ...
+    A_fun, B_fun, C_fun, par, 10);
+btime_slmpc_regul_solver_AS = repeated_timeit(myf, 1) %#ok<NOPTS> 
 
 function [U_data, Y_data, R_data] = test_mpc(mympc, myestim, mpcmodel, nominal, ...
-    Ahat, Bhat, Chat, xhatop, uop, yop, dxhatop, Phat, Qhat, Rhat, f, h, par, x0, Ts, ...
-    A_sym, B_sym, C_sym, theta, omega, tau, par_model, ystep)
+    xhat0, Phat, Qhat, Rhat, f, h, par, x0, Ts, ...
+    A_fun, B_fun, C_fun, par_model, ystep)
     N = 35;
     r = 180;
     Y_data = zeros(1,N);
     U_data = zeros(1,N);
     R_data = zeros(1,N);
+    u = 0;
     x = x0;
-    y = h(x);
-    u = uop;
-    xhat = [(eye(3) - Ahat); Chat]\[Bhat*(u-uop) + dxhatop; (y-yop)] + xhatop;
+    xhat = xhat0;
+    xhatop = zeros(size(xhat));
+    dxhatop = zeros(size(xhat));
+    xhat_d = xhat(1:2);
+    [A, B, C] = getSSmatrices(A_fun, B_fun, C_fun, xhat_d, u);
+    [Ahat, Bhat, Chat] = getAugSSmatrices(A, B, C);
+    xhatop(1:2) = xhat_d;
+    uop = u;
+    yop = h(xhat_d);
+    dxhatop(1:2) = f(xhat_d, u, par_model, Ts) - xhat_d;
+    mpcmodel.A = Ahat;
+    mpcmodel.B = Bhat;
+    mpcmodel.C = Chat;
+    nominal.X = xhatop;
+    nominal.U = uop;
+    nominal.Y = yop;
+    nominal.DX = dxhatop;
     for i=1:N
         y = h(x) + ystep;
         myestim.Plant = xhat;
+        u = mpcmoveAdaptive(mympc, myestim, mpcmodel, nominal, [], r);
+        xhat_d = xhat(1:2);
+        [A, B, C] = getSSmatrices(A_fun, B_fun, C_fun, xhat_d, u);
+        [Ahat, Bhat, Chat] = getAugSSmatrices(A, B, C);
+        xhatop(1:2) = xhat_d;
+        uop = u;
+        yop = h(xhat_d);
+        dxhatop(1:2) = f(xhat_d, u, par_model, Ts) - xhat_d;
         mpcmodel.A = Ahat;
         mpcmodel.B = Bhat;
         mpcmodel.C = Chat;
@@ -131,14 +140,6 @@ function [U_data, Y_data, R_data] = test_mpc(mympc, myestim, mpcmodel, nominal, 
         nominal.U = uop;
         nominal.Y = yop;
         nominal.DX = dxhatop;
-        u = mpcmoveAdaptive(mympc, myestim, mpcmodel, nominal, [], r);
-        xhat_d = xhat(1:2);
-        [A, B, C] = getSSmatrices(A_sym, B_sym, C_sym, theta, omega, tau, xhat_d, u);
-        [Ahat, Bhat, Chat] = getAugSSmatrices(A, B, C);
-        xhatop(1:2) = xhat_d;
-        uop = u;
-        yop = h(xhat_d);
-        dxhatop(1:2) = f(xhat_d, u, par_model, Ts) - xhat_d;
         U_data(:,i) = u;
         Y_data(:,i) = y;
         R_data(:,i) = r;
@@ -148,13 +149,13 @@ function [U_data, Y_data, R_data] = test_mpc(mympc, myestim, mpcmodel, nominal, 
     end
 end
 
-function [A, B, C] = getSSmatrices(A_sym, B_sym, C_sym, theta, omega, tau, xop, uop)
+function [A, B, C] = getSSmatrices(A_fun, B_fun, C_fun, xop, uop)
     theta_op = xop(1);
     omega_op = xop(2);
     tau_op = uop;
-    A = double(subs(A_sym, [theta, omega, tau], [theta_op, omega_op, tau_op]));
-    B = double(subs(B_sym, [theta, omega, tau], [theta_op, omega_op, tau_op]));
-    C = double(subs(C_sym, [theta, omega], [theta_op, omega_op]));
+    A = A_fun(omega_op, tau_op, theta_op);
+    B = B_fun(omega_op, tau_op, theta_op);
+    C = C_fun();
 end
 
 function [Ahat, Bhat, Chat] = getAugSSmatrices(A, B, C)
