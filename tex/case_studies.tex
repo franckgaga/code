@@ -482,7 +482,7 @@ The time required to simulate the previous case studies is a benchmark of MPC pe
 
 The MATLAB implementations use the model predictive control toolbox. Additional licenses to the control system and optimization toolboxes are needed to design and execute MPCs. Note that the SLMPC code relies on the symbolic toolbox, since there is no automatic differentiation in MATLAB. All the scripts are executed as is, in the interpreter. Code generation is typically required to produce fast dedicated code. But, as mentioned in the introduction, it creates other problems like extra licensing fees (e.g.: MATLAB/Simulink Coder). Also note that MATLAB only supports the less efficient non-mutating syntax for the nonlinear state-space functions.
 
-Since the performance is solver-dependent, multiple optimization algorithms are tested. The results include four types of quadratic and nonlinear solvers. The operator-splitting (OS) methods are: 
+Since the performance is solver-dependent, multiple optimization algorithms are tested. The results include four types of quadratic/nonlinear solvers. The operator-splitting (OS) methods are: 
 \begin{itemize}
     \item \texttt{OSQP.jl} package in Julia \citep{osqp}
     \item \texttt{admm} option in MATLAB \citep{admm}
