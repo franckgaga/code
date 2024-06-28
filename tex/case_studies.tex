@@ -15,7 +15,7 @@ The first example details how to apply an MPC on a plant at each discrete time s
 
 The example considers a continuously stirred tank reactor (CSTR) with a cold and hot water intakes, fed at a respective flow rate of $u_c$ and $u_h$. The manipulated input vector is thus $\mathbf{u} = [\begin{smallmatrix}u_c & u_h\end{smallmatrix}]^\intercal$. The liquid level $y_L$ and temperature $y_T$ constitute the measured output vector $\mathbf{y} = [\begin{smallmatrix}y_L & y_T\end{smallmatrix}]^\intercal$. \cref{fig:cstr} presents schematically the case study process.
 
-\begin{figure}[b]
+\begin{figure}
     \centering
     \caption{CSTR process.}
     \input{fig/cstr.tikz}
@@ -47,7 +47,7 @@ LinModel with a sample time Ts = 2.0 s and:
  2 outputs y
  0 measured disturbances d
 \end{minted}
-The \texttt{model} object is used for two purposes : to construct our controller and as a plant simulator to test the design. The \texttt{setname!} function allows customized $y$-axis labels in the plots by é vectors of strings.
+The \texttt{model} object is used for two purposes : to construct our controller and as a plant simulator to test the design. The \texttt{setname!} function customizes the $y$-axis labels in the plots.
 
 \subsubsection{Linear Model Predictive Controller}
 
@@ -72,7 +72,7 @@ By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} \citep{osqp} to sol
 
 On a side note, an internal model structure could have been used with \texttt{estim = InternalModel(model)} and \texttt{mpc = setconstraint!(LinMPC(estim); ymin=[45, -Inf])}, as an alternative to state estimator. It was tested on this example and it gave similar results.
 
-Before closing the loop, the actual plant input $\mathbf{u}$ and measurement $\mathbf{y^m}$ should initialize the estimates $\mathbf{\hat{x}}$ at the steady-state solution that leads to $\mathbf{\hat{y}^m}(0)=\mathbf{y^m}(0)$. This approach results in a bumpless transfer, especially with estimators in the predictor form. The \texttt{initstate!} function finds this solution for \texttt{LinModel}.Since the plant is the model here, its output will initialize the states. \texttt{LinModel} objects are callable for this purpose. Once done, imposing step changes on the setpoint \texttt{ry} and on a load disturbance \texttt{ul} tests the closed-loop performance of \texttt{mpc}:
+Before closing the loop, the actual plant input $\mathbf{u}$ and measurement $\mathbf{y^m}$ should initialize the estimates $\mathbf{\hat{x}}$ at the steady-state solution that leads to $\mathbf{\hat{y}^m}(0)=\mathbf{y^m}(0)$. This approach results in a bumpless transfer, especially with estimators in the predictor form. The \texttt{initstate!} function finds this solution for \texttt{LinModel}.Since the plant is the model here, its output initializes the states. \texttt{LinModel} objects are callable for this purpose. Once done, imposing step changes on the setpoint \texttt{ry} and on a load disturbance \texttt{ul} tests the closed-loop performance of \texttt{mpc}:
 \begin{minted}{julia}
 function test_mpc(mpc, plant)
     plant.x .= 0; y = plant() # or evaloutput(plant)
@@ -97,19 +97,18 @@ Calling \texttt{LinMPC} instances computes and returns $\mathbf{u}(k)$. It is wo
 res = SimResult(mpc, U_data, Y_data; Ry_data)
 using Plots; plot(res)
 \end{minted}
+\cref{fig:plot_LinMPC1} shows that the controller violates the constraints around 110 s because of the disturbance. Adding feedforward compensation can mitigate this.
 
-\begin{figure}[b]
+\begin{figure}[ht]
     \centering
     \caption{CSTR closed-loop simulation (MPC).}
     \includegraphics[width=0.5\columnwidth]{fig/plot_LinMPC1.pdf}
     \label{fig:plot_LinMPC1}
 \end{figure}
 
-\cref{fig:plot_LinMPC1} shows that the controller violates the constraints around 110 s because of the disturbance. Adding feedforward compensation can mitigate this.
-
 \subsubsection{Feedforward Compensation}
 
-Suppose that the load disturbance $u_l$ is in fact caused by a separate hot water pipe that discharges into the tank. Measuring this flow rate allows us to incorporate feedforward compensation with $\mathbf{d}=u_l$. The new plant model, named \texttt{model\_d}, is:
+Suppose that the load disturbance $u_l$ is in fact caused by a separate hot water pipe that discharges into the tank. Measuring this flow rate allows us to incorporate feedforward compensation with $\mathbf{d}=u_l$. The new plant model is:
 
 \begin{minted}{julia}
 model_d = LinModel([G G[1:2, 2]], 2.0; i_d=[3])
@@ -149,15 +148,14 @@ U_data, Y_data, Ry_data = test_mpc_d(mpc_d, model)
 res = SimResult(mpc, U_data, Y_data; Ry_data)
 plot(res)
 \end{minted}
+\cref{fig:plot_LinMPC2} shows that the feedforward compensation handles the disturbance without violating the constraint. Note that measured disturbances are assumed constant in the future by default but custom $\mathbf{\hat{D}}$ predictions are possible. The same applies for the setpoints $\mathbf{\hat{R}_y}$ and $\mathbf{\hat{R}_u}$. For instance, the stochastic predictions generated by an \texttt{InternalModel} object could be applied to fill these vectors with the expected values.
 
-\begin{figure}[b]
+\begin{figure}[ht]
     \centering
     \caption{CSTR closed-loop simulation with feedforward (MPC).}
     \includegraphics[width=0.5\columnwidth]{fig/plot_LinMPC2.pdf}
     \label{fig:plot_LinMPC2}
 \end{figure}
-
-\cref{fig:plot_LinMPC2} shows that the feedforward compensation handles the disturbance without violating the constraint. Note that measured disturbances are assumed constant in the future by default but custom $\mathbf{\hat{D}}$ predictions are possible. The same applies for the setpoints $\mathbf{\hat{R}_y}$ and $\mathbf{\hat{R}_u}$. For instance, the stochastic predictions generated by an \texttt{InternalModel} object could be applied to fill these vectors with the expected values.
 
 \subsection{Nonlinear Design : Inverted Pendulum}
 \label{sec.nonlinear_design}
@@ -238,15 +236,14 @@ N = 35; u = [0.5]; y_noise = [0.5]
 res = sim!(estim, N, u; plant, y_noise)
 using Plots; plot(res, plotu=false, plotxwithx̂=true)
 \end{minted}
+\cref{fig:plot_NonLinMPC1} indicates that the Kalman filter performance seems sufficient for control. The estimate $\hat{x}_3$ is the integrating state on the torque $\tau$ that compensates for static errors. 
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \caption{Pendulum state estimation.}
     \includegraphics[width=0.5\columnwidth]{fig/plot_NonLinMPC1.pdf}
     \label{fig:plot_NonLinMPC1}
 \end{figure}
-
-\cref{fig:plot_NonLinMPC1} indicates that the Kalman filter performance seems sufficient for control. The estimate $\hat{x}_3$ is the integrating state on the torque $\tau$ that compensates for static errors. 
 
 \subsubsection{Nonlinear Model Predictive Controller (NMPC)}
 
@@ -392,7 +389,6 @@ Of course, this gain is only exploitable if the motor electronic includes some k
     \includegraphics[width=0.5\columnwidth]{fig/plot_EconomMPC1.pdf}
     \label{fig:plot_EconomMPC1}
 \end{figure}
-%
 \begin{figure}[ht]
     \centering
     \caption{Pendulum output disturbance rejection (EMPC).}
@@ -403,7 +399,7 @@ Of course, this gain is only exploitable if the motor electronic includes some k
 \subsection{Successive Linearization Model Predictive Control (SLMPC)}
 \label{sec:successive_linearization}
 
-The \texttt{setmodel!} method allows online adaptation of a linear plant model. Combined with the automatic linearization of \texttt{linearize}, a successive linearization model predictive controller (SLMPC) can be designed with minimal efforts. First, the default \texttt{LinMPC} solver (\texttt{OSQP.jl}) does not perform as well as \texttt{DAQP.jl} on unstable plant like here \citep{daqp}. The syntax to install it is: 
+The \texttt{setmodel!} method allows online adaptation of a linear plant model. Combined with the automatic linearization of \texttt{linearize} (based on \texttt{ForwardDiff.jl}), a successive linearization model predictive controller (SLMPC) can be designed with minimal efforts. But first, the default \texttt{LinMPC} solver (\texttt{OSQP.jl}) does not perform as well as \texttt{DAQP.jl} on unstable plant like here \citep{daqp}. The syntax to install it is: 
 \begin{minted}{julia}
 using Pkg; Pkg.add(["JuMP","DAQP"]) # install JuMP and DAQP
 using JuMP, DAQP
@@ -463,7 +459,7 @@ x_0 = [π, 0]; x̂_0 = [π, 0, 0]; ry = [180]; y_step=[10]
 res3_yd = sim2!(mpc3, model, N, ry, plant, x_0, x̂_0, y_step)
 plot(res3_yd)
 \end{minted}
-but the next section presents the interesting result: the solving time is drastically lower.
+The next section presents the interesting result however: the solving time is drastically lower.
 
 \begin{figure}[ht]
     \centering
