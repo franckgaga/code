@@ -72,7 +72,7 @@ By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} \citep{osqp} to sol
 
 On a side note, an internal model structure could have been used with \texttt{estim = InternalModel(model)} and \texttt{mpc = setconstraint!(LinMPC(estim); ymin=[45, -Inf])}, as an alternative to state estimator. It was tested on this example and it gave similar results.
 
-Before closing the loop, the actual plant input $\mathbf{u}$ and measurement $\mathbf{y^m}$ should initialize the estimates $\mathbf{\hat{x}}$ at the steady-state solution that leads to $\mathbf{\hat{y}^m}(0)=\mathbf{y^m}(0)$. This approach results in a bumpless transfer, especially with estimators in the predictor form. The \texttt{initstate!} function finds this solution for \texttt{LinModel}.Since the plant is the model here, its output initializes the states. \texttt{LinModel} objects are callable for this purpose. Once done, imposing step changes on the setpoint \texttt{ry} and on a load disturbance \texttt{ul} tests the closed-loop performance of \texttt{mpc}:
+Before closing the loop, the actual plant input $\mathbf{u}$ and measurement $\mathbf{y^m}$ should initialize the estimates $\mathbf{\hat{x}}$ at the steady-state solution that leads to $\mathbf{\hat{y}^m}(0)=\mathbf{y^m}(0)$. This approach results in a bumpless transfer, especially with estimators in the predictor form. The \texttt{initstate!} function finds this solution for \texttt{LinModel}. Since the plant is the model here, its output initializes the states. \texttt{LinModel} objects are callable for this purpose. Once done, imposing step changes on the setpoint \texttt{ry} and on a load disturbance \texttt{ul} tests the closed-loop performance of \texttt{mpc}:
 \begin{minted}{julia}
 function test_mpc(mpc, plant)
     plant.x .= 0; y = plant() # or evaloutput(plant)
@@ -270,8 +270,8 @@ plot(res_ry)
 \end{minted}
 The result in \cref{fig:plot_NonLinMPC2} suggests that the controller is robust enough to variations on the $K$ coefficient. Starting from this inverted position, \cref{fig:plot_NonLinMPC3} shows the closed-loop response to a step disturbances of \SI{10}{\degree} is satisfactory:
 \begin{minted}{julia}
-x0 = [π, 0]; x̂0 = [π, 0, 0]; y_step = [10]
-res_yd = sim!(nmpc, N, [180.0]; plant, x0, x̂0, y_step)
+x_0 = [π, 0]; x̂_0 = [π, 0, 0]; y_step = [10]
+res_yd = sim!(nmpc, N, [180.0]; plant, x_0, x̂_0, y_step)
 plot(res_yd)
 \end{minted}
 The next section presents an economic predictive controller on the pendulum.
