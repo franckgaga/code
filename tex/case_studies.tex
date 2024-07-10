@@ -391,7 +391,7 @@ Of course, this gain is only exploitable if the motor electronic includes some k
     \label{fig:plot_EconomMPC2}
 \end{figure}
 
-\subsection{Successive Linearization Model Predictive Control (SLMPC)}
+\subsubsection{Successive Linearization Model Predictive Control (SLMPC)}
 \label{sec:successive_linearization}
 
 The \texttt{setmodel!} method allows online adaptation of a linear plant model. Combined with the automatic linearization of \texttt{linearize}, based on \texttt{ForwardDiff.jl}, a successive linearization MPC can be designed with minimal efforts. But first, the default \texttt{LinMPC} solver (\texttt{OSQP.jl}) does not perform as well as \texttt{DAQP.jl} on unstable plants like here \citep{daqp}. The syntax to install it is: 
