@@ -75,7 +75,7 @@ On a side note, an internal model structure could have been used with \texttt{es
 Before closing the loop, the actual plant input $\mathbf{u}$ and measurement $\mathbf{y^m}$ should initialize the estimates $\mathbf{\hat{x}}$ at the steady-state solution that leads to $\mathbf{\hat{y}^m}(0)=\mathbf{y^m}(0)$. This approach results in a bumpless transfer, especially with estimators in the predictor form. The \texttt{initstate!} function finds this solution for \texttt{LinModel}. Since the plant is the model here, its output initializes the states. \texttt{LinModel} objects are callable for this purpose. Once done, imposing step changes on the setpoint \texttt{ry} and on a load disturbance \texttt{ul} tests the closed-loop performance of \texttt{mpc}:
 \begin{minted}{julia}
 function test_mpc(mpc, plant)
-    plant.x .= 0; y = plant() # or evaloutput(plant)
+    plant.x0 .= 0; y = plant() # or evaloutput(plant)
     initstate!(mpc, plant.uop, y)
     N = 75; ry = [50, 30]; ul = 0
     U, Y, Ry = zeros(2, N), zeros(2, N), zeros(2, N)
@@ -127,7 +127,7 @@ The simulation needs a new \texttt{LinMPC} object based on \texttt{model\_d} and
 \begin{minted}{julia}
 mpc_d = setconstraint!(LinMPC(model_d), ymin=[45, -Inf])
 function test_mpc_d(mpc_d, plant)
-    plant.x .= 0; y = plant(); d = [20]
+    plant.x0 .= 0; y = plant(); d = [20]
     initstate!(mpc_d, plant.uop, y, d)
     N = 75; ry = [50, 30]; ul = 0
     U, Y, Ry = zeros(2, N), zeros(2, N), zeros(2, N)
