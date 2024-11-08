@@ -1,21 +1,15 @@
 % !TeX spellcheck = en_US
 % !TeX encoding = UTF-8
 % !LW recipe=latexmk (latexmkrc)
-\documentclass[ijoc,nonblindrev]{informs4}
+\documentclass[twocolumn]{article}
 
+\usepackage{natbib,abstract}
 \usepackage{amsmath,amssymb,fontspec,mathtools,siunitx,etoolbox}
-\usepackage{titlesec, graphicx,xcolor,booktabs,tikz,chemplants}
+\usepackage{titlesec,graphicx,xcolor,booktabs,tikz,chemplants}
 \usepackage{minted}
 \usepackage[colorlinks,allcolors=blue]{hyperref}
 \usepackage[capitalize]{cleveref}
 
-\usepackage{natbib}
- \bibpunct[, ]{(}{)}{,}{a}{}{,}%
- \def\bibfont{\small}%
- \def\bibsep{\smallskipamount}%
- \def\bibhang{24pt}%
- \def\newblock{\ }%
- \def\BIBand{and}%
 
 %% =============== preamble ==================================================
 %% ---------------- tikz -----------------------------------------------------
@@ -29,59 +23,65 @@
 \titleformat*{\paragraph}{\bfseries\ttfamily}
 %% ----------------- minted -------------------------------------------------
 \setminted[julia]{%
-    %fontsize=\small,
+    fontsize=\small,
     bgcolor=gray!10,
-    baselinestretch=0.8
 }
 \setminted[julia-repl]{%
-    %fontsize=\small,
+    fontsize=\small,
     xleftmargin=3pt,
-    baselinestretch=0.8
 }
-\newcommand*{\spacerepl}{\vspace*{-20pt}}
-\BeforeBeginEnvironment{minted}{\vspace*{-13pt}}
+\newcommand*{\spacerepl}{\vspace*{0pt}}
+\BeforeBeginEnvironment{minted}{\vspace*{-0pt}}
 \AfterEndEnvironment{minted}{\vspace*{-0pt}}
 %% ============================================================================
 
-% For revisions, input the manuscript number assigned by the on-line
-% system along with a suffix ".Rx" where x is the revision number.
-\MANUSCRIPTNO{MOOR-0001-2024.00}
 
 \begin{document}
 
-\RUNAUTHOR{Gagnon et al.}
 
-\RUNTITLE{ModelPredictiveControl.jl: advanced process control made easy in Julia}
 
-\TITLE{ModelPredictiveControl.jl: advanced process control made easy in Julia}
+\title{ModelPredictiveControl.jl: advanced\\process control made easy in Julia}
 
-\ARTICLEAUTHORS{%
-\AUTHOR{Francis Gagnon\textsuperscript{a}, Alex Thivierge\textsuperscript{b}}
-\AFF{\textsuperscript{a}Jumine, Quebec City, Canada, \EMAIL{francis.gagnon@jumine.ca}; \textsuperscript{b}\EMAIL{alex.thivierge@jumine.ca}}
-\AUTHOR{André Desbiens}
-\AFF{Process Observation and Optimization Laboratory (LOOP), Université Laval, Quebec City, Canada, \EMAIL{andre.desbien@gel.ulaval.ca}}
-\AUTHOR{Fredrik Bagge Carlson}
-\AFF{JuliaHub, Lund, Sweden, \EMAIL{baggepinnen@gmail.com}}
-} % end of the block
+\author{Francis Gagnon\thanks{Jumine, Quebec City, Canada} \and Alex Thivierge\footnotemark[1] \and André Desbiens\thanks{Process Observation and Optimization Laboratory (LOOP), Université Laval, Quebec City, Canada} \and Fredrik Bagge Carlson\thanks{JuliaHub, Lund, Sweden}}
 
-\ABSTRACT{%
-% Enter your abstract
-Proprietary closed-source software is still the norm in advanced process control. Transparency and reproducibility are key aspects of scientific research. Free and open-source toolkit can contribute to the development, sharing and advancement of  new and efficient control approaches, and the industrial sector will certainly benefit from them. This paper presents ModelPredictiveControl.jl, an open-source software package for designing model predictive controllers in the Julia programming language. It is designed to be easy to use and modular, while providing advanced features like nonlinear control and moving horizon estimation. It relies on powerful control system and mathematical optimization frameworks to simplify the construction and testing of state estimators and predictive controllers. It also integrates with the standard plotting library to quickly visualize closed-loop data. The paper presents the main functionalities and illustrates them with two case studies in simulation. The first example is a continuously stirred tank reactor described by linear dynamics. The second one implements a nonlinear, an economic, and a successive linearization model predictive controllers for an inverted pendulum. The solving times are benchmarked against equivalent implementations in MATLAB to show the efficiency of the package.
-}%
 
-\KEYWORDS{Dynamic programming-optimal control: Applications; Engineering, Applications; Manufacturing: Automated systems; Programming, Quadratic; Programming, Nonlinear} 
-\HISTORY{Received: Month DD, YYYY; Accepted: Month DD, YYYY; Published Online: Month DD, YYYY}
+% \ARTICLEAUTHORS{%
+% \AUTHOR{Francis Gagnon\textsuperscript{a}, Alex Thivierge\textsuperscript{b}}
+% \AFF{\textsuperscript{a}Jumine, Quebec City, Canada, \EMAIL{francis.gagnon@jumine.ca}; \textsuperscript{b}\EMAIL{alex.thivierge@jumine.ca}}
+% \AUTHOR{André Desbiens}
+% \AFF{Process Observation and Optimization Laboratory (LOOP), Université Laval, Quebec City, Canada, \EMAIL{andre.desbien@gel.ulaval.ca}}
+% \AUTHOR{Fredrik Bagge Carlson}
+% \AFF{JuliaHub, Lund, Sweden, \EMAIL{baggepinnen@gmail.com}}
+% } % end of the block
 
-\maketitle
+
+% \begin{keywords}
+% Dynamic programming-optimal control: Applications; Engineering, Applications; Manufacturing: Automated systems; Programming, Quadratic; Programming, Nonlinear
+% \end{keywords}
+
+% \KEYWORDS{Dynamic programming-optimal control: Applications; Engineering, Applications; Manufacturing: Automated systems; Programming, Quadratic; Programming, Nonlinear} 
+% \HISTORY{Received: Month DD, YYYY; Accepted: Month DD, YYYY; Published Online: Month DD, YYYY}
+
+
+\twocolumn[
+\maketitle % need full-width title
+\begin{onecolabstract}
+    Proprietary closed-source software is still the norm in advanced process control. Transparency and reproducibility are key aspects of scientific research. Free and open-source toolkit can contribute to the development, sharing and advancement of  new and efficient control approaches, and the industrial sector will certainly benefit from them. This paper presents ModelPredictiveControl.jl, an open-source software package for designing model predictive controllers in the Julia programming language. It is designed to be easy to use and modular, while providing advanced features like nonlinear control and moving horizon estimation. It relies on powerful control system and mathematical optimization frameworks to simplify the construction and testing of state estimators and predictive controllers. It also integrates with the standard plotting library to quickly visualize closed-loop data. The paper presents the main functionalities and illustrates them with two case studies in simulation. The first example is a continuously stirred tank reactor described by linear dynamics. The second one implements a nonlinear, an economic, and a successive linearization model predictive controllers for an inverted pendulum. The solving times are benchmarked against equivalent implementations in MATLAB to show the efficiency of the package.
+\end{onecolabstract}
+\vspace{1em}
+]
+\saythanks 
+
 
 \input{tex/intro}
 \input{tex/mat_method}
 \input{tex/case_studies}
 \input{tex/conclu}
 
-\ACKNOWLEDGMENT{The authors would like to acknowledge all the developers involved in the control system and optimization frameworks of Julia. Their ease of use and intuitiveness  significantly accelerated the programming of this package.}
+\section*{Acknowledgments}
+The authors would like to acknowledge all the developers involved in the control system and optimization frameworks of Julia. Their ease of use and intuitiveness  significantly accelerated the programming of this package.
 
-\bibliographystyle{informs2014} 
+\bibliographystyle{abbrvnat}
 \bibliography{mpcPackageJulia_bibfile} 
 
 \end{document}

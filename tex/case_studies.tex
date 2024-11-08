@@ -503,14 +503,13 @@ All the solvers in Julia are free and open-source, except for \texttt{KNITRO.jl}
 
 A laptop with an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark} i7-1165G7 (8 cores at \SI{4.70}{\giga\hertz}) and a Linux v6.9.5 kernel runs the benchmarks. The scripts are executed on Julia v1.10.4 and MATLAB R2024a. A public repository at \url{https://github.com/franckgaga/mpcPackageJulia.tex} provides the code to reproduce the results. 
 
-\begin{table}
+\begin{table*}
     \centering
     \caption{Julia and MATLAB Benchmarks on the Case Studies.}
     \label{tab:benchamrks}
     \centering
-    \small
     \input{tab/benchmarks.tex}
-\end{table}
+\end{table*}
 
 The benchmarks are presented in \cref{tab:benchamrks}. The linear MPC is significantly faster in Julia, approximately from 4 to 15 times faster. This result is however amplified by \texttt{OSQP.jl}, a modern and fast OS quadratic optimizer, which seems to perform considerably better than MATLAB's counterpart (\texttt{admm}). But the authors would argue that it is a consequence of \texttt{ModelPredictiveControl.jl} modular design. Any modern optimization tools can be leveraged with minimal effort and without any package update, presuming that they offer a \texttt{JuMP.jl} interface. Using a custom optimization algorithm in MATLAB MPC toolbox is possible but not straightforward.
 
