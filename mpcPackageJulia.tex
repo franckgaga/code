@@ -3,13 +3,11 @@
 % !LW recipe=latexmk (latexmkrc)
 \documentclass[5p,authoryear]{elsarticle}
 
-\usepackage{natbib}
 \usepackage{amsmath,amssymb,fontspec,mathtools,siunitx,etoolbox}
-\usepackage{graphicx,xcolor,booktabs,tikz,chemplants}
+\usepackage{graphicx,enumitem,xcolor,booktabs,tikz,chemplants,natbib}
 \usepackage{minted}
 \usepackage[colorlinks,allcolors=blue]{hyperref}
 \usepackage[capitalize]{cleveref}
-
 
 %% =============== preamble ==================================================
 %% ---------------- tikz -----------------------------------------------------
@@ -21,6 +19,8 @@
 \setmonofont{Noto Sans Mono}[Scale=MatchLowercase]
 %% ----------------- elsarticle ----------------------------------------------
 \journal{arXiv}
+%% ----------------- enumitem ------------------------------------------------
+\setlist[itemize]{noitemsep}
 %% ----------------- minted -------------------------------------------------
 \setminted[julia]{%
     fontsize=\small,
@@ -31,9 +31,9 @@
     fontsize=\small,
     xleftmargin=0pt,
 }
-\newcommand*{\spacerepl}{\vspace*{-9pt}}
-%\BeforeBeginEnvironment{minted}{\vspace*{-0pt}}
-%\AfterEndEnvironment{minted}{\vspace*{-0pt}}
+\newcommand*{\spacerepl}{\vspace*{-\baselineskip}}
+%\BeforeBeginEnvironment{minted}{\vspace*{0pt}}
+%\AfterEndEnvironment{minted}{\vspace*{0pt}}
 %% ============================================================================
 \begin{document}
 

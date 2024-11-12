@@ -25,7 +25,8 @@ estim = UnscentedKalmanFilter(model; σQ, σR, nint_u, σQint_u)
 ## =========================================
 p_plant = copy(p); p_plant[3] = 1.25*p[3]
 plant = NonLinModel(f!, h!, Ts, nu, nx, ny; p=p_plant)
-N = 35; u=[0.5]; res = sim!(estim, N, u; plant, y_noise=[0.5])
+N = 35; u = [0.5]; 
+res = sim!(estim, N, u; plant, y_noise=[0.5])
 using Plots; plot(res, plotu=false, plotxwithx̂=true)
 
 ## =========================================

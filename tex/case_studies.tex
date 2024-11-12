@@ -39,7 +39,7 @@ vu , vy  = ["\$u_c\$", "\$u_h\$"], ["\$y_L\$", "\$y_T\$"]
 model = setop!(LinModel(G, 2.0); uop, yop)
 model = setname!(model; u=vu, y=vy)
 \end{minted}
-\spacerepl
+\spacerepl\vspace{0.5em}
 \begin{minted}{julia-repl}
 LinModel with a sample time Ts = 2.0 s and:
  2 manipulated inputs u
@@ -47,7 +47,7 @@ LinModel with a sample time Ts = 2.0 s and:
  2 outputs y
  0 measured disturbances d
 \end{minted}
-The \texttt{model} object is used for two purposes : to construct our controller and as a plant simulator to test the design. The \texttt{setname!} function customizes the $y$-axis labels in the plots.
+The \texttt{model} object is used for two purposes : to construct controllers and as a plant simulator to test the design. The \texttt{setname!} function modifies the $y$-axis labels in the plots.
 
 \subsubsection{Linear Model Predictive Controller}
 
@@ -225,7 +225,8 @@ The vectors \texttt{σQ} and \texttt{σR} are the standard deviations of the pro
 \begin{minted}{julia}
 p_plant = copy(p); p_plant[3] = 1.25*p[3]
 plant = NonLinModel(f!, h!, Ts, nu, nx, ny; p=p_plant)
-N = 35; u=[0.5]; res = sim!(estim, N, u; plant, y_noise=[0.5])
+N = 35; u = [0.5]; 
+res = sim!(estim, N, u; plant, y_noise=[0.5])
 using Plots; plot(res, plotu=false, plotxwithx̂=true)
 \end{minted}
 \cref{fig:plot_NonLinMPC1} indicates that the Kalman filter performance seems sufficient for control. The estimate $\hat{x}_3$ is the integrating state on the torque $\tau$ that compensates for static errors. 

@@ -7,7 +7,7 @@ The functions of this package dispatch over three abstract types, described here
 
 \paragraph{\texttt{SimModel}} (2 subtypes) -- Discrete state-space models of the plant, including linear and nonlinear representations. Constructors automatically discretize continuous-time linear systems. Instances of \texttt{SimModel} serves as a wrapper to construct \texttt{StateEstimator} and \texttt{PredictiveController} objects, and also as plant simulators to test the designs.
 
-\paragraph{\texttt{StateEstimator}} (7 subtypes) -- Open loop and closed-loop state observers, either based on deterministic or stochastic systems. They produce the full state feedback for the \texttt{PredictiveController}.
+\paragraph{\texttt{StateEstimator}} (7 subtypes) -- Open loop and closed-loop state observers, both for deterministic or stochastic systems. They produce the full state feedback for the \texttt{PredictiveController}.
 
 \paragraph{\texttt{PredictiveController}} (3 subtypes)  -- Linear and nonlinear MPC are available. An explicit controller based on matrix algebra is also possible for linear models without constraint.
 
@@ -16,19 +16,17 @@ The functions of this package dispatch over three abstract types, described here
 Plant models are defined by the abstract type \texttt{SimModel}. Operating points on the model inputs, outputs and measured disturbances are explicitly defined by the user. Scaling the inputs and outputs can sometimes ease the optimization. It is not supported yet since it is realizable at the user level, but it is planned for future releases. There are currently two concrete subtypes in the package, introduced in the following two sections. 
 
 \paragraph{\texttt{LinModel}}
-
-Discrete linear state-space representations of the plant. Continuous-time models are discretized using zero-order hold for the manipulated inputs, and Tustin's approximation, for the measured disturbances (sampled continuous signals, usually). This leads to equations of the form:
+Linear state-space representations of the plant. Continuous-time models are discretized using zero-order hold for the manipulated inputs, and Tustin's approximation, for the measured disturbances (sampled continuous signals, usually). This leads to equations of the form:
 \begin{subequations}
 \begin{align}
     \mathbf{x}(k+1) &= \mathbf{A x}(k) + \mathbf{B_u u}(k) + \mathbf{B_d d}(k) \\
     \mathbf{y}(k)   &= \mathbf{C x}(k) + \mathbf{D_d d}(k)
 \end{align}
 \end{subequations}
-in which the vectors $\mathbf{u}$, $\mathbf{d}$, $\mathbf{x}$ and $\mathbf{y}$ are the manipulated input, measured disturbance, state and output of the model, respectively. Objects are constructed with \texttt{ss} or \texttt{tf} functions from \texttt{ControlSystems.jl}, or by providing the fives state-space matrices directly. All the \texttt{StateEstimator} and \texttt{PredictiveController} objects based on a \texttt{LinModel} representation allow online model modifications (see \cref{sec:successive_linearization} for an example with successive linearizations).
+in which the vectors $\mathbf{u}$, $\mathbf{d}$, $\mathbf{x}$ and $\mathbf{y}$ are the manipulated input, measured disturbance, state and output of the model, respectively. Objects are constructed with \texttt{ss} or \texttt{tf} functions from \texttt{ControlSystems.jl}, or by providing the fives state-space matrices directly. All the \texttt{StateEstimator} and \texttt{PredictiveController} objects based on a \texttt{LinModel} representation allow online model modifications (see the \cref{sec:successive_linearization} for an example with successive linearizations).
 
 \paragraph{\texttt{NonLinModel}}
-
-Discrete nonlinear state-space representations of the plant. A built-in 4th order Runge-Kutta solver with optional supersampling discretizes continuous-time dynamics by default, leading to the following system of equations:. 
+Nonlinear state-space representations of the plant. A built-in 4th order Runge-Kutta solver with optional supersampling discretizes continuous-time dynamics by default, leading to the following system of equations:. 
 \begin{subequations}
 \begin{align}
     \mathbf{x}(k+1) &= \mathbf{f}\big(\mathbf{x}(k), \mathbf{u}(k), \mathbf{d}(k), \mathbf{p} \big) \\
