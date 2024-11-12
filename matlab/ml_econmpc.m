@@ -46,7 +46,7 @@ validateFcns(mympc, [0; 0; 0], 0.5, [], {par, Ts});
 x0 = [0; 0];
 xhat0 = [0; 0; 0];
 u = 0.0;
-[R, Y, ~, U, X, ~] = test_mpc(mympc, opt, ukf, ...
+[R, Y, ~, U, ~, ~] = test_mpc(mympc, opt, ukf, ...
     par_plant, par, Ts, u, x0, xhat0, Phat0, 0);
 T = Ts*(0:length(Y)-1);
 figure();
