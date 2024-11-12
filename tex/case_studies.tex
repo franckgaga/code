@@ -208,7 +208,8 @@ The output function $\mathbf{h}$ converts the $\theta$ angle to degrees. The pla
 The state estimates of an \texttt{UnscentedKalmanFilter} will feed the controller:
 \begin{minted}{julia}
 σQ = [0.1, 1.0]; σR=[5.0]; nint_u=[1]; σQint_u=[0.1]
-estim = UnscentedKalmanFilter(model; σQ, σR, nint_u, σQint_u)
+estim = UnscentedKalmanFilter(model; σQ, σR, 
+                              nint_u, σQint_u)
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
