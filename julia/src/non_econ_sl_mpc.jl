@@ -8,7 +8,6 @@ function f!(ẋ, x, u, _ , p)
     τ = u[1]             # [Nm]
     ẋ[1] = ω
     ẋ[2] = -g/L*sin(θ) - K/m*ω + τ/m/L^2
-    return nothing
 end
 h!(y, x, _ , _ ) = (y[1] = 180/π*x[1])   # [°]
 p = [9.8, 0.4, 1.2, 0.3]
@@ -142,7 +141,8 @@ model2 = NonLinModel(f!, h2!, Ts, nu, nx, ny; p)
 plant2 = NonLinModel(f!, h2!, Ts, nu, nx, ny; p=p_plant)
 model2 = setname!(model2, u=vu, x=vx, y=[vy; vx[2]])
 plant2 = setname!(plant2, u=vu, x=vx, y=[vy; vx[2]])
-estim2 = UnscentedKalmanFilter(model2; σQ, σR, nint_u, σQint_u, i_ym=[1])
+estim2 = UnscentedKalmanFilter(model2; σQ, σR, 
+                               nint_u, σQint_u, i_ym=[1])
 
 
 ## =========================================
@@ -151,8 +151,9 @@ function JE(UE, ŶE, _ , p)
     τ, ω = UE[1:end-1], ŶE[2:2:end-1]
     return Ts*sum(τ.*ω)
 end
-p, Mwt2, Ewt = Ts, [Mwt; 0.0], 3.5e3
-empc = NonLinMPC(estim2; Hp, Hc, Nwt, Mwt=Mwt2, Cwt, JE, Ewt, p)
+p = Ts; Mwt2 = [Mwt; 0.0]; Ewt = 3.5e3
+empc = NonLinMPC(estim2; Hp, Hc, 
+                 Nwt, Mwt=Mwt2, Cwt, JE, Ewt, p)
 empc = setconstraint!(empc; umin, umax)
 
 ## =========================================
@@ -213,7 +214,8 @@ bm = @benchmark(
 
 ## =========================================
 x_0 = [π, 0]; x̂_0 = [π, 0, 0]; y_step = [10; 0]
-res2_yd = sim!(empc, N, ry; plant=plant2, x_0, x̂_0, y_step)
+res2_yd = sim!(empc, N, ry; plant=plant2, 
+                            x_0, x̂_0, y_step)
 plot(res2_yd, ploty=[1])
 
 ## =========================================
@@ -249,7 +251,7 @@ bm = @benchmark(
 ## ==========================================
 ## ====== SUCCESSIVE LINEARIZATION MPC ======
 ## ==========================================
-using Pkg; Pkg.add(["JuMP","DAQP"]) # install JuMP and DAQP
+using Pkg; Pkg.add(["JuMP","DAQP"])
 using JuMP, DAQP
 optim = JuMP.Model(DAQP.Optimizer, add_bridges=false)
 
@@ -260,7 +262,8 @@ mpc3 = LinMPC(kf; Hp, Hc, Mwt, Nwt, Cwt, optim)
 mpc3 = setconstraint!(mpc3; umin, umax)
 
 ## ==========================================
-function sim2!(mpc, nlmodel, N, ry, plant, x_0, x̂_0, y_step)
+function sim_adapt!(mpc, nlmodel, N, ry, 
+                    plant, x_0, x̂_0, y_step)
     U, Y, Ry = zeros(1, N), zeros(1, N), zeros(1, N)
     u, x̂ = [0], x̂_0
     initstate!(mpc, u, plant())
@@ -283,7 +286,8 @@ end
 
 ## ==========================================
 x_0 = [0, 0]; x̂_0 = [0, 0, 0]; ry = [180]; y_step=[0]
-res3_ry = sim2!(mpc3, model, N, ry, plant, x_0, x̂_0, y_step)
+res3_ry = sim_adapt!(mpc3, model, N, ry, 
+                     plant, x_0, x̂_0, y_step)
 plot(res3_ry)
 
 ## =========================================
@@ -311,7 +315,8 @@ bm = @benchmark(
 
 ## =========================================
 x_0 = [π, 0]; x̂_0 = [π, 0, 0]; ry = [180]; y_step=[10]
-res3_yd = sim2!(mpc3, model, N, ry, plant, x_0, x̂_0, y_step)
+res3_yd = sim_adapt!(mpc3, model, N, ry, 
+                     plant, x_0, x̂_0, y_step)
 plot(res3_yd)
 
 ## =========================================

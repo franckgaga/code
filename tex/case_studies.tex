@@ -3,7 +3,7 @@
 \section{Case Studies}
 \label{sec:case_studies}
 
-This section presents two case studies in simulation to demonstrate the design of linear and nonlinear MPCs. The objective here is to demonstrate how the package syntax facilitates the implementation and testing of predictive controllers and state estimators. The package manager of Julia simplifies the installation of \texttt{ModelPredictiveControl.jl}:
+This section presents two case studies in simulation to demonstrate the design of linear and nonlinear MPCs. The objective here is to demonstrate how the package syntax facilitates the implementation and testing of predictive controllers and state estimators. The package manager of Julia eases the installation of \texttt{ModelPredictiveControl.jl}:
 \begin{minted}{julia}
 using Pkg; Pkg.add("ModelPredictiveControl")
 \end{minted}
@@ -15,9 +15,10 @@ The first example details how to apply an MPC on a plant at each discrete time s
 
 The example considers a continuously stirred tank reactor (CSTR) with a cold and hot water intakes, fed at a respective flow rate of $u_c$ and $u_h$. The manipulated input vector is thus $\mathbf{u} = [\begin{smallmatrix}u_c & u_h\end{smallmatrix}]^\intercal$. The liquid level $y_L$ and temperature $y_T$ constitute the measured output vector $\mathbf{y} = [\begin{smallmatrix}y_L & y_T\end{smallmatrix}]^\intercal$. \cref{fig:cstr} presents schematically the case study process.
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \caption{CSTR process.}
+    \vspace{0.5em}
     \input{fig/cstr.tikz}
     \label{fig:cstr}
 \end{figure}
@@ -35,8 +36,9 @@ The syntax to construct a linear model with a sample time of $\SI{2}{\second}$ i
 using ModelPredictiveControl, ControlSystemsBase
 G = [ tf(1.90, [18, 1]) tf(1.90, [18, 1]);
       tf(-0.74,[8, 1])  tf(0.74, [8, 1]) ]
-model = setop!(LinModel(G, 2.0); uop=[20,20], yop=[50,30])
-vu, vy = ["\$u_c\$", "\$u_h\$"], ["\$y_L\$", "\$y_T\$"]
+uop, yop = [20, 20], [50, 30]
+vu , vy  = ["\$u_c\$", "\$u_h\$"], ["\$y_L\$", "\$y_T\$"]
+model = setop!(LinModel(G, 2.0); uop, yop)
 model = setname!(model; u=vu, y=vy)
 \end{minted}
 \spacerepl
@@ -57,8 +59,8 @@ mpc = setconstraint!(LinMPC(model), ymin=[45, -Inf])
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-LinMPC controller with a sample time Ts = 2.0 s, OSQP optimizer, 
-SteadyKalmanFilter estimator and:
+LinMPC controller with a sample time Ts = 2.0 s, OSQP
+optimizer, SteadyKalmanFilter estimator and:
  10 prediction steps Hp
   2 control steps Hc
   1 slack variable ϵ (control constraints)
@@ -83,6 +85,7 @@ function test_mpc(mpc, plant)
         i == 26 && (ry = [48, 35])
         i == 51 && (ul = -10)
         y = plant() # simulated measurements
+        preparestate!(mpc, y) # prepare mpc estimate
         u = mpc(ry) # or moveinput!(mpc, ry)
         U[:,i], Y[:,i], Ry[:,i] = u, y, ry
         updatestate!(mpc, u, y) # update mpc estimate
@@ -92,7 +95,9 @@ function test_mpc(mpc, plant)
 end
 U_data, Y_data, Ry_data = test_mpc(mpc, model)
 \end{minted}
-Calling \texttt{LinMPC} instances computes and returns $\mathbf{u}(k)$. It is worth mentioning that additional information like the optimal output predictions $\mathbf{\hat{Y}}$ can be retrieved by calling \texttt{getinfo} after solving the problem. Also, updating the internal states of \texttt{mpc} prepares the object for the \emph{next} time step. That is why the call is made at the end of the \texttt{for} loop. The same logic applies for \texttt{plant}. Lastly, the package implements a \texttt{Plots.jl} recipe \citep{plots} to quickly visualize the results:
+Calling \texttt{LinMPC} instances computes and returns $\mathbf{u}(k)$. It is worth mentioning that additional information like the optimal output predictions $\mathbf{\hat{Y}}$ can be retrieved by calling \texttt{getinfo} after solving the problem. 
+
+Also, calling \texttt{preparestate!} on \texttt{mpc} prepares the estimates for the current control period, and \texttt{updatestate!} updates them for the next one (the same logic applies for \texttt{plant}). Lastly, the package implements a \texttt{Plots.jl} recipe \citep{plots} to quickly visualize the results:
 \begin{minted}{julia}
 res = SimResult(mpc, U_data, Y_data; Ry_data)
 using Plots; plot(res)
@@ -108,16 +113,16 @@ using Plots; plot(res)
 
 \subsubsection{Feedforward Compensation}
 
-Suppose that the load disturbance $u_l$ is in fact caused by a separate hot water pipe that discharges into the tank. Measuring this flow rate allows us to incorporate feedforward compensation with $\mathbf{d}=u_l$. The new plant model is:
+Suppose that the load disturbance $u_l$ is in fact caused by a separate hot water pipe that discharges into the tank. Measuring this flow rate allows us to incorporate feedforward compensation with $\mathbf{d}=u_l$. The new model is:
 
 \begin{minted}{julia}
 model_d = LinModel([G G[1:2, 2]], 2.0; i_d=[3])
-model_d = setop!(model_d; uop=[20,20], yop=[50,30], dop=[20])
+model_d = setop!(model_d; uop, yop, dop=[20])
 model_d = setname!(model_d; u=vu, y=vy, d=["\$u_l\$"])
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-Discrete-time linear model with a sample time Ts = 2.0 s and:
+LinModel with a sample time Ts = 2.0 s and:
  2 manipulated inputs u
  4 states x
  2 outputs y
@@ -135,6 +140,7 @@ function test_mpc_d(mpc_d, plant)
         i == 26 && (ry = [48, 35])
         i == 51 && (ul = -10)
         y, d = plant(), [20+ul] # simulated measurements
+        preparestate!(mpc_d, y, d) # d in arguments
         u = mpc_d(ry, d) # d in arguments
         U[:,i], Y[:,i], Ry[:,i] = u, y, ry
         updatestate!(mpc_d, u, y, d) # d in arguments
@@ -160,34 +166,31 @@ plot(res)
 
 \subsubsection{Nonlinear Model}
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \caption{Inverted pendulum.}
+    \vspace{0.5em}
     \input{fig/pendulum.tikz}
     \label{fig:pendulum}
 \end{figure}
 
 For this case study, the goal is to control the angular position $\theta$ of a pendulum attached to a motor, thus $\mathbf{y} = \theta$. The manipulated input is the motor torque $\mathbf{u} = \tau$ in \si{\newton\meter}. \cref{fig:pendulum} depicts the system. The model is:
-\begin{subequations}
 \begin{align}
 \dot{\theta}(t) &= \omega(t) \\
 \dot{\omega}(t) &= -\frac{g}{L}\sin\big(\theta(t)\big) -\frac{K}{m}\omega(t) + \frac{1}{m L^2}\tau(t) \label{eq.pendulum_speed}
 \end{align}
-\end{subequations}
-in which $g$ is the gravitational acceleration in \si{\meter\per\second\squared}, $L$, the pendulum length in \si{\meter}, $K$, the friction coefficient at the pivot point in \si{\kilogram\per\second}, and $m$, the mass attached at the end of the pendulum in \si{\kilogram}. By default, the \texttt{NonLinModel} constructor assumes continuous-time equations and discretizes them with Runge-Kutta:
+in which $g$ is the gravitational acceleration in \si{\meter\per\second\squared}, $L$, the pendulum length in \si{\meter}, $K$, the friction coefficient at the pivot point in \si{\kilogram\per\second}, and $m$, the mass attached at the end of the pendulum in \si{\kilogram}. They are all bundled in the parameter vector $\mathbf{p}=[\begin{smallmatrix}g & L & K & m\end{smallmatrix}]'$. By default, the \texttt{NonLinModel} constructor assumes continuous-time equations and discretizes them with Runge-Kutta:
 \begin{minted}{julia}
 using ModelPredictiveControl
-function pendulum!(ẋ, x, u, par)
-    g, L, K, m = par     # [m/s²], [m], [kg/s], [kg]
+function f!(ẋ, x, u, _ , p)
+    g, L, K, m = p       # [m/s²], [m], [kg/s], [kg]
     θ, ω = x[1], x[2]    # [rad], [rad/s]
     τ = u[1]             # [Nm]
     ẋ[1] = ω
     ẋ[2] = -g/L*sin(θ) - K/m*ω + τ/m/L^2
-    return nothing
 end
-const par = (9.8, 0.4, 1.2, 0.3)
-f!(ẋ, x, u, _ ) = pendulum!(ẋ, x, u, par)
-h!(y, x, _ ) = (y[1] = 180/π*x[1])   # [°]
+h!(y, x, _ , _ ) = (y[1] = 180/π*x[1])   # [°]
+p = [9.8, 0.4, 1.2, 0.3]
 nu = 1; nx = 2; ny = 1; Ts = 0.1
 model = NonLinModel(f!, h!, Ts, nu, nx, ny)
 vu = ["\$τ\$ (Nm)"]
@@ -197,25 +200,26 @@ model = setname!(model; u=vu, x=vx, y=vy)
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-NonLinModel with a sample time Ts = 0.1 s, RungeKutta solver and:
+NonLinModel with a sample time Ts = 0.1 s, RungeKutta
+solver and:
  1 manipulated inputs u
  2 states x
  1 outputs y
  0 measured disturbances d
 \end{minted}
-
-The output function $\mathbf{h}$ converts the $\theta$ angle to degrees. The plant model relies on mutating state-space functions to reduce the memory allocations and the computational burden as well. The more intuitive non-mutating syntax can still be used by providing functions with one less argument, e.g.: \texttt{f(x,u,d)=x+u+d} and \texttt{h(x,d)=x+d}.
+The output function $\mathbf{h}$ converts the $\theta$ angle to degrees. The plant model relies on mutating state-space functions to reduce the memory allocations and the computational burden as well. The more intuitive non-mutating syntax can still be used by providing functions with one less argument, e.g.: \texttt{f(x,u,d,p)=x+u+d+p} and \texttt{h(x,d,p)=x+d+p}.
 
 \subsubsection{Nonlinear State Estimator}
 
 The state estimates of an \texttt{UnscentedKalmanFilter} will feed the controller:
 \begin{minted}{julia}
-σQ = [0.1, 0.5]; σR=[0.5]; nint_u=[1]; σQint_u=[0.1]
+σQ = [0.1, 1.0]; σR=[5.0]; nint_u=[1]; σQint_u=[0.1]
 estim = UnscentedKalmanFilter(model; σQ, σR, nint_u, σQint_u)
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-UnscentedKalmanFilter estimator with a sample time Ts = 0.1 s, NonLinModel and:
+UnscentedKalmanFilter estimator with a sample time Ts =
+0.1 s, NonLinModel and:
  1 manipulated inputs u (1 integrating states)
  3 states x̂
  1 measured outputs ym (0 integrating states)
@@ -224,11 +228,9 @@ UnscentedKalmanFilter estimator with a sample time Ts = 0.1 s, NonLinModel and:
 \end{minted}
 The vectors \texttt{σQ} and \texttt{σR} are the standard deviations of the process and sensor noises, respectively. The value for the velocity $\omega$ is higher here (\texttt{σQ} second value) since \eqref{eq.pendulum_speed} includes an uncertain parameter: the friction coefficient $K$. Also, the argument \texttt{nint\_u} explicitly adds one integrating state at the model input, the motor torque $\tau$, with an associated standard deviation \texttt{σQint\_u} of $\SI{0.1}{\newton\meter}$. Custom models for the unmeasured disturbances will be added in a future release (other than integrators). The estimator tuning is tested on a plant with a \SI{25}{\percent} larger friction coefficient $K$: 
 \begin{minted}{julia}
-par_plant = (par[1], par[2], 1.25*par[3], par[4])
-f_plant!(ẋ, x, u, _) = pendulum!(ẋ, x, u, par_plant)
-plant = NonLinModel(f_plant!, h!, Ts, nu, nx, ny)
-N = 35; u = [0.5]; y_noise = [0.5]
-res = sim!(estim, N, u; plant, y_noise)
+p_plant = copy(p); p_plant[3] = 1.25*p[3]
+plant = NonLinModel(f!, h!, Ts, nu, nx, ny; p=p_plant)
+N = 35; u=[0.5]; res = sim!(estim, N, u; plant, y_noise=[0.5])
 using Plots; plot(res, plotu=false, plotxwithx̂=true)
 \end{minted}
 \cref{fig:plot_NonLinMPC1} indicates that the Kalman filter performance seems sufficient for control. The estimate $\hat{x}_3$ is the integrating state on the torque $\tau$ that compensates for static errors. 
@@ -251,8 +253,8 @@ nmpc = setconstraint!(nmpc; umin, umax)
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt optimizer, 
-UnscentedKalmanFilter estimator and:
+NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt
+optimizer, UnscentedKalmanFilter estimator and:
  20 prediction steps Hp
   2 control steps Hc
   0 slack variable ϵ (control constraints)
@@ -274,16 +276,16 @@ x_0 = [π, 0]; x̂_0 = [π, 0, 0]; y_step = [10]
 res_yd = sim!(nmpc, N, [180.0]; plant, x_0, x̂_0, y_step)
 plot(res_yd)
 \end{minted}
-The next section presents an economic predictive controller on the pendulum.
+The next section presents an economic model predictive controller on the pendulum.
 
-\begin{figure}[t]
+\begin{figure}[ht]
     \centering
     \caption{Pendulum output setpoint tracking (NMPC).}
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC2.pdf}
     \label{fig:plot_NonLinMPC2}
 \end{figure}
 
-\begin{figure}[t]
+\begin{figure}[ht]
     \centering
     \caption{Pendulum output disturbance rejection (NMPC).}
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC3.pdf}
@@ -308,28 +310,31 @@ W \approx T_s \sum_{j = 0}^{H_p - 1} \tau(k+j) \omega(k+j)
 The objective will now include an additive term that penalizes the work done by the motor $W$ to reduce the energy consumption. Notice that \eqref{eq:pendulum_W} is a function of the manipulated input $\tau$ and the angular speed $\omega$, a state that is not measured (only the angle $\theta$ is measured here). As the arguments of the economic function $J_E$ in \eqref{eq:J_NMPC} do not include the states, the speed is now defined as an unmeasured output to design a Kalman filter similar to the previous one ($\mathbf{y^m} = \theta$ and $\mathbf{y^u} = \omega$): 
 
 \begin{minted}{julia}
-h2!(y, x, _ ) = (y[1] = 180/π*x[1]; y[2]=x[2])
+h2!(y, x, _ , _ ) = (y[1] = 180/π*x[1]; y[2]=x[2])
 nu, nx, ny = 1, 2, 2
-model2 = NonLinModel(f!      , h2!, Ts, nu, nx, ny)
-plant2 = NonLinModel(f_plant!, h2!, Ts, nu, nx, ny)
+model2 = NonLinModel(f!, h2!, Ts, nu, nx, ny; p)
+plant2 = NonLinModel(f!, h2!, Ts, nu, nx, ny; p=p_plant)
 model2 = setname!(model2, u=vu, x=vx, y=[vy; vx[2]])
 plant2 = setname!(plant2, u=vu, x=vx, y=[vy; vx[2]])
-estim2 = UnscentedKalmanFilter(model2; σQ, σR, nint_u, σQint_u, i_ym=[1])
+estim2 = UnscentedKalmanFilter(model2; σQ, σR, 
+                               nint_u, σQint_u, i_ym=[1])
 \end{minted}
 The \texttt{plant2} object based on \texttt{h2!} is also required since \texttt{sim!} expects that the plant output vector $\mathbf{y}$ corresponds to the controller model output vector. Now, these lines define the $J_E$ function and the controller:
 \begin{minted}{julia}
-function JE(UE, ŶE, _ )
+function JE(UE, ŶE, _ , p)
+    Ts = p
     τ, ω = UE[1:end-1], ŶE[2:2:end-1]
     return Ts*sum(τ.*ω)
 end
-Mwt2, Ewt = [Mwt; 0.0], 3.5e3
-empc = NonLinMPC(estim2; Hp, Hc, Nwt, Mwt=Mwt2, Cwt, JE, Ewt)
+p = Ts; Mwt2 = [Mwt; 0.0]; Ewt = 3.5e3
+empc = NonLinMPC(estim2; Hp, Hc, 
+                 Nwt, Mwt=Mwt2, Cwt, JE, Ewt, p)
 empc = setconstraint!(empc; umin, umax)
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt optimizer, 
-UnscentedKalmanFilter estimator and:
+NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt
+optimizer, UnscentedKalmanFilter estimator and:
  20 prediction steps Hp
   2 control steps Hc
   0 slack variable ϵ (control constraints)
@@ -357,24 +362,25 @@ Dict(:W_nmpc => calcW(res_ry), :W_empc => calcW(res2_ry))
 \spacerepl
 \begin{minted}{julia-repl}
 Dict{Symbol, Float64} with 2 entries:
-  :W_empc => 3.89437
-  :W_nmpc => 3.91597
+  :W_empc => 3.90053
+  :W_nmpc => 3.92078
 \end{minted}
 Also, for a \SI{10}{\degree} step disturbance (results depicted in \cref{fig:plot_EconomMPC2}):
 \begin{minted}{julia}
 x_0 = [π, 0]; x̂_0 = [π, 0, 0]; y_step = [10; 0]
-res2_yd = sim!(empc, N, ry; plant=plant2, x_0, x̂_0, y_step)
+res2_yd = sim!(empc, N, ry; plant=plant2, 
+                            x_0, x̂_0, y_step)
 plot(res2_yd, ploty=[1])
 \end{minted}
-the new controller is able to recuperate more energy from the pendulum (i.e. negative work):
+the new controller is able to recuperate a little more energy from the pendulum (i.e. negative work):
 \begin{minted}{julia}
 Dict(:W_nmpc => calcW(res_yd), :W_empc => calcW(res2_yd))
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
 Dict{Symbol, Float64} with 2 entries:
-  :W_empc => -0.149044
-  :W_nmpc => -0.112247
+  :W_empc => -0.0542454
+  :W_nmpc => -0.0440395
 \end{minted}
 Of course, this gain is only exploitable if the motor electronic includes some kind of regenerative circuitry.
 
@@ -384,6 +390,7 @@ Of course, this gain is only exploitable if the motor electronic includes some k
     \includegraphics[width=\columnwidth]{fig/plot_EconomMPC1.pdf}
     \label{fig:plot_EconomMPC1}
 \end{figure}
+
 \begin{figure}[ht]
     \centering
     \caption{Pendulum output disturbance rejection (EMPC).}
@@ -396,11 +403,11 @@ Of course, this gain is only exploitable if the motor electronic includes some k
 
 The \texttt{setmodel!} method allows online adaptation of a linear plant model. Combined with the automatic linearization of \texttt{linearize}, based on \texttt{ForwardDiff.jl}, a successive linearization MPC can be designed with minimal efforts. But first, the default \texttt{LinMPC} solver (\texttt{OSQP.jl}) does not perform as well as \texttt{DAQP.jl} on unstable plants like here \citep{daqp}. The syntax to install it is: 
 \begin{minted}{julia}
-using Pkg; Pkg.add(["JuMP","DAQP"]) # install JuMP and DAQP
+using Pkg; Pkg.add(["JuMP","DAQP"])
 using JuMP, DAQP
 optim = JuMP.Model(DAQP.Optimizer, add_bridges=false)
 \end{minted}
-The bridges are a concept introduced by \texttt{JuMP.jl} to convert the constraints into a form that is natively supported by a specific solver (e.g.: from inequality to equality constraints). Disabling them slightly reduce the overhead when it is not required, like here. Next, the \texttt{SteadyKalmanFilter} does not support \texttt{setmodel!}, so we need to use the time-varying \texttt{KalmanFilter} instead:
+The bridges are a concept introduced by \texttt{JuMP.jl} to convert the constraints into a form that is natively supported by a specific solver (e.g.: from inequality to equality constraints). Disabling them slightly reduce the overhead when it is not required, like here. Next, the default asymptotic Kalman Filter does not support \texttt{setmodel!}, so we need to use the time-varying \texttt{KalmanFilter} instead:
 \begin{minted}{julia}
 linmodel = linearize(model, x=[0, 0], u=[0])
 kf = KalmanFilter(linmodel; σQ, σR, nint_u, σQint_u)
@@ -409,8 +416,8 @@ mpc3 = setconstraint!(mpc3; umin, umax)
 \end{minted}
 \spacerepl
 \begin{minted}{julia-repl}
-LinMPC controller with a sample time Ts = 0.1 s, DAQP optimizer, KalmanFilter
-estimator and:
+LinMPC controller with a sample time Ts = 0.1 s, DAQP
+optimizer, KalmanFilter estimator and:
  20 prediction steps Hp
   2 control steps Hc
   0 slack variable ϵ (control constraints)
@@ -422,7 +429,8 @@ estimator and:
 \end{minted}
 A custom simulation function that successively linearizes the pendulum model and updates the \texttt{LinMPC} controller with \texttt{setmodel!} is required: 
 \begin{minted}{julia}
-function sim2!(mpc, nlmodel, N, ry, plant, x_0, x̂_0, y_step)
+function sim_adapt!(mpc, nlmodel, N, ry, 
+               plant, x_0, x̂_0, y_step)
     U, Y, Ry = zeros(1, N), zeros(1, N), zeros(1, N)
     u, x̂ = [0], x̂_0
     initstate!(mpc, u, plant())
@@ -431,27 +439,30 @@ function sim2!(mpc, nlmodel, N, ry, plant, x_0, x̂_0, y_step)
     setmodel!(mpc, linmodel)
     for i = 1:N
         y = plant() + y_step
+        x̂ = preparestate!(mpc, y)
         u = mpc(ry)
         linearize!(linmodel, nlmodel; u, x=x̂[1:2])
         setmodel!(mpc, linmodel) 
         U[:,i], Y[:,i], Ry[:,i] = u, y, ry
-        x̂ = updatestate!(mpc, u, y)
+        updatestate!(mpc, u, y)
         updatestate!(plant, u)
     end
     U_data, Y_data, Ry_data = U, Y, Ry
     return SimResult(mpc, U_data, Y_data; Ry_data)
 end
 \end{minted}
-The new model is set after solving the optimization problem, and before updating the state estimate, that is, when both $\mathbf{u}(k)$ and $\mathbf{\hat{x}}_{k-1}(k)$ are available as the new operating point. As shown in \cref{fig:plot_SuccLinMPC1} and \ref{fig:plot_SuccLinMPC2}, the SLMPC closed-loop response is similar to the nonlinear MPC, both for the 180° setpoint:
+The new model is set after solving the optimization problem, and before updating the state estimate, that is, when both $\mathbf{u}(k)$ and $\mathbf{\hat{x}}_k(k)$ are available as the new operating point. As shown in \cref{fig:plot_SuccLinMPC1} and \ref{fig:plot_SuccLinMPC2}, the SLMPC closed-loop response is similar to the nonlinear MPC, both for the 180° setpoint:
 \begin{minted}{julia}
 x_0 = [0, 0]; x̂_0 = [0, 0, 0]; ry = [180]; y_step=[0]
-res3_ry = sim2!(mpc3, model, N, ry, plant, x_0, x̂_0, y_step)
+res3_ry = sim_adapt!(mpc3, model, N, ry, 
+                plant, x_0, x̂_0, y_step)
 plot(res3_ry)
 \end{minted}
 and the 10° step disturbance:
 \begin{minted}{julia}
 x_0 = [π, 0]; x̂_0 = [π, 0, 0]; ry = [180]; y_step=[10]
-res3_yd = sim2!(mpc3, model, N, ry, plant, x_0, x̂_0, y_step)
+res3_yd = sim_adapt!(mpc3, model, N, ry, 
+                plant, x_0, x̂_0, y_step)
 plot(res3_yd)
 \end{minted}
 

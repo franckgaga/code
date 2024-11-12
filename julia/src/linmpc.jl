@@ -5,8 +5,9 @@
 using ModelPredictiveControl, ControlSystemsBase
 G = [ tf(1.90, [18, 1]) tf(1.90, [18, 1]);
       tf(-0.74,[8, 1])  tf(0.74, [8, 1]) ]
-model = setop!(LinModel(G, 2.0); uop=[20,20], yop=[50,30])
-vu, vy = ["\$u_c\$", "\$u_h\$"], ["\$y_L\$", "\$y_T\$"]
+uop, yop = [20, 20], [50, 30]
+vu , vy  = ["\$u_c\$", "\$u_h\$"], ["\$y_L\$", "\$y_T\$"]
+model = setop!(LinModel(G, 2.0); uop, yop)
 model = setname!(model; u=vu, y=vy)
 
 ## =========================================
@@ -67,7 +68,7 @@ bm = @benchmark test_mpc($mpc_daqp, $model) samples=500
 ## ========= Feedforward ===================
 ## =========================================
 model_d = LinModel([G G[1:2, 2]], 2.0; i_d=[3])
-model_d = setop!(model_d; uop=[20,20], yop=[50,30], dop=[20])
+model_d = setop!(model_d; uop, yop, dop=[20])
 model_d = setname!(model_d; u=vu, y=vy, d=["\$u_l\$"])
 
 ## =========================================
