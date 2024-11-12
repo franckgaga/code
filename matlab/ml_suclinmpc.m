@@ -1,6 +1,6 @@
 % Exectued on:
 % MATLAB Version: 24.1.0.2603908 (R2024a) Update 4
-% Operating System: Linux 6.9.5 
+% Operating System: Linux 6.11.6
 
 Ts = 0.1;
 par = [9.8; 0.4; 1.2; 0.3];
@@ -29,10 +29,10 @@ Phat0 = [
 ];
 Qhat = [
     (0.1)^2  0.0      0.0;
-    0.0      (0.5)^2  0.0;
+    0.0      (1.0)^2  0.0;
     0.0      0.0      (0.1)^2;
 ];
-Rhat = (0.5)^2;
+Rhat = (5.0)^2;
 
 mpcverbosity off;
 mympc = mpc(mpcmodel,Ts,20,2);
@@ -58,12 +58,12 @@ xhat0 = [0; 0; 0];
 
 T_data= Ts*(0:length(Y_data)-1);
 figure();
-subplot(121)
-plot(T_data, Y_data, T_data, R_data, '--')
+subplot(121);
+plot(T_data, Y_data, T_data, R_data, '--'); grid on;
 subplot(122)
-stairs(T_data,U_data)
+stairs(T_data,U_data); grid on;
 hold on
-plot(T_data, -1.5*ones(1, length(T_data)),T_data,+1.5*ones(1, length(T_data)))
+plot(T_data, -1.5*ones(1, length(T_data)),T_data,+1.5*ones(1, length(T_data))); grid on;
 hold off
 
 myf = @() test_mpc(mympc, myestim, mpcmodel, nominal, ...
@@ -83,11 +83,11 @@ xhat0 = [pi; 0; 0];
 T_data= Ts*(0:length(Y_data)-1);
 figure();
 subplot(121)
-plot(T_data, Y_data, T_data, R_data, '--')
+plot(T_data, Y_data, T_data, R_data, '--'); grid on;
 subplot(122)
-stairs(T_data,U_data)
+stairs(T_data,U_data); grid on;
 hold on
-plot(T_data, -1.5*ones(1, length(T_data)),T_data,+1.5*ones(1, length(T_data)))
+plot(T_data, -1.5*ones(1, length(T_data)),T_data,+1.5*ones(1, length(T_data))); grid on;
 hold off
 
 myf = @() test_mpc(mympc, myestim, mpcmodel, nominal, ...
@@ -124,6 +124,7 @@ function [U_data, Y_data, R_data] = test_mpc(mympc, myestim, mpcmodel, nominal, 
     nominal.DX = dxhatop;
     for i=1:N
         y = h(x) + ystep;
+        [xhat, Phat] = correctKF(Chat, xhat, xhatop, yop, y, Phat, Rhat);
         myestim.Plant = xhat;
         u = mpcmoveAdaptive(mympc, myestim, mpcmodel, nominal, [], r);
         xhat_d = xhat(1:2);
@@ -144,8 +145,7 @@ function [U_data, Y_data, R_data] = test_mpc(mympc, myestim, mpcmodel, nominal, 
         Y_data(:,i) = y;
         R_data(:,i) = r;
         x = f(x, u, par, Ts);
-        [xhat, Phat] = updateKF(Ahat, Bhat, Chat, xhat, xhatop, uop, yop, dxhatop, ...
-                                u, y, Phat, Qhat, Rhat);
+        [xhat, Phat] = predictKF(Ahat, Bhat, xhat, xhatop, uop, dxhatop, u, Phat, Qhat);
     end
 end
 
@@ -164,13 +164,18 @@ function [Ahat, Bhat, Chat] = getAugSSmatrices(A, B, C)
     Chat = [C zeros(size(C, 1), 1)];
 end
 
-function [xhatNext, PhatNext] = updateKF(Ahat, Bhat, Chat, xhat, ...
-                                         xhatop, uop, yop, dxhatop, ...
-                                         u, y, Phat, Qhat, Rhat)
-    M = (Phat*Chat')/(Chat*Phat*Chat'+Rhat);
-    Khat  = Ahat*M;
-    xhat0 = xhat-xhatop;
-    yhat  = Chat*xhat0 + yop;
-    xhatNext = Ahat*xhat0 + Bhat*(u-uop) + Khat*(y-yhat) + dxhatop + xhatop;
-    PhatNext = Ahat*(Phat-M*Chat*Phat)*Ahat' + Qhat;
+function [xhat, Phat] = correctKF(Chat, xhat, xhatop, yop, y, Phat, Rhat)
+    Mhat = Chat*Phat*Chat' + Rhat;
+    Khat = Phat*Chat'/Mhat;
+    xhat0 = xhat - xhatop;
+    yhat = Chat*xhat0 + yop;
+    xhat = xhat + Khat*(y-yhat);
+    Phat = (eye(length(xhat)) - Khat*Chat)*Phat; 
 end
+
+function [xhatNext, PhatNext] = predictKF(Ahat, Bhat, xhat, xhatop, uop, dxhatop, u, Phat, Qhat)
+    xhat0 = xhat - xhatop;
+    xhatNext = Ahat*xhat0 + Bhat*(u-uop) + dxhatop + xhatop;
+    PhatNext = Ahat*Phat*Ahat' + Qhat;
+end
+
