@@ -17,10 +17,8 @@ The example considers a continuously stirred tank reactor (CSTR) with a cold and
 
 \begin{figure}[ht]
     \centering
-    \caption{CSTR process.}
-    \vspace{0.5em}
     \input{fig/cstr.tikz}
-    \label{fig:cstr}
+    \caption{CSTR process.}\label{fig:cstr}
 \end{figure}
 
 At the steady-state operating point $u_c=u_h=20$, $y_L=50$, and $y_T=30$, the following linear model accurately describes the plant dynamics:
@@ -106,9 +104,8 @@ using Plots; plot(res)
 
 \begin{figure}[ht]
     \centering
-    \caption{CSTR closed-loop simulation (MPC).}
     \includegraphics[width=\columnwidth]{fig/plot_LinMPC1.pdf}
-    \label{fig:plot_LinMPC1}
+    \caption{CSTR closed-loop simulation (MPC).}\label{fig:plot_LinMPC1}
 \end{figure}
 
 \subsubsection{Feedforward Compensation}
@@ -156,9 +153,8 @@ plot(res)
 
 \begin{figure}[ht]
     \centering
-    \caption{CSTR closed-loop simulation with feedforward (MPC).}
     \includegraphics[width=\columnwidth]{fig/plot_LinMPC2.pdf}
-    \label{fig:plot_LinMPC2}
+    \caption{CSTR closed-loop simulation with feedforward (MPC).}\label{fig:plot_LinMPC2}
 \end{figure}
 
 \subsection{Nonlinear Design : Inverted Pendulum}
@@ -168,10 +164,8 @@ plot(res)
 
 \begin{figure}[ht]
     \centering
-    \caption{Inverted pendulum.}
-    \vspace{0.5em}
     \input{fig/pendulum.tikz}
-    \label{fig:pendulum}
+    \caption{Inverted pendulum.}\label{fig:pendulum}
 \end{figure}
 
 For this case study, the goal is to control the angular position $\theta$ of a pendulum attached to a motor, thus $\mathbf{y} = \theta$. The manipulated input is the motor torque $\mathbf{u} = \tau$ in \si{\newton\meter}. \cref{fig:pendulum} depicts the system. The model is:
@@ -237,9 +231,8 @@ using Plots; plot(res, plotu=false, plotxwithx̂=true)
 
 \begin{figure}[ht]
     \centering
-    \caption{Pendulum state estimation.}
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC1.pdf}
-    \label{fig:plot_NonLinMPC1}
+    \caption{Pendulum state estimation.}\label{fig:plot_NonLinMPC1}
 \end{figure}
 
 \subsubsection{Nonlinear Model Predictive Controller (NMPC)}
@@ -280,16 +273,14 @@ The next section presents an economic model predictive controller on the pendulu
 
 \begin{figure}[ht]
     \centering
-    \caption{Pendulum output setpoint tracking (NMPC).}
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC2.pdf}
-    \label{fig:plot_NonLinMPC2}
+    \caption{Pendulum output setpoint tracking (NMPC).}\label{fig:plot_NonLinMPC2}
 \end{figure}
 
 \begin{figure}[ht]
     \centering
-    \caption{Pendulum output disturbance rejection (NMPC).}
     \includegraphics[width=\columnwidth]{fig/plot_NonLinMPC3.pdf}
-    \label{fig:plot_NonLinMPC3}
+    \caption{Pendulum output disturbance rejection (NMPC).}\label{fig:plot_NonLinMPC3}
 \end{figure}
 
 \subsubsection{Economic model predictive control (EMPC)}
@@ -386,16 +377,14 @@ Of course, this gain is only exploitable if the motor electronic includes some k
 
 \begin{figure}[ht]
     \centering
-    \caption{Pendulum output setpoint tracking (EMPC).}
     \includegraphics[width=\columnwidth]{fig/plot_EconomMPC1.pdf}
-    \label{fig:plot_EconomMPC1}
+    \caption{Pendulum output setpoint tracking (EMPC).}\label{fig:plot_EconomMPC1}
 \end{figure}
 
 \begin{figure}[ht]
     \centering
-    \caption{Pendulum output disturbance rejection (EMPC).}
     \includegraphics[width=\columnwidth]{fig/plot_EconomMPC2.pdf}
-    \label{fig:plot_EconomMPC2}
+    \caption{Pendulum output disturbance rejection (EMPC).}\label{fig:plot_EconomMPC2}
 \end{figure}
 
 \subsubsection{Successive Linearization Model Predictive Control (SLMPC)}
@@ -468,16 +457,14 @@ plot(res3_yd)
 
 \begin{figure}[ht]
     \centering
-    \caption{Pendulum output setpoint tracking (SLMPC).}
     \includegraphics[width=\columnwidth]{fig/plot_SuccLinMPC1.pdf}
-    \label{fig:plot_SuccLinMPC1}
+    \caption{Pendulum output setpoint tracking (SLMPC).}\label{fig:plot_SuccLinMPC1}
 \end{figure}
 
 \begin{figure}[ht]
     \centering
-    \caption{Pendulum output disturbance rejection (SLMPC).}
     \includegraphics[width=\columnwidth]{fig/plot_SuccLinMPC2.pdf}
-    \label{fig:plot_SuccLinMPC2}
+    \caption{Pendulum output disturbance rejection (SLMPC).}\label{fig:plot_SuccLinMPC2}
 \end{figure}
 
 The next section presents the interesting result: the solving time is drastically lower.
@@ -512,16 +499,17 @@ And, lastly, the sequential quadratic (SQ) methods are:
 
 All the solvers in Julia are free and open-source, except for \texttt{KNITRO.jl} which is commercial. A separate keyword argument in the controller constructors allows customizing the solver (see \cref{sec:successive_linearization} for an example). Only the active-set results are include for the SLMPC since \texttt{OSQP.jl} does not work as well on the pendulum (without major modifications in the optimizer settings).
 
-A laptop with an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark} i7-1165G7 (8 cores at \SI{4.70}{\giga\hertz}) and a Linux v6.9.5 kernel runs the benchmarks. The scripts are executed on Julia v1.10.4 and MATLAB R2024a. A public repository at \url{https://github.com/franckgaga/mpcPackageJulia.tex} provides the code to reproduce the results. 
+A laptop with an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark} i7-1165G7 (8 cores at \SI{4.70}{\giga\hertz}) and a Linux v6.9.5 kernel runs the benchmarks. The scripts are executed on Julia v1.10.4 and MATLAB R2024a. A public repository provides the code to reproduce the results, see \url{https://github.com/franckgaga/mpcPackageJulia.tex}.
 
 \begin{table*}
     \centering
     \caption{Julia and MATLAB Benchmarks on the Case Studies.}
+    \vspace{0.5em}
     \label{tab:benchamrks}
     \centering
     \input{tab/benchmarks.tex}
 \end{table*}
 
-The benchmarks are presented in \cref{tab:benchamrks}. The linear MPC is significantly faster in Julia, approximately from 4 to 15 times faster. This result is however amplified by \texttt{OSQP.jl}, a modern and fast OS quadratic optimizer, which seems to perform considerably better than MATLAB's counterpart (\texttt{admm}). But the authors would argue that it is a consequence of \texttt{ModelPredictiveControl.jl} modular design. Any modern optimization tools can be leveraged with minimal effort and without any package update, presuming that they offer a \texttt{JuMP.jl} interface. Using a custom optimization algorithm in MATLAB MPC toolbox is possible but not straightforward.
+The benchmarks are presented in \cref{tab:benchamrks}. The linear MPC is significantly faster in Julia, approximately from 4 to 16 times faster. This result is however amplified by \texttt{OSQP.jl}, a modern and fast OS quadratic optimizer, which seems to perform considerably better than MATLAB's counterpart (\texttt{admm}). But the authors would argue that it is a consequence of \texttt{ModelPredictiveControl.jl} modular design. Any modern optimization tools can be leveraged with minimal effort and without any package update, presuming that they offer a \texttt{JuMP.jl} interface. Using a custom optimization algorithm in MATLAB MPC toolbox is possible but not straightforward.
 
-The NMPC and EMPC are approximately twice as fast as MATLAB counterparts on average. This is presumably explained by MATLAB's internal and the pendulum model. Indeed, many built-in MATLAB functions are not purely interpreted but contains calls to specialized compiled code. This is probably the case for \texttt{fmincon} solvers, the function used by MATLAB NMPC toolset. And, since the pendulum model is trivially simple, computing the predictions is not a performance bottleneck. Thus, in both languages, the majority of the time is spent in the optimization algorithms, both implemented in machine code for most parts. It is expected that the speed gap between the two languages would be larger for more complex plant models, since this part is mainly interpreted in MATLAB. Lastly, SLMPC is about 4 times faster than MATLAB. It is also 75 times faster than the nonlinear controllers on average: an impressive gain for similar closed-loop response!
+The NMPC and EMPC are approximately 2 to 3 times as fast as MATLAB counterparts. This is presumably explained by MATLAB's internal and the pendulum model. Indeed, many built-in MATLAB functions are not purely interpreted but contains calls to specialized compiled code. This is probably the case for \texttt{fmincon} solvers, the function used by MATLAB NMPC toolset. And, since the pendulum model is trivially simple, computing the predictions is not a performance bottleneck. Thus, in both languages, the majority of the time is spent in the optimization algorithms, both implemented in machine code for most parts. It is expected that the speed gap between the two languages would be larger for more complex plant models, since this part is mainly interpreted in MATLAB. Lastly, SLMPC is about 4 times faster than MATLAB. It is also 75 times faster than the nonlinear controllers on average: an impressive gain for similar closed-loop response!
