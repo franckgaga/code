@@ -3,8 +3,10 @@
 % !LW recipe=latexmk (latexmkrc)
 \documentclass[5p,authoryear]{elsarticle}
 
-\usepackage{amsmath,amssymb,fontspec,mathtools,siunitx,etoolbox}
+\usepackage{amsmath,amssymb,mathtools,siunitx,etoolbox}%fontspec
 \usepackage{graphicx,enumitem,xcolor,booktabs,tikz,chemplants,natbib}
+\usepackage[mathletters]{ucs} 
+\usepackage[utf8x]{inputenc}
 \usepackage{minted}
 \usepackage[colorlinks,allcolors=blue]{hyperref}
 \usepackage[capitalize]{cleveref}
@@ -16,7 +18,7 @@
 %\usetikzlibrary{external}
 %\tikzexternalize[prefix=fig/]
 %% ----------------- fontspec ------------------------------------------------
-\setmonofont{Noto Sans Mono}[Scale=MatchLowercase]
+%\setmonofont{Noto Sans Mono}[Scale=MatchLowercase]
 %% ----------------- elsarticle ----------------------------------------------
 \journal{arXiv}
 %% ----------------- enumitem ------------------------------------------------
