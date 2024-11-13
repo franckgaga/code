@@ -5,7 +5,11 @@
 
 \usepackage{amsmath,amssymb,mathtools,textgreek,siunitx,etoolbox} 
 \usepackage{graphicx,enumitem,xcolor,booktabs,tikz,chemplants,natbib}
-\usepackage{minted}
+\usepackage[
+    %finalizecache=false, #no longer supported in minted 3.0
+    frozencache=true,
+    cachedir=minted-cache
+]{minted}
 \usepackage[colorlinks,allcolors=blue]{hyperref}
 \usepackage[capitalize]{cleveref}
 
