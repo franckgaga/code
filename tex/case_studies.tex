@@ -91,7 +91,7 @@ function test_mpc(mpc, plant)
 end
 U_data, Y_data, Ry_data = test_mpc(mpc, model)
 \end{minted}
-Calling \texttt{LinMPC} instances computes and returns $\mathbf{u}(k)$. It is worth mentioning that additional information like the optimal output predictions $\mathbf{\hat{Y}}$ can be retrieved by calling \texttt{getinfo} after solving the problem. Also, calling the \texttt{preparestate!} method on \texttt{mpc} prepares the estimates for the current control period, and \texttt{updatestate!} updates them for the next one (the same logic applies for \texttt{plant}). Lastly, the package implements a \texttt{Plots.jl} recipe \citep{plots} to quickly visualize the results:
+Calling \texttt{LinMPC} instances computes and returns $\mathbf{u}(k)$. It is worth mentioning that additional information like the optimal output predictions $\mathbf{\hat{Y}}$ can be retrieved by calling \texttt{getinfo} after solving the problem. Also, calling the \texttt{preparestate!} method on \texttt{mpc} prepares the state estimates for the current control period, and \texttt{updatestate!} updates them for the next one (the same logic applies for \texttt{plant}). Lastly, the package implements a \texttt{Plots.jl} recipe \citep{plots} to quickly visualize the results:
 \begin{minted}{julia}
 res = SimResult(mpc, U_data, Y_data; Ry_data)
 using Plots; plot(res)
@@ -509,20 +509,21 @@ And, lastly, the sequential quadratic (SQ) methods are:
 All the solvers in Julia are free and open-source, except for \texttt{KNITRO.jl} which is commercial. A separate keyword argument in the controller constructors allows customizing the solver (see \cref{sec:successive_linearization} for an example). Only the active-set results are include for the SLMPC since \texttt{OSQP.jl} does not work as well on the pendulum (without major modifications in the optimizer settings).
 
 A laptop with an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark} i7-1165G7 (8 cores at \SI{4.70}{\giga\hertz}) and a Linux v6.11.6 kernel runs the benchmarks. The scripts are executed on Julia v1.10.4, the v1.0.1 release of this package and MATLAB R2024a. A public repository provides the code to reproduce the results, see \url{https://github.com/franckgaga/mpcPackageJulia.tex}.
-It can be cloned, and by executing the following commands in the git root folder:
+It can be cloned, and by executing the following commands in Julia with the git root folder as the working directory:
 \begin{minted}{julia}
 using Pkg; Pkg.activate("julia"); Pkg.instantiate()
 \end{minted}
 an identical environment with the same versions of the packages will be created.
 
-\begin{table*}[t]
+\begin{table}[t]
     \centering
     \caption{Julia and MATLAB Benchmarks on the Case Studies.}
-    \vspace{0.5em}
     \label{tab:benchamrks}
+    \vspace{0.5em}
     \centering
+    \footnotesize
     \input{tab/benchmarks.tex}
-\end{table*}
+\end{table}
 
 The benchmarks are presented in \cref{tab:benchamrks}. The linear MPC is significantly faster in Julia, approximately from 4 to 16 times faster. This result is however amplified by \texttt{OSQP.jl}, a modern and fast OS quadratic optimizer, which seems to perform considerably better than MATLAB's counterpart (\texttt{admm}). But the authors would argue that it is a consequence of \texttt{ModelPredictiveControl.jl} modular design. Any modern optimization tools can be leveraged with minimal effort and without any package update, presuming that they offer a \texttt{JuMP.jl} interface. Using a custom optimization algorithm in MATLAB MPC toolbox is possible but not straightforward.
 
