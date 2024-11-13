@@ -263,19 +263,17 @@ mpc3 = LinMPC(kf; Hp, Hc, Mwt, Nwt, Cwt, optim)
 mpc3 = setconstraint!(mpc3; umin, umax)
 
 ## ==========================================
-function sim_adapt!(mpc, nlmodel, N, ry, 
-                    plant, x_0, x̂_0, y_step)
+function sim2!(mpc, nlmodel, N, ry, plant, x, 𝕩̂, y_step)
     U, Y, Ry = zeros(1, N), zeros(1, N), zeros(1, N)
-    u, x̂ = [0], x̂_0
-    initstate!(mpc, u, plant())
-    setstate!(plant, x_0); setstate!(mpc, x̂_0)
-    linmodel = linearize(nlmodel; u, x=x̂[1:2])
+    setstate!(plant, x); setstate!(mpc, 𝕩̂)
+    initstate!(mpc, [0], plant())
+    linmodel = linearize(nlmodel; u=[0], x=𝕩̂[1:2])
     setmodel!(mpc, linmodel)
     for i = 1:N
         y = plant() + y_step
-        x̂ = preparestate!(mpc, y)
+        𝕩̂ = preparestate!(mpc, y)
         u = mpc(ry)
-        linearize!(linmodel, nlmodel; u, x=x̂[1:2])
+        linearize!(linmodel, nlmodel; u, x=𝕩̂[1:2])
         setmodel!(mpc, linmodel) 
         U[:,i], Y[:,i], Ry[:,i] = u, y, ry
         updatestate!(mpc, u, y)
@@ -286,9 +284,8 @@ function sim_adapt!(mpc, nlmodel, N, ry,
 end
 
 ## ==========================================
-x_0 = [0, 0]; x̂_0 = [0, 0, 0]; ry = [180]; y_step=[0]
-res3_ry = sim_adapt!(mpc3, model, N, ry, 
-                     plant, x_0, x̂_0, y_step)
+x_0 = [0, 0]; 𝕩̂_0 = [0, 0, 0]; ry = [180]
+res3_ry = sim2!(mpc3, model, N, ry, plant, x_0, 𝕩̂_0, [0])
 plot(res3_ry)
 
 ## =========================================
@@ -315,9 +312,8 @@ bm = @benchmark(
 @show btime_SLMPC_track_solver_AS = median(bm)
 
 ## =========================================
-x_0 = [π, 0]; x̂_0 = [π, 0, 0]; ry = [180]; y_step=[10]
-res3_yd = sim_adapt!(mpc3, model, N, ry, 
-                     plant, x_0, x̂_0, y_step)
+x_0 = [π, 0]; 𝕩̂_0 = [π, 0, 0]; ry = [180]
+res3_yd = sim2!(mpc3, model, N, ry, plant, x_0, 𝕩̂_0, [10])
 plot(res3_yd)
 
 ## =========================================
