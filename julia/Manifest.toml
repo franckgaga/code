@@ -796,7 +796,7 @@ version = "1.11.0"
 
 [[deps.ModelPredictiveControl]]
 deps = ["ControlSystemsBase", "ForwardDiff", "Ipopt", "JuMP", "LinearAlgebra", "OSQP", "PreallocationTools", "PrecompileTools", "ProgressLogging", "Random", "RecipesBase"]
-path = "/home/francis/.julia/dev/ModelPredictiveControl"
+git-tree-sha1 = "13e92dc06780658eb0044c94094582dc9cc0ab4d"
 uuid = "61f9bdb8-6ae4-484a-811f-bbf86720c31c"
 version = "1.0.1"
 
