@@ -3,16 +3,8 @@
 % !LW recipe=latexmk (latexmkrc)
 \documentclass[5p,authoryear]{elsarticle}
 
-\usepackage{amsmath,amssymb,mathtools,siunitx,etoolbox} 
+\usepackage{amsmath,amssymb,mathtools,textgreek,siunitx,etoolbox} 
 \usepackage{graphicx,enumitem,xcolor,booktabs,tikz,chemplants,natbib}
-
-%\usepackage[mathletters]{ucs} 
-%\usepackage[utf8]{inputenc}
-
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-
-
 \usepackage{minted}
 \usepackage[colorlinks,allcolors=blue]{hyperref}
 \usepackage[capitalize]{cleveref}
@@ -38,16 +30,16 @@
 \newcommand*{\spacerepl}{\vspace*{-8pt}}
 %\BeforeBeginEnvironment{minted}{\vspace*{-\baselineskip}}
 %\AfterEndEnvironment{minted}{\vspace*{-\baselineskip}}
-
-\DeclareUnicodeCharacter{03F5}{$\epsilon$}
-\DeclareUnicodeCharacter{0302}{\^{x}}
-\DeclareUnicodeCharacter{1E8B}{\.{x}}
-\DeclareUnicodeCharacter{03B8}{$\theta$}
-\DeclareUnicodeCharacter{03C9}{$\omega$}
-\DeclareUnicodeCharacter{03C4}{$\tau$}
-\DeclareUnicodeCharacter{03C0}{$\pi$}
-\DeclareUnicodeCharacter{03C3}{$\sigma$}
-
+% ------------------- unicode char handling --------------------------------
+\DeclareUnicodeCharacter{0302}{\^{x}} % replace hat by xhat
+\DeclareUnicodeCharacter{1D569}{} % hide the blackboard font x
+\DeclareUnicodeCharacter{1E8B}{\.{x}} 
+\DeclareUnicodeCharacter{03F5}{\textepsilon}
+\DeclareUnicodeCharacter{03B8}{\texttheta}
+\DeclareUnicodeCharacter{03C9}{\textomega}
+\DeclareUnicodeCharacter{03C4}{\texttau}
+\DeclareUnicodeCharacter{03C0}{\textpi}
+\DeclareUnicodeCharacter{03C3}{\textsigma}
 %% ============================================================================
 \begin{document}
 

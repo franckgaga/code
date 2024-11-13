@@ -3,7 +3,7 @@
 \section{Case Studies}
 \label{sec:case_studies}
 
-This section presents two case studies in simulation to demonstrate the design of linear and nonlinear MPCs. The objective here is to demonstrate how the package syntax facilitates the implementation and testing of predictive controllers and state estimators. The package manager of Julia eases the installation of \texttt{ModelPredictiveControl.jl}:
+This section presents two case studies in simulation to demonstrate the design of linear and nonlinear MPCs. The objective here is to demonstrate how the package syntax facilitates the implementation and testing of predictive controllers and state estimators. The package manager of Julia eases the installation:
 \begin{minted}{julia}
 using Pkg; Pkg.add("ModelPredictiveControl")
 \end{minted}
@@ -63,14 +63,12 @@ optimizer, SteadyKalmanFilter estimator and:
   2 control steps Hc
   1 slack variable ϵ (control constraints)
   2 manipulated inputs u (0 integrating states)
-  4 estimated states  ̂
+  4 estimated states 
   2 measured outputs ym (2 integrating states)
   0 unmeasured outputs yu
   0 measured disturbances d
 \end{minted}
-By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} \citep{osqp} to solve the problem, soft constraints on output predictions $\mathbf{\hat y}$ to ensure feasibility, and a \texttt{SteadyKalmanFilter} to estimate the plant states. The default predictive and control horizons are $H_p = 10 + n_k$ and $H_c = 2$, respectively, where $n_k$ is the number of delays in the linear model. The $H_c$ value is small by default to reduce the computational burden and the aggressiveness \citep{mpcHcAnalysis}. An attentive reader will also notice that the Kalman filter estimates two additional states compared to the plant model. These are the integrating states for the unmeasured plant disturbances, and they are automatically added at the model output $\mathbf{y}$ by default if observability is preserved.
-
-On a side note, an internal model structure could have been used with \texttt{estim = InternalModel(model)} and \texttt{mpc = setconstraint!(LinMPC(estim); ymin=[45, -Inf])}, as an alternative to state estimator. It was tested on this example and it gave similar results.
+By default, \texttt{LinMPC} controllers use \texttt{OSQP.jl} \citep{osqp} to solve the problem, soft constraints on output predictions $\mathbf{\hat y}$ for feasibility, and a \texttt{SteadyKalmanFilter} to estimate the plant states\footnote{An internal model structure could have been used with \texttt{estim = InternalModel(model)} and \texttt{mpc = setconstraint!(LinMPC(estim); ymin=[45, -Inf])}, as an alternative to state estimators. It was tested on this example and it gave similar results.}. The default predictive and control horizons are $H_p = 10 + n_k$ and $H_c = 2$, respectively, where $n_k$ is the number of delays in the linear model. The $H_c$ value is small by default to reduce the computational burden and the aggressiveness \citep{mpcHcAnalysis}. An attentive reader will also notice that the Kalman filter estimates two additional states compared to the plant model. These are the integrating states for the unmeasured plant disturbances, and they are automatically added at the model output $\mathbf{y}$ by default if observability is preserved.
 
 Before closing the loop, the actual plant input $\mathbf{u}$ and measurement $\mathbf{y^m}$ should initialize the estimates $\mathbf{\hat{x}}$ at the steady-state solution that leads to $\mathbf{\hat{y}^m}(0)=\mathbf{y^m}(0)$. This approach results in a bumpless transfer, especially with estimators in the predictor form. The \texttt{initstate!} function finds this solution for \texttt{LinModel}. Since the plant is the model here, its output initializes the states. \texttt{LinModel} objects are callable for this purpose. Once done, imposing step changes on the setpoint \texttt{ry} and on a load disturbance \texttt{ul} tests the closed-loop performance of \texttt{mpc}:
 \begin{minted}{julia}
@@ -125,7 +123,7 @@ LinModel with a sample time Ts = 2.0 s and:
  2 outputs y
  1 measured disturbances d
 \end{minted}
-The simulation needs a new \texttt{LinMPC} object based on \texttt{model\_d} and a new test function that explicitly employs the current disturbance measurement:
+The simulation needs a new \texttt{LinMPC} instance based on \texttt{model\_d} and a new test function that explicitly employs the current disturbance measurement:
 \begin{minted}{julia}
 mpc_d = setconstraint!(LinMPC(model_d), ymin=[45, -Inf])
 function test_mpc_d(mpc_d, plant)
@@ -216,7 +214,7 @@ estim = UnscentedKalmanFilter(model; σQ, σR,
 UnscentedKalmanFilter estimator with a sample time Ts =
 0.1 s, NonLinModel and:
  1 manipulated inputs u (1 integrating states)
- 3 states  ̂
+ 3 states 𝕩̂
  1 measured outputs ym (0 integrating states)
  0 unmeasured outputs yu
  0 measured disturbances d
@@ -227,7 +225,7 @@ p_plant = copy(p); p_plant[3] = 1.25*p[3]
 plant = NonLinModel(f!, h!, Ts, nu, nx, ny; p=p_plant)
 N = 35; u = [0.5]; 
 res = sim!(estim, N, u; plant, y_noise=[0.5])
-using Plots; plot(res, plotu=false, plotxwith ̂=true)
+using Plots; plot(res, plotu=false, plotxwith𝕩̂=true)
 \end{minted}
 \cref{fig:plot_NonLinMPC1} indicates that the Kalman filter performance seems sufficient for control. The estimate $\hat{x}_3$ is the integrating state on the torque $\tau$ that compensates for static errors. 
 
@@ -254,21 +252,21 @@ optimizer, UnscentedKalmanFilter estimator and:
   2 control steps Hc
   0 slack variable ϵ (control constraints)
   1 manipulated inputs u (1 integrating states)
-  3 estimated states  ̂
+  3 estimated states 𝕩̂
   1 measured outputs ym (0 integrating states)
   0 unmeasured outputs yu
   0 measured disturbances d
 \end{minted}
 The keyword arguments \texttt{Mwt} and \texttt{Nwt} are the output setpoint tracking and move suppression weights, respectively. The option \texttt{Cwt=Inf} disables the slack variable $\epsilon$. An angular setpoint of \SI{180}{\degree} (inverted position) tests \texttt{mpc} performance on the plant:
 \begin{minted}{julia}
-x_0 = [0, 0];  ̂_0 = [0, 0, 0]; ry = [180]
-res_ry = sim!(nmpc, N, ry; plant, x_0,  ̂_0)
+x_0 = [0, 0]; 𝕩̂_0 = [0, 0, 0]; ry = [180]
+res_ry = sim!(nmpc, N, ry; plant, x_0, 𝕩̂_0)
 plot(res_ry)
 \end{minted}
 The result in \cref{fig:plot_NonLinMPC2} suggests that the controller is robust enough to variations on the $K$ coefficient. Starting from this inverted position, \cref{fig:plot_NonLinMPC3} shows the closed-loop response to a step disturbances of \SI{10}{\degree} is satisfactory:
 \begin{minted}{julia}
-x_0 = [π, 0];  ̂_0 = [π, 0, 0]; y_step = [10]
-res_yd = sim!(nmpc, N, [180.0]; plant, x_0,  ̂_0, y_step)
+x_0 = [π, 0]; 𝕩̂_0 = [π, 0, 0]; y_step = [10]
+res_yd = sim!(nmpc, N, [180.0]; plant, x_0, 𝕩̂_0, y_step)
 plot(res_yd)
 \end{minted}
 The next section presents an economic model predictive controller on the pendulum.
@@ -332,7 +330,7 @@ optimizer, UnscentedKalmanFilter estimator and:
   2 control steps Hc
   0 slack variable ϵ (control constraints)
   1 manipulated inputs u (1 integrating states)
-  3 estimated states  ̂
+  3 estimated states 𝕩̂
   1 measured outputs ym (0 integrating states)
   1 unmeasured outputs yu
   0 measured disturbances d
@@ -340,8 +338,8 @@ optimizer, UnscentedKalmanFilter estimator and:
 
 The keyword argument \texttt{Ewt} is the $E$ weight in \eqref{eq:J_NMPC}. The economic term must be large enough to be significant but a too high value can lead to a static error on the angle setpoint. The second element of \texttt{Mwt2} is zero since the speed $\omega$ is not requested to track a setpoint. \cref{fig:plot_EconomMPC1} shows that closed-loop response to a \SI{180}{\degree} setpoint is similar:
 \begin{minted}{julia}
-x_0 = [0, 0];  ̂_0 = [0, 0, 0]; ry = [180; 0]
-res2_ry = sim!(empc, N, ry; plant=plant2, x_0,  ̂_0)
+x_0 = [0, 0]; 𝕩̂_0 = [0, 0, 0]; ry = [180; 0]
+res2_ry = sim!(empc, N, ry; plant=plant2, x_0, 𝕩̂_0)
 plot(res2_ry, ploty=[1])
 \end{minted}
 and the energy consumption is slightly lower:
@@ -360,9 +358,9 @@ Dict{Symbol, Float64} with 2 entries:
 \end{minted}
 Also, for a \SI{10}{\degree} step disturbance (results depicted in \cref{fig:plot_EconomMPC2}):
 \begin{minted}{julia}
-x_0 = [π, 0];  ̂_0 = [π, 0, 0]; y_step = [10; 0]
+x_0 = [π, 0]; 𝕩̂_0 = [π, 0, 0]; y_step = [10; 0]
 res2_yd = sim!(empc, N, ry; plant=plant2, 
-                            x_0,  ̂_0, y_step)
+                            x_0, 𝕩̂_0, y_step)
 plot(res2_yd, ploty=[1])
 \end{minted}
 the new controller is able to recuperate a little more energy from the pendulum (i.e. negative work):
@@ -413,7 +411,7 @@ optimizer, KalmanFilter estimator and:
   2 control steps Hc
   0 slack variable ϵ (control constraints)
   1 manipulated inputs u (1 integrating states)
-  3 estimated states  ̂
+  3 estimated states 𝕩̂
   1 measured outputs ym (0 integrating states)
   0 unmeasured outputs yu
   0 measured disturbances d
@@ -421,18 +419,18 @@ optimizer, KalmanFilter estimator and:
 A custom simulation function that successively linearizes the pendulum model and updates the \texttt{LinMPC} controller with \texttt{setmodel!} is required: 
 \begin{minted}{julia}
 function sim_adapt!(mpc, nlmodel, N, ry, 
-               plant, x_0,  ̂_0, y_step)
+               plant, x_0, 𝕩̂_0, y_step)
     U, Y, Ry = zeros(1, N), zeros(1, N), zeros(1, N)
-    u,  ̂ = [0],  ̂_0
+    u, 𝕩̂ = [0], 𝕩̂_0
     initstate!(mpc, u, plant())
-    setstate!(plant, x_0); setstate!(mpc,  ̂_0)
-    linmodel = linearize(nlmodel; u, x= ̂[1:2])
+    setstate!(plant, x_0); setstate!(mpc, 𝕩̂_0)
+    linmodel = linearize(nlmodel; u, x=𝕩̂[1:2])
     setmodel!(mpc, linmodel)
     for i = 1:N
         y = plant() + y_step
-         ̂ = preparestate!(mpc, y)
+        𝕩̂ = preparestate!(mpc, y)
         u = mpc(ry)
-        linearize!(linmodel, nlmodel; u, x= ̂[1:2])
+        linearize!(linmodel, nlmodel; u, x=𝕩̂[1:2])
         setmodel!(mpc, linmodel) 
         U[:,i], Y[:,i], Ry[:,i] = u, y, ry
         updatestate!(mpc, u, y)
@@ -444,16 +442,16 @@ end
 \end{minted}
 The new model is set after solving the optimization problem, and before updating the state estimate, that is, when both $\mathbf{u}(k)$ and $\mathbf{\hat{x}}_k(k)$ are available as the new operating point. As shown in \cref{fig:plot_SuccLinMPC1} and \ref{fig:plot_SuccLinMPC2}, the SLMPC closed-loop response is similar to the nonlinear MPC, both for the 180° setpoint:
 \begin{minted}{julia}
-x_0 = [0, 0];  ̂_0 = [0, 0, 0]; ry = [180]; y_step=[0]
+x_0 = [0, 0]; 𝕩̂_0 = [0, 0, 0]; ry = [180]; y_step=[0]
 res3_ry = sim_adapt!(mpc3, model, N, ry, 
-                plant, x_0,  ̂_0, y_step)
+                plant, x_0, 𝕩̂_0, y_step)
 plot(res3_ry)
 \end{minted}
 and the 10° step disturbance:
 \begin{minted}{julia}
-x_0 = [π, 0];  ̂_0 = [π, 0, 0]; ry = [180]; y_step=[10]
+x_0 = [π, 0]; 𝕩̂_0 = [π, 0, 0]; ry = [180]; y_step=[10]
 res3_yd = sim_adapt!(mpc3, model, N, ry, 
-                plant, x_0,  ̂_0, y_step)
+                plant, x_0, 𝕩̂_0, y_step)
 plot(res3_yd)
 \end{minted}
 
@@ -480,30 +478,35 @@ The MATLAB implementations use the model predictive control toolbox. Additional 
 
 Since the performance is solver-dependent, multiple optimization algorithms are tested. The results include four types of quadratic/nonlinear solvers. The operator-splitting (OS) methods are: 
 \begin{itemize}
-    \item \texttt{OSQP.jl} package in Julia \citep{osqp}
-    \item \texttt{admm} option in MATLAB \citep{admm}
+    \item \texttt{OSQP.jl} in Julia \citep{osqp}
+    \item \texttt{admm} in MATLAB \citep{admm}
 \end{itemize}
 For active-set (AS) methods, the optimizers are: 
 \begin{itemize}
-    \item \texttt{DAQP.jl} package in Julia \citep{daqp}
-    \item \texttt{active-set} option in MATLAB \citep{activeset}
+    \item \texttt{DAQP.jl} in Julia \citep{daqp}
+    \item \texttt{active-set} in MATLAB \citep{activeset}
 \end{itemize}
 For interior-point (IP) methods, the solvers are: 
 \begin{itemize}
-    \item \texttt{Ipopt.jl} package in Julia \citep{ipopt}
-    \item \texttt{interior-point} option in MATLAB \citep{interiorpoint}
+    \item \texttt{Ipopt.jl} in Julia \citep{ipopt}
+    \item \texttt{interior-point} in MATLAB \citep{interiorpoint}
 \end{itemize}
 And, lastly, the sequential quadratic (SQ) methods are:
 \begin{itemize}
-    \item \texttt{KNITRO.jl} package in Julia \citep{knitro}
-    \item \texttt{sqp} option in MATLAB \citep{sqp}
+    \item \texttt{KNITRO.jl} in Julia \citep{knitro}
+    \item \texttt{sqp} in MATLAB \citep{sqp}
 \end{itemize}
 
 All the solvers in Julia are free and open-source, except for \texttt{KNITRO.jl} which is commercial. A separate keyword argument in the controller constructors allows customizing the solver (see \cref{sec:successive_linearization} for an example). Only the active-set results are include for the SLMPC since \texttt{OSQP.jl} does not work as well on the pendulum (without major modifications in the optimizer settings).
 
-A laptop with an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark} i7-1165G7 (8 cores at \SI{4.70}{\giga\hertz}) and a Linux v6.9.5 kernel runs the benchmarks. The scripts are executed on Julia v1.10.4 and MATLAB R2024a. A public repository provides the code to reproduce the results, see \url{https://github.com/franckgaga/mpcPackageJulia.tex}.
+A laptop with an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark} i7-1165G7 (8 cores at \SI{4.70}{\giga\hertz}) and a Linux v6.11.6 kernel runs the benchmarks. The scripts are executed on Julia v1.10.4, the v1.0.1 release of this package and MATLAB R2024a. A public repository provides the code to reproduce the results, see \url{https://github.com/franckgaga/mpcPackageJulia.tex}.
+It can be cloned, and by executing the following commands in the git root folder:
+\begin{minted}{julia}
+using Pkg; Pkg.activate("julia"); Pkg.instantiate()
+\end{minted}
+an identical environment with the same versions of the packages will be created.
 
-\begin{table*}
+\begin{table*}[t]
     \centering
     \caption{Julia and MATLAB Benchmarks on the Case Studies.}
     \vspace{0.5em}
