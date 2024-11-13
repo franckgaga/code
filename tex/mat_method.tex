@@ -88,17 +88,23 @@ Linear model predictive controller with soft or hard bound constraints. It minim
 \begin{multline}\label{eq:J_MPC}
 J_{\mathit{MPC}} = 
     \mathbf{\big(\hat{R}_y - \hat{Y}\big)}^\intercal \mathbf{M}_{H_p} \mathbf{\big(\hat{R}_y - \hat{Y}\big)}   
-    + \mathbf{\big(ΔU\big)}^\intercal \mathbf{N}_{H_c} \mathbf{\big(ΔU\big)} \\
+    + \mathbf{\big(\Delta U\big)}^\intercal \mathbf{N}_{H_c} \mathbf{\big(\Delta U\big)} \\
     + \mathbf{\big(\hat{R}_u - U\big)}^\intercal \mathbf{L}_{H_p} \mathbf{\big(\hat{R}_u - U\big)} 
     + C \epsilon^2
 \end{multline}
-with the decision variables $\mathbf{ΔU}$ and $\epsilon$, the inputs increments over the control horizon $H_c$ and the slack variable, respectively. The vectors $\mathbf{\hat{Y}}$ and $\mathbf{\hat{R}_y}$ encompass the predictions of the outputs and their setpoints over the horizon $H_p$, respectively. The variables $\mathbf{U}$ and $\mathbf{\hat{R}_u}$ are similar but for the input setpoints. The matrices $\mathbf{M}_{H_p}$, $\mathbf{N}_{H_c}$ and $\mathbf{L}_{H_p}$ are Hermitian weights. In particular, if $\mathbf{M}_{H_p}$ is a block diagonal matrix, the last block allows specifying a terminal penalty different from the running weights.
+with the decision variables $\mathbf{\Delta U}$ and $\epsilon$, the inputs increments over the control horizon $H_c$ and the slack variable, respectively. The vectors $\mathbf{\hat{Y}}$ and $\mathbf{\hat{R}_y}$ encompass the predictions of the outputs and their setpoints over the horizon $H_p$, respectively. The variables $\mathbf{U}$ and $\mathbf{\hat{R}_u}$ are similar but for the input setpoints. The matrices $\mathbf{M}_{H_p}$, $\mathbf{N}_{H_c}$ and $\mathbf{L}_{H_p}$ are Hermitian weights. In particular, if $\mathbf{M}_{H_p}$ is a block diagonal matrix, the last block allows specifying a terminal penalty different from the running weights.
 
 The problem is subject to the following constraints:
 \begin{alignat}{3}
-    \mathbf{U_{min}  - C_{u_{min}}}  \epsilon &\le \mathbf{U}  &&\le \mathbf{U_{max}  + C_{u_{max}}}  \epsilon \\
-    \mathbf{ΔU_{min} - C_{Δu_{min}}} \epsilon &\le \mathbf{ΔU} &&\le \mathbf{ΔU_{max} + C_{Δu_{max}}} \epsilon \\
-    \mathbf{Y_{min}  - C_{y_{min}}}  \epsilon &\le \mathbf{\hat{Y}} &&\le \mathbf{Y_{max}  + C_{y_{max}}}  \epsilon
+    \mathbf{U_{min}  - C_{u_{min}}}  \epsilon 
+         &\le \mathbf{U}  
+        &&\le \mathbf{U_{max}  + C_{u_{max}}}  \epsilon \\
+    \mathbf{\Delta U_{min} - C_{\Delta u_{min}}} \epsilon 
+         &\le \mathbf{\Delta U} 
+        &&\le \mathbf{\Delta U_{max} + C_{\Delta u_{max}}} \epsilon \\
+    \mathbf{Y_{min}  - C_{y_{min}}}  \epsilon 
+         &\le \mathbf{\hat{Y}} 
+        &&\le \mathbf{Y_{max}  + C_{y_{max}}}  \epsilon
 \end{alignat}
 and also $\epsilon \ge 0$. Box constraints on the terminal states are also possible: 
 \begin{equation}

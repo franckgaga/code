@@ -3,10 +3,16 @@
 % !LW recipe=latexmk (latexmkrc)
 \documentclass[5p,authoryear]{elsarticle}
 
-\usepackage{amsmath,amssymb,mathtools,siunitx,etoolbox}%fontspec
+\usepackage{amsmath,amssymb,mathtools,siunitx,etoolbox} 
 \usepackage{graphicx,enumitem,xcolor,booktabs,tikz,chemplants,natbib}
-\usepackage[mathletters]{ucs} 
-\usepackage[utf8x]{inputenc}
+
+%\usepackage[mathletters]{ucs} 
+%\usepackage[utf8]{inputenc}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+
 \usepackage{minted}
 \usepackage[colorlinks,allcolors=blue]{hyperref}
 \usepackage[capitalize]{cleveref}
@@ -17,25 +23,31 @@
 %%generate separate PDF for each tikz (compile with pdflatex -shell-escape) :
 %\usetikzlibrary{external}
 %\tikzexternalize[prefix=fig/]
-%% ----------------- fontspec ------------------------------------------------
-%\setmonofont{Noto Sans Mono}[Scale=MatchLowercase]
 %% ----------------- elsarticle ----------------------------------------------
 \journal{arXiv}
 %% ----------------- enumitem ------------------------------------------------
 \setlist[itemize]{noitemsep}
 %% ----------------- minted -------------------------------------------------
 \setminted[julia]{%
-    fontsize=\small,
+    fontsize=\footnotesize,
     bgcolor=gray!10,
-    xleftmargin=0pt,
 }
 \setminted[julia-repl]{%
-    fontsize=\small,
-    xleftmargin=0pt,
+    fontsize=\footnotesize,
 }
-\newcommand*{\spacerepl}{\vspace*{-\baselineskip}}
-%\BeforeBeginEnvironment{minted}{\vspace*{0pt}}
-%\AfterEndEnvironment{minted}{\vspace*{0pt}}
+\newcommand*{\spacerepl}{\vspace*{-8pt}}
+%\BeforeBeginEnvironment{minted}{\vspace*{-\baselineskip}}
+%\AfterEndEnvironment{minted}{\vspace*{-\baselineskip}}
+
+\DeclareUnicodeCharacter{03F5}{$\epsilon$}
+\DeclareUnicodeCharacter{0302}{\^{x}}
+\DeclareUnicodeCharacter{1E8B}{\.{x}}
+\DeclareUnicodeCharacter{03B8}{$\theta$}
+\DeclareUnicodeCharacter{03C9}{$\omega$}
+\DeclareUnicodeCharacter{03C4}{$\tau$}
+\DeclareUnicodeCharacter{03C0}{$\pi$}
+\DeclareUnicodeCharacter{03C3}{$\sigma$}
+
 %% ============================================================================
 \begin{document}
 
@@ -68,9 +80,9 @@ Advanced Process Control \sep State Estimation \sep Kalman Filter \sep Moving Ho
 \input{tex/mat_method}
 \input{tex/case_studies}
 \input{tex/conclu}
-
+%
 \section*{Acknowledgments}
-The authors would like to acknowledge all the developers involved in the control system and optimization frameworks of Julia. Their ease of use and intuitiveness  significantly accelerated the programming of this package.
+The authors would like to acknowledge all the developers involved in the control system and optimization frameworks of Julia. Their ease of use and intuitiveness  significantly accelerated the programming of this package. 
 
 \bibliographystyle{elsarticle-harv}
 \bibliography{mpcPackageJulia_bibfile} 

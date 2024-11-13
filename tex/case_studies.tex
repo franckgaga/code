@@ -63,7 +63,7 @@ optimizer, SteadyKalmanFilter estimator and:
   2 control steps Hc
   1 slack variable ϵ (control constraints)
   2 manipulated inputs u (0 integrating states)
-  4 estimated states x̂
+  4 estimated states  ̂
   2 measured outputs ym (2 integrating states)
   0 unmeasured outputs yu
   0 measured disturbances d
@@ -176,12 +176,12 @@ For this case study, the goal is to control the angular position $\theta$ of a p
 in which $g$ is the gravitational acceleration in \si{\meter\per\second\squared}, $L$, the pendulum length in \si{\meter}, $K$, the friction coefficient at the pivot point in \si{\kilogram\per\second}, and $m$, the mass attached at the end of the pendulum in \si{\kilogram}. They are all bundled in the parameter vector $\mathbf{p}=[\begin{smallmatrix}g & L & K & m\end{smallmatrix}]'$. By default, the \texttt{NonLinModel} constructor assumes continuous-time equations and discretizes them with Runge-Kutta:
 \begin{minted}{julia}
 using ModelPredictiveControl
-function f!(ẋ, x, u, _ , p)
+function f!(ẋ, x, u, _ , p)
     g, L, K, m = p       # [m/s²], [m], [kg/s], [kg]
     θ, ω = x[1], x[2]    # [rad], [rad/s]
     τ = u[1]             # [Nm]
-    ẋ[1] = ω
-    ẋ[2] = -g/L*sin(θ) - K/m*ω + τ/m/L^2
+    ẋ[1] = ω
+    ẋ[2] = -g/L*sin(θ) - K/m*ω + τ/m/L^2
 end
 h!(y, x, _ , _ ) = (y[1] = 180/π*x[1])   # [°]
 p = [9.8, 0.4, 1.2, 0.3]
@@ -216,7 +216,7 @@ estim = UnscentedKalmanFilter(model; σQ, σR,
 UnscentedKalmanFilter estimator with a sample time Ts =
 0.1 s, NonLinModel and:
  1 manipulated inputs u (1 integrating states)
- 3 states x̂
+ 3 states  ̂
  1 measured outputs ym (0 integrating states)
  0 unmeasured outputs yu
  0 measured disturbances d
@@ -227,7 +227,7 @@ p_plant = copy(p); p_plant[3] = 1.25*p[3]
 plant = NonLinModel(f!, h!, Ts, nu, nx, ny; p=p_plant)
 N = 35; u = [0.5]; 
 res = sim!(estim, N, u; plant, y_noise=[0.5])
-using Plots; plot(res, plotu=false, plotxwithx̂=true)
+using Plots; plot(res, plotu=false, plotxwith ̂=true)
 \end{minted}
 \cref{fig:plot_NonLinMPC1} indicates that the Kalman filter performance seems sufficient for control. The estimate $\hat{x}_3$ is the integrating state on the torque $\tau$ that compensates for static errors. 
 
@@ -254,21 +254,21 @@ optimizer, UnscentedKalmanFilter estimator and:
   2 control steps Hc
   0 slack variable ϵ (control constraints)
   1 manipulated inputs u (1 integrating states)
-  3 estimated states x̂
+  3 estimated states  ̂
   1 measured outputs ym (0 integrating states)
   0 unmeasured outputs yu
   0 measured disturbances d
 \end{minted}
 The keyword arguments \texttt{Mwt} and \texttt{Nwt} are the output setpoint tracking and move suppression weights, respectively. The option \texttt{Cwt=Inf} disables the slack variable $\epsilon$. An angular setpoint of \SI{180}{\degree} (inverted position) tests \texttt{mpc} performance on the plant:
 \begin{minted}{julia}
-x_0 = [0, 0]; x̂_0 = [0, 0, 0]; ry = [180]
-res_ry = sim!(nmpc, N, ry; plant, x_0, x̂_0)
+x_0 = [0, 0];  ̂_0 = [0, 0, 0]; ry = [180]
+res_ry = sim!(nmpc, N, ry; plant, x_0,  ̂_0)
 plot(res_ry)
 \end{minted}
 The result in \cref{fig:plot_NonLinMPC2} suggests that the controller is robust enough to variations on the $K$ coefficient. Starting from this inverted position, \cref{fig:plot_NonLinMPC3} shows the closed-loop response to a step disturbances of \SI{10}{\degree} is satisfactory:
 \begin{minted}{julia}
-x_0 = [π, 0]; x̂_0 = [π, 0, 0]; y_step = [10]
-res_yd = sim!(nmpc, N, [180.0]; plant, x_0, x̂_0, y_step)
+x_0 = [π, 0];  ̂_0 = [π, 0, 0]; y_step = [10]
+res_yd = sim!(nmpc, N, [180.0]; plant, x_0,  ̂_0, y_step)
 plot(res_yd)
 \end{minted}
 The next section presents an economic model predictive controller on the pendulum.
@@ -314,9 +314,9 @@ estim2 = UnscentedKalmanFilter(model2; σQ, σR,
 \end{minted}
 The \texttt{plant2} object based on \texttt{h2!} is also required since \texttt{sim!} expects that the plant output vector $\mathbf{y}$ corresponds to the controller model output vector. Now, these lines define the $J_E$ function and the controller:
 \begin{minted}{julia}
-function JE(UE, ŶE, _ , p)
+function JE(UE, YE, _ , p)
     Ts = p
-    τ, ω = UE[1:end-1], ŶE[2:2:end-1]
+    τ, ω = UE[1:end-1], YE[2:2:end-1]
     return Ts*sum(τ.*ω)
 end
 p = Ts; Mwt2 = [Mwt; 0.0]; Ewt = 3.5e3
@@ -332,7 +332,7 @@ optimizer, UnscentedKalmanFilter estimator and:
   2 control steps Hc
   0 slack variable ϵ (control constraints)
   1 manipulated inputs u (1 integrating states)
-  3 estimated states x̂
+  3 estimated states  ̂
   1 measured outputs ym (0 integrating states)
   1 unmeasured outputs yu
   0 measured disturbances d
@@ -340,8 +340,8 @@ optimizer, UnscentedKalmanFilter estimator and:
 
 The keyword argument \texttt{Ewt} is the $E$ weight in \eqref{eq:J_NMPC}. The economic term must be large enough to be significant but a too high value can lead to a static error on the angle setpoint. The second element of \texttt{Mwt2} is zero since the speed $\omega$ is not requested to track a setpoint. \cref{fig:plot_EconomMPC1} shows that closed-loop response to a \SI{180}{\degree} setpoint is similar:
 \begin{minted}{julia}
-x_0 = [0, 0]; x̂_0 = [0, 0, 0]; ry = [180; 0]
-res2_ry = sim!(empc, N, ry; plant=plant2, x_0, x̂_0)
+x_0 = [0, 0];  ̂_0 = [0, 0, 0]; ry = [180; 0]
+res2_ry = sim!(empc, N, ry; plant=plant2, x_0,  ̂_0)
 plot(res2_ry, ploty=[1])
 \end{minted}
 and the energy consumption is slightly lower:
@@ -360,9 +360,9 @@ Dict{Symbol, Float64} with 2 entries:
 \end{minted}
 Also, for a \SI{10}{\degree} step disturbance (results depicted in \cref{fig:plot_EconomMPC2}):
 \begin{minted}{julia}
-x_0 = [π, 0]; x̂_0 = [π, 0, 0]; y_step = [10; 0]
+x_0 = [π, 0];  ̂_0 = [π, 0, 0]; y_step = [10; 0]
 res2_yd = sim!(empc, N, ry; plant=plant2, 
-                            x_0, x̂_0, y_step)
+                            x_0,  ̂_0, y_step)
 plot(res2_yd, ploty=[1])
 \end{minted}
 the new controller is able to recuperate a little more energy from the pendulum (i.e. negative work):
@@ -413,7 +413,7 @@ optimizer, KalmanFilter estimator and:
   2 control steps Hc
   0 slack variable ϵ (control constraints)
   1 manipulated inputs u (1 integrating states)
-  3 estimated states x̂
+  3 estimated states  ̂
   1 measured outputs ym (0 integrating states)
   0 unmeasured outputs yu
   0 measured disturbances d
@@ -421,18 +421,18 @@ optimizer, KalmanFilter estimator and:
 A custom simulation function that successively linearizes the pendulum model and updates the \texttt{LinMPC} controller with \texttt{setmodel!} is required: 
 \begin{minted}{julia}
 function sim_adapt!(mpc, nlmodel, N, ry, 
-               plant, x_0, x̂_0, y_step)
+               plant, x_0,  ̂_0, y_step)
     U, Y, Ry = zeros(1, N), zeros(1, N), zeros(1, N)
-    u, x̂ = [0], x̂_0
+    u,  ̂ = [0],  ̂_0
     initstate!(mpc, u, plant())
-    setstate!(plant, x_0); setstate!(mpc, x̂_0)
-    linmodel = linearize(nlmodel; u, x=x̂[1:2])
+    setstate!(plant, x_0); setstate!(mpc,  ̂_0)
+    linmodel = linearize(nlmodel; u, x= ̂[1:2])
     setmodel!(mpc, linmodel)
     for i = 1:N
         y = plant() + y_step
-        x̂ = preparestate!(mpc, y)
+         ̂ = preparestate!(mpc, y)
         u = mpc(ry)
-        linearize!(linmodel, nlmodel; u, x=x̂[1:2])
+        linearize!(linmodel, nlmodel; u, x= ̂[1:2])
         setmodel!(mpc, linmodel) 
         U[:,i], Y[:,i], Ry[:,i] = u, y, ry
         updatestate!(mpc, u, y)
@@ -444,16 +444,16 @@ end
 \end{minted}
 The new model is set after solving the optimization problem, and before updating the state estimate, that is, when both $\mathbf{u}(k)$ and $\mathbf{\hat{x}}_k(k)$ are available as the new operating point. As shown in \cref{fig:plot_SuccLinMPC1} and \ref{fig:plot_SuccLinMPC2}, the SLMPC closed-loop response is similar to the nonlinear MPC, both for the 180° setpoint:
 \begin{minted}{julia}
-x_0 = [0, 0]; x̂_0 = [0, 0, 0]; ry = [180]; y_step=[0]
+x_0 = [0, 0];  ̂_0 = [0, 0, 0]; ry = [180]; y_step=[0]
 res3_ry = sim_adapt!(mpc3, model, N, ry, 
-                plant, x_0, x̂_0, y_step)
+                plant, x_0,  ̂_0, y_step)
 plot(res3_ry)
 \end{minted}
 and the 10° step disturbance:
 \begin{minted}{julia}
-x_0 = [π, 0]; x̂_0 = [π, 0, 0]; ry = [180]; y_step=[10]
+x_0 = [π, 0];  ̂_0 = [π, 0, 0]; ry = [180]; y_step=[10]
 res3_yd = sim_adapt!(mpc3, model, N, ry, 
-                plant, x_0, x̂_0, y_step)
+                plant, x_0,  ̂_0, y_step)
 plot(res3_yd)
 \end{minted}
 
