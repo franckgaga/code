@@ -19,6 +19,7 @@ rev/
 *.fbd
 *.fls
 *.dvi
+*.pyg
 _minted-mpcPackageJulia/
 _minted/
 minted-cache/
