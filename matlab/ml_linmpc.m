@@ -1,6 +1,6 @@
 % Exectued on:
 % MATLAB Version: 24.1.0.2603908 (R2024a) Update 4
-% Operating System: Linux 6.9.5
+% Operating System: Linux 6.11.6
 
 G = [ tf(1.90, [18, 1]) tf(1.90, [18, 1]);
       tf(-0.74,[8, 1])  tf(0.74, [8, 1]) ];
@@ -30,10 +30,10 @@ Chat = [
 ];
 mpcmodel = ss(Ahat,Bhat,Chat,[],Ts);
 Khat =  [
-    -0.0393314  -0.0;
-    -0.0        -0.015454;
-    0.606234   -0.0;
-    -0.0         0.61571
+    -0.0354666  -0.0;
+    0.0         -0.012071;
+    0.608523    -0.0;
+   -0.0         0.616621
 ];
 
 mympc = mpc(mpcmodel,Ts,10,2);
@@ -54,13 +54,13 @@ myestim.LastMove = [];
 N = size(U_data, 2);
 t_data = (0:N-1)*Ts;
 subplot(311)
-plot(t_data,Y_data(1,:), t_data, R_data(1,:), "--", t_data, 45*ones(1, N))
+plot(t_data,Y_data(1,:), t_data, R_data(1,:), "--", t_data, 45*ones(1, N)); grid on;
 subplot(312)
-plot(t_data,Y_data(2,:), t_data, R_data(2,:), "--")
+plot(t_data,Y_data(2,:), t_data, R_data(2,:), "--"); grid on;
 subplot(313)
-stairs(t_data,U_data(1,:))
+stairs(t_data,U_data(1,:)); grid on;
 hold on;
-stairs(t_data, U_data(2,:))
+stairs(t_data, U_data(2,:)); grid on;
 hold off;
 
 mympc.Optimizer.Algorithm = "admm";
@@ -82,11 +82,11 @@ Ahat = [
  0.0       0.0       0.0       0.0       0.0  1.0   
 ];
 Bhat = [ 
-  -0.273215  -0.273215    0.0
-  0.510838  -0.510838     0.0
-  0.0        0.0         -0.27348170645824377
-  0.0        0.0         -0.5132002392796675
-  0.0        0.0          0.0
+  -0.273215  -0.273215    0.0;
+  0.510838  -0.510838     0.0;
+  0.0        0.0         -0.27348170645824377;
+  0.0        0.0         -0.5132002392796675;
+  0.0        0.0          0.0;
   0.0        0.0          0.0
  ];
 Chat = [
@@ -105,12 +105,12 @@ uop = [20; 20];
 dop = 20;
 
 Khat = [
- -0.0121777  -0.0;
-  0.0        -0.00474342;
- -0.0115353  -0.0;
-  0.0        -0.0042109;
-  0.609557   -0.0;
-  0.0         0.61647    
+    -0.0109576  -0.0;
+    -0.0        -0.00370149;
+    -0.0103784  -0.0;
+    -0.0        -0.00328163;
+     0.611214   -0.0;
+    -0.0         0.617085  
 ];
 mpcmodel_d = ss(Ahat,Bhat,Chat,Dhat,Ts);
 mpcmodel_d = setmpcsignals(mpcmodel_d,'MV',[1 2],'MD',3); 
@@ -134,13 +134,13 @@ myestim_d.LastMove = [];
 N = size(U_data, 2);
 t_data = (0:N-1)*Ts;
 subplot(311)
-plot(t_data,Y_data(1,:), t_data, R_data(1,:), "--", t_data, 45*ones(1, N))
+plot(t_data,Y_data(1,:), t_data, R_data(1,:), "--", t_data, 45*ones(1, N)); grid on;
 subplot(312)
-plot(t_data,Y_data(2,:), t_data, R_data(2,:), "--")
+plot(t_data,Y_data(2,:), t_data, R_data(2,:), "--"); grid on;
 subplot(313)
-stairs(t_data,U_data(1,:))
+stairs(t_data,U_data(1,:)); grid on;
 hold on;
-stairs(t_data, U_data(2,:))
+stairs(t_data, U_data(2,:)); grid on;
 hold off;
 
 mympc_d.Optimizer.Algorithm = "admm";
@@ -173,13 +173,14 @@ function [U_data, Y_data, R_data] = test_mpc(mympc, myestim, ...
             ul = -10;
         end
         y = C*x + yop;
+        xhat = xhat + Khat*((y-yop) - Chat*xhat);
         myestim.Plant = xhat;
         u = mpcmove(mympc, myestim, [], r);
         U_data(:,i) = u;
         Y_data(:,i) = y;
         R_data(:,i) = r;
         x = A*x + B*(u-uop+[0; ul]);
-        xhat = Ahat*xhat + Bhat*(u-uop) + Khat*((y-yop) - Chat*xhat);
+        xhat = Ahat*xhat + Bhat*(u-uop);
     end
 end
 
@@ -206,13 +207,13 @@ function [U_data, Y_data, R_data] = test_mpc_d(mympc, myestim, ...
         end
         y = C*x + yop;
         d = ul + dop;
+        xhat = xhat + Khat*((y-yop) - Chat*xhat - Dhatd*(d-dop));
         myestim.Plant = xhat;
         u = mpcmove(mympc, myestim, [], r, d);
         U_data(:,i) = u;
         Y_data(:,i) = y;
         R_data(:,i) = r;
         x = A*x + B*(u-uop+[0; ul]);
-        xhat = Ahat*xhat + Bhatu*(u-uop) + Bhatd*(d-dop) + ...
-               Khat*((y-yop) - Chat*xhat - Dhatd*(d-dop));
+        xhat = Ahat*xhat + Bhatu*(u-uop) + Bhatd*(d-dop);
     end
 end

@@ -37,7 +37,6 @@
 }
 
 @inproceedings{controlsystems,
-  abstract     = {ControlSystems.jl enables the powerful features of the Julia language to be leveraged for control design and analysis.<br/>The toolbox provides types for state-space, transfer-function, and time-delay models, together with algorithms for design and analysis.<br/>Julia's mathematically-oriented syntax is convenient for implementing control algorithms, and its just-in-time compilation gives performance on par with C.<br/>The multiple-dispatch paradigm makes it easy to combine the algorithms with powerful tools from Julia's ecosystem, such as automatic differentiation, arbitrary-precision arithmetic, GPU arrays, and probability distributions.<br/>We demonstrate how these features allow complex problems to be solved with little effort.},
   author       = {Bagge Carlson, Fredrik and Fält, Mattias and Heimerson, Albin and Troeng, Olof},
   booktitle    = {Proceedings of CDC 2021},
   language     = {eng},
@@ -45,6 +44,7 @@
   title        = {ControlSystems.jl: A Control Toolbox in Julia},
   doi          = {10.1109/CDC45484.2021.9683403},
   year         = {2021},
+  pages        = {4847--4853},
 }
 
 @article{jump,
@@ -141,12 +141,13 @@ doi = {10.1080/0020718508961188},
   booktitle={FOCAPO / CPC 2012},
   volume={24},
   year={2012},
+  pages={1--6}
 }
 
 @article{ipopt,
 author={W{\"a}chter, Andreas and Biegler, Lorenz T.},
 title={On the implementation of an interior-point filter line-search algorithm for large-scale nonlinear programming},
-journal={Math. Program.},
+journal={Mathematical Programming},
 year={2006},
 volume={106},
 number={1},
@@ -196,10 +197,11 @@ author = {Tariq Samad and Margret Bauer and Scott Bortoff and Stefano {Di Cairan
   lccn={96046917},
   chapter={5},
   year={1997},
+  pages={233--310},
   publisher={Prentice Hall PTR}
 }
 
-@inBook{knitro,
+@book{knitro,
   author="Byrd, Richard H. and Nocedal, Jorge and Waltz, Richard A.",
   title="Knitro: An Integrated Package for Nonlinear Optimization",
   booktitle="Large-Scale Nonlinear Optimization",
@@ -250,6 +252,7 @@ author = {Tariq Samad and Margret Bauer and Scott Bortoff and Stefano {Di Cairan
   publisher="Springer New York",
   address="New York, NY",
   pages="529--562",
+  chapter="18",
   isbn="978-0-387-40065-5",
   doi="10.1007/978-0-387-40065-5\_18",
 }
@@ -260,4 +263,34 @@ author = {Tariq Samad and Margret Bauer and Scott Bortoff and Stefano {Di Cairan
   journal = {arXiv:1607.07892},
      year = {2016},
       doi = {10.48550/arXiv.1607.07892}
+}
+
+@article{doMPC,
+title = {do-mpc: Towards FAIR nonlinear and robust model predictive control},
+journal = {Control Engineering Practice},
+volume = {140},
+pages = {105676},
+year = {2023},
+issn = {0967-0661},
+doi = {10.1016/j.conengprac.2023.105676},
+author = {Felix Fiedler and Benjamin Karg and Lukas Lüken and Dean Brandner and Moritz Heinlein and Felix Brabender and Sergio Lucia},
+}
+
+@article{gekko,
+title={GEKKO Optimization Suite},
+author={Beal, Logan and Hill, Daniel and Martin, R and Hedengren, John},
+journal={Processes},
+volume={6},
+number={8},
+pages={106},
+year={2018},
+doi={10.3390/pr6080106},
+publisher={Multidisciplinary Digital Publishing Institute}
+}
+
+@article{acados,
+Title={acados -- a modular open-source framework for fast embedded optimal control},
+Author={Robin Verschueren and Gianluca Frison and Dimitris Kouzoupis and Jonathan Frey and Niels van Duijkeren and Andrea Zanelli and Branimir Novoselnik and Thivaharan Albin and Rien Quirynen and Moritz Diehl},
+Journal={Mathematical Programming Computation},
+Year={2021},
 }

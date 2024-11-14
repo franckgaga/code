@@ -1,6 +1,6 @@
 % Exectued on:
 % MATLAB Version: 24.1.0.2603908 (R2024a) Update 4
-% Operating System: Linux 6.9.5
+% Operating System: Linux 6.11.6
 
 Ts = 0.1;
 par = [9.8; 0.4; 1.2; 0.3];
@@ -17,10 +17,10 @@ Phat0 = [
 ukf.StateCovariance = Phat0;
 ukf.ProcessNoise = [
     (0.1)^2  0.0      0.0;
-    0.0      (0.5)^2  0.0;
+    0.0      (1.0)^2  0.0;
     0.0      0.0      (0.1)^2;
 ];
-ukf.MeasurementNoise = (0.5)^2;
+ukf.MeasurementNoise = (5.0)^2;
 
 x0 = [0; 0];
 xhat0 = [0; 0; 0];
@@ -32,13 +32,13 @@ T = Ts*(0:length(Y)-1);
 
 figure();
 subplot(3,2, [1 3 5])
-plot(T, Y, T, Yhat)
+plot(T, Y, T, Yhat); grid on;
 subplot(3,2,2)
-plot(T, X(1,:), T, Xhat(1,:))
+plot(T, X(1,:), T, Xhat(1,:)); grid on;
 subplot(3,2,4)
-plot(T, X(2,:), T, Xhat(2,:))
+plot(T, X(2,:), T, Xhat(2,:)); grid on;
 subplot(3,2,6)
-plot(T, Xhat(3,:))
+plot(T, Xhat(3,:)); grid on;
 
 mympc = nlmpc(3,1,1);
 mympc.PredictionHorizon = 20;
@@ -65,11 +65,11 @@ u = 0.0;
 T = Ts*(0:length(Y)-1);
 figure();
 subplot(121)
-plot(T, Y, T, R, '--')
+plot(T, Y, T, R, '--'); grid on;
 subplot(122)
-stairs(T,U)
+stairs(T,U); grid on;
 hold on
-plot(T, -1.5*ones(1, length(T)),T,+1.5*ones(1, length(T)))
+plot(T, -1.5*ones(1, length(T)),T,+1.5*ones(1, length(T))); grid on;
 hold off
 
 mympc.Optimization.SolverOptions.Algorithm = "interior-point";
@@ -89,11 +89,11 @@ u = 0.0;
     par_plant, par, Ts, u, x0, xhat0, Phat0, 10);
 figure();
 subplot(121)
-plot(T, Y, T, R, '--')
+plot(T, Y, T, R, '--'); grid on;
 subplot(122)
-stairs(T,U)
+stairs(T,U); grid on;
 hold on
-plot(T, -1.5*ones(1, length(T)),T,+1.5*ones(1, length(T)))
+plot(T, -1.5*ones(1, length(T)),T,+1.5*ones(1, length(T))); grid on;
 hold off
 
 mympc.Optimization.SolverOptions.Algorithm = "interior-point";
@@ -115,18 +115,18 @@ function [Y, Yhat, U, X, Xhat] = test_ukf(ukf, ...
     X = zeros(2, N);
     Xhat = zeros(3, N);
     x = x0;
-    xhat = xhat0;
+    ukf.State = xhat0;
     ukf.StateCovariance = Phat0;
     for i=1:N
         y = h(x) + ynoise*randn(1, 1);
+        xhat = correct(ukf, y, u, par, Ts);
         yhat = hhat(xhat);
         Y(:, i) = y;
         Yhat(:, i) = yhat;
         U(:, i) = u;
         X(:, i) = x;
-        Xhat(:, i) = xhat;
-        correct(ukf, y, u, par, Ts);
-        xhat = predict(ukf, u, par, Ts);
+        Xhat(:, i) = xhat;        
+        predict(ukf, u, par, Ts);
         x = f(x, u, par_plant, Ts);
     end
 end
@@ -141,11 +141,12 @@ function [R, Y, Yhat, U, X, Xhat] = test_mpc(mympc, opt, ukf, ...
     X = zeros(2, N);
     Xhat = zeros(3, N);
     x = x0;
-    xhat = xhat0;
+    ukf.State = xhat0;
     ukf.StateCovariance = Phat0;
     r = 180;
     for i=1:N
         y = h(x) + ystep;
+        xhat = correct(ukf, y, u, par, Ts);
         yhat = hhat(xhat);
         u = nlmpcmove(mympc, xhat, u, r, [], opt);
         R(:, i) = r;
@@ -154,8 +155,7 @@ function [R, Y, Yhat, U, X, Xhat] = test_mpc(mympc, opt, ukf, ...
         U(:, i) = u;
         X(:, i) = x;
         Xhat(:, i) = xhat;
-        correct(ukf, y, u, par, Ts);
-        xhat = predict(ukf, u, par, Ts);
+        predict(ukf, u, par, Ts);
         x = f(x, u, par_plant, Ts);
     end
 end

@@ -1,21 +1,17 @@
 % !TeX spellcheck = en_US
 % !TeX encoding = UTF-8
 % !LW recipe=latexmk (latexmkrc)
-\documentclass[ijoc,nonblindrev]{informs4}
+\documentclass[5p,authoryear]{elsarticle}
 
-\usepackage{amsmath,amssymb,fontspec,mathtools,siunitx,etoolbox}
-\usepackage{titlesec, graphicx,xcolor,booktabs,tikz,chemplants}
-\usepackage{minted}
+\usepackage{amsmath,amssymb,mathtools,textgreek,siunitx,etoolbox} 
+\usepackage{graphicx,enumitem,xcolor,booktabs,tikz,chemplants,natbib}
+\usepackage[
+    %finalizecache, %no longer supported in minted 3.0 (this, this line needs TexLive 2023)
+    %frozencache,
+    cachedir=minted-cache
+]{minted}
 \usepackage[colorlinks,allcolors=blue]{hyperref}
 \usepackage[capitalize]{cleveref}
-
-\usepackage{natbib}
- \bibpunct[, ]{(}{)}{,}{a}{}{,}%
- \def\bibfont{\small}%
- \def\bibsep{\smallskipamount}%
- \def\bibhang{24pt}%
- \def\newblock{\ }%
- \def\BIBand{and}%
 
 %% =============== preamble ==================================================
 %% ---------------- tikz -----------------------------------------------------
@@ -23,65 +19,66 @@
 %%generate separate PDF for each tikz (compile with pdflatex -shell-escape) :
 %\usetikzlibrary{external}
 %\tikzexternalize[prefix=fig/]
-%% ----------------- fontspec ------------------------------------------------
-\setmonofont{Noto Sans Mono}[Scale=MatchLowercase]
-%% ----------------- titlesec ------------------------------------------------
-\titleformat*{\paragraph}{\bfseries\ttfamily}
+%% ----------------- elsarticle ----------------------------------------------
+\journal{arXiv}
+%% ----------------- enumitem ------------------------------------------------
+\setlist[itemize]{noitemsep}
 %% ----------------- minted -------------------------------------------------
 \setminted[julia]{%
-    %fontsize=\small,
+    fontsize=\footnotesize,
     bgcolor=gray!10,
-    baselinestretch=0.8
 }
 \setminted[julia-repl]{%
-    %fontsize=\small,
-    xleftmargin=3pt,
-    baselinestretch=0.8
+    fontsize=\footnotesize,
 }
-\newcommand*{\spacerepl}{\vspace*{-20pt}}
-\BeforeBeginEnvironment{minted}{\vspace*{-13pt}}
-\AfterEndEnvironment{minted}{\vspace*{-0pt}}
+\newcommand*{\spacerepl}{\vspace{-2\baselineskip}}
+% ------------------- unicode char handling --------------------------------
+\DeclareUnicodeCharacter{0302}{\^{x}} % replace hat by xhat
+\DeclareUnicodeCharacter{1D569}{} % hide the blackboard font x
+\DeclareUnicodeCharacter{1E8B}{\.{x}} 
+\DeclareUnicodeCharacter{03F5}{\textepsilon}
+\DeclareUnicodeCharacter{03B8}{\texttheta}
+\DeclareUnicodeCharacter{03C9}{\textomega}
+\DeclareUnicodeCharacter{03C4}{\texttau}
+\DeclareUnicodeCharacter{03C0}{\textpi}
+\DeclareUnicodeCharacter{03C3}{\textsigma}
 %% ============================================================================
-
-% For revisions, input the manuscript number assigned by the on-line
-% system along with a suffix ".Rx" where x is the revision number.
-\MANUSCRIPTNO{MOOR-0001-2024.00}
-
 \begin{document}
 
-\RUNAUTHOR{Gagnon et al.}
+\begin{frontmatter}
 
-\RUNTITLE{ModelPredictiveControl.jl: advanced process control made easy in Julia}
+\title{ModelPredictiveControl.jl: advanced\\process control made easy in Julia}
 
-\TITLE{ModelPredictiveControl.jl: advanced process control made easy in Julia}
+\author[jumine]{Francis Gagnon}\corref{corresponding}\ead{franckgaga2@gmail.com}
+\author[jumine]{Alex Thivierge}
+\author[loop]{André Desbiens}
+\author[juliahub]{Fredrik Bagge Carlson}
 
-\ARTICLEAUTHORS{%
-\AUTHOR{Francis Gagnon\textsuperscript{a}, Alex Thivierge\textsuperscript{b}}
-\AFF{\textsuperscript{a}Jumine, Quebec City, Canada, \EMAIL{francis.gagnon@jumine.ca}; \textsuperscript{b}\EMAIL{alex.thivierge@jumine.ca}}
-\AUTHOR{André Desbiens}
-\AFF{Process Observation and Optimization Laboratory (LOOP), Université Laval, Quebec City, Canada, \EMAIL{andre.desbien@gel.ulaval.ca}}
-\AUTHOR{Fredrik Bagge Carlson}
-\AFF{JuliaHub, Lund, Sweden, \EMAIL{baggepinnen@gmail.com}}
-} % end of the block
+\address[jumine]{Jumine, Quebec City, Canada}
+\address[loop]{Process Observation and Optimization Laboratory (LOOP), Université Laval, Quebec City, Canada}
+\address[juliahub]{JuliaHub, Lund, Sweden}
 
-\ABSTRACT{%
-% Enter your abstract
+\begin{abstract}
 Proprietary closed-source software is still the norm in advanced process control. Transparency and reproducibility are key aspects of scientific research. Free and open-source toolkit can contribute to the development, sharing and advancement of  new and efficient control approaches, and the industrial sector will certainly benefit from them. This paper presents ModelPredictiveControl.jl, an open-source software package for designing model predictive controllers in the Julia programming language. It is designed to be easy to use and modular, while providing advanced features like nonlinear control and moving horizon estimation. It relies on powerful control system and mathematical optimization frameworks to simplify the construction and testing of state estimators and predictive controllers. It also integrates with the standard plotting library to quickly visualize closed-loop data. The paper presents the main functionalities and illustrates them with two case studies in simulation. The first example is a continuously stirred tank reactor described by linear dynamics. The second one implements a nonlinear, an economic, and a successive linearization model predictive controllers for an inverted pendulum. The solving times are benchmarked against equivalent implementations in MATLAB to show the efficiency of the package.
-}%
+\end{abstract}
+    
+\cortext[corresponding]{Corresponding author.}
 
-\KEYWORDS{Dynamic programming-optimal control: Applications; Engineering, Applications; Manufacturing: Automated systems; Programming, Quadratic; Programming, Nonlinear} 
-\HISTORY{Received: Month DD, YYYY; Accepted: Month DD, YYYY; Published Online: Month DD, YYYY}
+\begin{keyword}
+Advanced Process Control \sep State Estimation \sep Kalman Filter \sep Moving Horizon Estimation \sep Computer-Aided Control Systems Design \sep Julia Programming Language
+\end{keyword}
 
-\maketitle
+\end{frontmatter}
 
 \input{tex/intro}
 \input{tex/mat_method}
 \input{tex/case_studies}
 \input{tex/conclu}
+%
+\section*{Acknowledgments}
+The authors would like to acknowledge all the developers involved in the control system and optimization frameworks of Julia. Their ease of use and intuitiveness  significantly accelerated the programming of this package. 
 
-\ACKNOWLEDGMENT{The authors would like to acknowledge all the developers involved in the control system and optimization frameworks of Julia. Their ease of use and intuitiveness  significantly accelerated the programming of this package.}
-
-\bibliographystyle{informs2014} 
+\bibliographystyle{elsarticle-harv}
 \bibliography{mpcPackageJulia_bibfile} 
 
 \end{document}
