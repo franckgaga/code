@@ -510,7 +510,7 @@ And, lastly, the sequential quadratic (SQ) methods are:
 
 All the solvers in Julia are free and open-source, except for \texttt{KNITRO.jl} which is commercial. A separate keyword argument in the controller constructors allows customizing the solver (see \cref{sec:successive_linearization} for an example). Only the active-set results are include for the SLMPC since \texttt{OSQP.jl} does not work as well on the pendulum (without major modifications in the optimizer settings).
 
-A laptop with an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark} i7-1165G7 (8 cores at \SI{4.70}{\giga\hertz}) and a Linux v6.11.6 kernel runs the benchmarks. The scripts are executed on Julia v1.10.4, the v1.0.1 release of this package and MATLAB R2024a. A public repository provides the code to reproduce the results, see \url{https://github.com/franckgaga/mpcPackageJulia.tex}.
+A laptop with an Intel\textsuperscript{\textregistered} Core\textsuperscript{\texttrademark} i7-1165G7 (8 cores at \SI{4.70}{\giga\hertz}) and a Linux v6.11.6 kernel runs the benchmarks. The scripts are executed on Julia v1.11.1, the v1.0.1 release of this package and MATLAB R2024a. A public repository provides the code to reproduce the results, see \url{https://github.com/franckgaga/mpcPackageJulia.tex}.
 It can be cloned, and by executing the following commands in Julia with the git root folder as the working directory:
 \begin{minted}{julia}
 using Pkg; Pkg.activate("julia"); Pkg.instantiate()
