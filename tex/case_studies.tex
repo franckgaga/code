@@ -55,7 +55,7 @@ The objective is to maintain both the water temperature and level at their respe
 \begin{minted}{julia}
 mpc = setconstraint!(LinMPC(model), ymin=[45, -Inf])
 \end{minted}
-\spacerepl\vspace{5pt}
+\spacerepl
 \begin{minted}{julia-repl}
 LinMPC controller with a sample time Ts = 2.0 s, OSQP
 optimizer, SteadyKalmanFilter estimator and:
@@ -63,7 +63,7 @@ optimizer, SteadyKalmanFilter estimator and:
   2 control steps Hc
   1 slack variable ϵ (control constraints)
   2 manipulated inputs u (0 integrating states)
-  4 estimated states 
+  4 estimated states 𝕩̂
   2 measured outputs ym (2 integrating states)
   0 unmeasured outputs yu
   0 measured disturbances d
@@ -247,7 +247,7 @@ nmpc = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt)
 umin, umax = [-1.5], [+1.5]
 nmpc = setconstraint!(nmpc; umin, umax)
 \end{minted}
-\spacerepl\vspace{5pt}
+\spacerepl
 \begin{minted}{julia-repl}
 NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt
 optimizer, UnscentedKalmanFilter estimator and:
@@ -331,7 +331,7 @@ empc = NonLinMPC(estim2; Hp, Hc,
                  Nwt, Mwt=Mwt2, Cwt, JE, Ewt, p)
 empc = setconstraint!(empc; umin, umax)
 \end{minted}
-\spacerepl\vspace{5pt}
+\spacerepl
 \begin{minted}{julia-repl}
 NonLinMPC controller with a sample time Ts = 0.1 s, Ipopt
 optimizer, UnscentedKalmanFilter estimator and:
@@ -366,7 +366,7 @@ function calcW(res)
 end
 Dict(:W_nmpc => calcW(res_ry), :W_empc => calcW(res2_ry))
 \end{minted}
-\spacerepl
+\spacerepl\vspace{1pt}
 \begin{minted}{julia-repl}
 Dict{Symbol, Float64} with 2 entries:
   :W_empc => 3.90053
@@ -415,7 +415,7 @@ kf = KalmanFilter(linmodel; σQ, σR, nint_u, σQint_u)
 mpc3 = LinMPC(kf; Hp, Hc, Mwt, Nwt, Cwt, optim)
 mpc3 = setconstraint!(mpc3; umin, umax)
 \end{minted}
-\spacerepl\vspace{0pt}
+\spacerepl
 \begin{minted}{julia-repl}
 LinMPC controller with a sample time Ts = 0.1 s, DAQP
 optimizer, KalmanFilter estimator and:
@@ -481,29 +481,31 @@ The next section presents the interesting result: the solving time is drasticall
 \subsection{Benchmarks}
 \label{sec:benchmarks}
 
-The time required to simulate the previous case studies is a benchmark of MPC performance in terms of computational cost (the cost to simulate the plant being negligible). The case studies are reproduced on MATLAB to compare the performance of the two frameworks. A special care is taken to ensure that that the closed-loop solution in MATLAB is identical to Julia’s counterpart. The median simulation time of 500 simulations, for MPC and SLMPC, and 50 simulations, for NMPC and EMPC, provide a performance benchmark robust to outliers. It must be emphasized that the reported values are the total time to simulate the whole scenario, that is $N=75$ time steps for the CSTR, and $N=35$, for the pendulum.
+The time required to simulate the previous case studies is a benchmark of MPC performance in terms of computational cost (the cost to simulate the plant being negligible). The case studies are reproduced on MATLAB to compare the performance of the two frameworks. A special care is taken to ensure that that the closed-loop solution in MATLAB is identical to Julia’s counterpart. A comparison with other MPC toolkits, for instance the various open source packages in Python and C/C++, is out of the scope of this paper.
+
+The median simulation time of 500 simulations, for MPC and SLMPC, and 50 simulations, for NMPC and EMPC, provide a performance benchmark robust to outliers. It must be emphasized that the reported values are the total time to simulate the whole scenario, that is $N=75$ time steps for the CSTR, and $N=35$, for the pendulum.
 
 The MATLAB implementations use the model predictive control toolbox. Additional licenses to the control system and optimization toolboxes are needed to design and execute MPCs. Note that the SLMPC code relies on the symbolic toolbox, since there is no automatic differentiation in MATLAB. All the scripts are executed as is, in the interpreter. Code generation is typically required to produce fast dedicated code. But, as mentioned in the introduction, it creates other problems like extra licensing fees (e.g.: MATLAB/Simulink Coder). Also note that MATLAB only supports the less efficient non-mutating syntax for the nonlinear state-space functions.
 
 Since the performance is solver-dependent, multiple optimization algorithms are tested. The results include four types of quadratic/nonlinear solvers. The operator-splitting (OS) methods are: 
 \begin{itemize}
-    \item \texttt{OSQP.jl} in Julia \citep{osqp}
-    \item \texttt{admm} in MATLAB \citep{admm}
+    \item \texttt{OSQP.jl} package in Julia \citep{osqp}
+    \item \texttt{admm} configuration in MATLAB \citep{admm}
 \end{itemize}
 For active-set (AS) methods, the optimizers are: 
 \begin{itemize}
-    \item \texttt{DAQP.jl} in Julia \citep{daqp}
-    \item \texttt{active-set} in MATLAB \citep{activeset}
+    \item \texttt{DAQP.jl} package in Julia \citep{daqp}
+    \item \texttt{active-set} configuration in MATLAB \citep{activeset}
 \end{itemize}
 For interior-point (IP) methods, the solvers are: 
 \begin{itemize}
-    \item \texttt{Ipopt.jl} in Julia \citep{ipopt}
-    \item \texttt{interior-point} in MATLAB \citep{interiorpoint}
+    \item \texttt{Ipopt.jl} package in Julia \citep{ipopt}
+    \item \texttt{interior-point} configuration in MATLAB \citep{interiorpoint}
 \end{itemize}
 And, lastly, the sequential quadratic (SQ) methods are:
 \begin{itemize}
-    \item \texttt{KNITRO.jl} in Julia \citep{knitro}
-    \item \texttt{sqp} in MATLAB \citep{sqp}
+    \item \texttt{KNITRO.jl} package in Julia \citep{knitro}
+    \item \texttt{sqp} configuration in MATLAB \citep{sqp}
 \end{itemize}
 
 All the solvers in Julia are free and open-source, except for \texttt{KNITRO.jl} which is commercial. A separate keyword argument in the controller constructors allows customizing the solver (see \cref{sec:successive_linearization} for an example). Only the active-set results are include for the SLMPC since \texttt{OSQP.jl} does not work as well on the pendulum (without major modifications in the optimizer settings).

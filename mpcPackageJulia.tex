@@ -6,8 +6,8 @@
 \usepackage{amsmath,amssymb,mathtools,textgreek,siunitx,etoolbox} 
 \usepackage{graphicx,enumitem,xcolor,booktabs,tikz,chemplants,natbib}
 \usepackage[
-    %finalizecache=false, #no longer supported in minted 3.0
-    frozencache=true,
+    %finalizecache, %no longer supported in minted 3.0 (this, this line needs TexLive 2023)
+    %frozencache,
     cachedir=minted-cache
 ]{minted}
 \usepackage[colorlinks,allcolors=blue]{hyperref}
@@ -31,7 +31,7 @@
 \setminted[julia-repl]{%
     fontsize=\footnotesize,
 }
-\newcommand*{\spacerepl}{\vspace*{-15pt}}
+\newcommand*{\spacerepl}{\vspace{-2\baselineskip}}
 % ------------------- unicode char handling --------------------------------
 \DeclareUnicodeCharacter{0302}{\^{x}} % replace hat by xhat
 \DeclareUnicodeCharacter{1D569}{} % hide the blackboard font x

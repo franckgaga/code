@@ -1,4 +1,10 @@
 # ==========================================
+# ========== GLOBAL SETTINGS ===============
+# ==========================================
+run_benchmarks   = true
+benchmark_knitro = true # put false if no KNITRO license:
+
+# ==========================================
 # ========== STATE ESTIMATOR ===============
 # ==========================================
 using ModelPredictiveControl
@@ -76,30 +82,32 @@ savefig(plt, "$(@__DIR__())/../../fig/plot_NonLinMPC2.pdf")
 using BenchmarkTools
 using JuMP, Ipopt, KNITRO
 
-optim = JuMP.Model(Ipopt.Optimizer, add_bridges=false)
-nmpc_ipopt = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt, optim)
-nmpc_ipopt = setconstraint!(nmpc_ipopt; umin, umax)
-JuMP.unset_time_limit_sec(nmpc_ipopt.optim)
+if run_benchmarks
+    optim = JuMP.Model(Ipopt.Optimizer, add_bridges=false)
+    nmpc_ipopt = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt, optim)
+    nmpc_ipopt = setconstraint!(nmpc_ipopt; umin, umax)
+    JuMP.unset_time_limit_sec(nmpc_ipopt.optim)
+    bm = @benchmark(
+            sim!($nmpc_ipopt, $N, $ry; plant=$plant, x_0=$x_0, x̂_0=$x̂_0),
+            samples=50, 
+            seconds=10*60
+        )
+    @show btime_NMPC_track_solver_IP = median(bm)
 
-optim = JuMP.Model(KNITRO.Optimizer, add_bridges=false)
-set_attribute(optim, "algorithm", 4) # 4th algorithm is SQP
-nmpc_knitro = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt, optim)
-nmpc_knitro = setconstraint!(nmpc_knitro; umin, umax)
-JuMP.unset_time_limit_sec(nmpc_knitro.optim)
-
-bm = @benchmark(
-        sim!($nmpc_ipopt, $N, $ry; plant=$plant, x_0=$x_0, x̂_0=$x̂_0),
-        samples=50, 
-        seconds=10*60
-    )
-@show btime_NMPC_track_solver_IP = median(bm)
-
-bm = @benchmark(
-        sim!($nmpc_knitro, $N, $ry; plant=$plant, x_0=$x_0, x̂_0=$x̂_0),
-        samples=50,
-        seconds=10*60
-    )
-@show btime_NMPC_track_solver_SQ = median(bm)
+    if benchmark_knitro
+        optim = JuMP.Model(KNITRO.Optimizer, add_bridges=false)
+        set_attribute(optim, "algorithm", 4) # 4th algorithm is SQP
+        nmpc_knitro = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt, optim)
+        nmpc_knitro = setconstraint!(nmpc_knitro; umin, umax)
+        JuMP.unset_time_limit_sec(nmpc_knitro.optim)
+        bm = @benchmark(
+                sim!($nmpc_knitro, $N, $ry; plant=$plant, x_0=$x_0, x̂_0=$x̂_0),
+                samples=50,
+                seconds=10*60
+            )
+        @show btime_NMPC_track_solver_SQ = median(bm)
+    end
+end
 
 ## =========================================
 x_0 = [π, 0]; x̂_0 = [π, 0, 0]; y_step = [10]
@@ -119,19 +127,23 @@ savefig(plt, "$(@__DIR__())/../../fig/plot_NonLinMPC3.pdf")
 ## =========================================
 ## ========= Benchmark =====================
 ## =========================================
-bm = @benchmark(
-        sim!($nmpc_ipopt, $N, $[180.0]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0, y_step=$y_step),
-        samples=50,
-        seconds=10*60
-    )
-@show btime_NMPC_regul_solver_IP = median(bm)
+if run_benchmarks
+    bm = @benchmark(
+            sim!($nmpc_ipopt, $N, $[180.0]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0, y_step=$y_step),
+            samples=50,
+            seconds=10*60
+        )
+    @show btime_NMPC_regul_solver_IP = median(bm)
 
-bm = @benchmark(
-        sim!($nmpc_knitro, $N, $[180.0]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0, y_step=$y_step),
-        samples=50,
-        seconds=10*60
-    )
-@show btime_NMPC_regul_solver_SQ = median(bm)
+    if benchmark_knitro
+        bm = @benchmark(
+                sim!($nmpc_knitro, $N, $[180.0]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0, y_step=$y_step),
+                samples=50,
+                seconds=10*60
+            )
+        @show btime_NMPC_regul_solver_SQ = median(bm)
+    end
+end
 
 # ==========================================
 # ========== ECONOMIC MPC ==================
@@ -188,30 +200,32 @@ display(Dict(:W_nmpc => calcW(res_ry), :W_empc => calcW(res2_ry)))
 using BenchmarkTools
 using JuMP, Ipopt, KNITRO
 
-optim = JuMP.Model(Ipopt.Optimizer, add_bridges=false)
-empc_ipopt = NonLinMPC(estim2; Hp, Hc, Nwt, Mwt=Mwt2, Cwt, JE, Ewt, optim, p)
-empc_ipopt = setconstraint!(empc_ipopt; umin, umax)
-JuMP.unset_time_limit_sec(empc_ipopt.optim)
+if run_benchmarks
+    optim = JuMP.Model(Ipopt.Optimizer, add_bridges=false)
+    empc_ipopt = NonLinMPC(estim2; Hp, Hc, Nwt, Mwt=Mwt2, Cwt, JE, Ewt, optim, p)
+    empc_ipopt = setconstraint!(empc_ipopt; umin, umax)
+    JuMP.unset_time_limit_sec(empc_ipopt.optim)
+    bm = @benchmark(
+            sim!($empc_ipopt, $N, $ry; plant=$plant2, x_0=$x_0, x̂_0=$x̂_0),
+            samples=50, 
+            seconds=10*60
+        )
+    @show btime_EMPC_track_solver_IP = median(bm)
 
-optim = JuMP.Model(KNITRO.Optimizer, add_bridges=false)
-set_attribute(optim, "algorithm", 4) # 4th algorithm is SQP
-empc_knitro = NonLinMPC(estim2; Hp, Hc, Nwt, Mwt=Mwt2, Cwt, JE, Ewt, optim, p)
-empc_knitro = setconstraint!(empc_knitro; umin, umax)
-JuMP.unset_time_limit_sec(empc_knitro.optim)
-
-bm = @benchmark(
-        sim!($empc_ipopt, $N, $ry; plant=$plant2, x_0=$x_0, x̂_0=$x̂_0),
-        samples=50, 
-        seconds=10*60
-    )
-@show btime_EMPC_track_solver_IP = median(bm)
-
-bm = @benchmark(
-        sim!($empc_knitro, $N, $ry; plant=$plant2, x_0=$x_0, x̂_0=$x̂_0),
-        samples=50,
-        seconds=10*60
-    )
-@show btime_EMPC_track_solver_SQ = median(bm)
+    if benchmark_knitro
+        optim = JuMP.Model(KNITRO.Optimizer, add_bridges=false)
+        set_attribute(optim, "algorithm", 4) # 4th algorithm is SQP
+        empc_knitro = NonLinMPC(estim2; Hp, Hc, Nwt, Mwt=Mwt2, Cwt, JE, Ewt, optim, p)
+        empc_knitro = setconstraint!(empc_knitro; umin, umax)
+        JuMP.unset_time_limit_sec(empc_knitro.optim)
+        bm = @benchmark(
+                sim!($empc_knitro, $N, $ry; plant=$plant2, x_0=$x_0, x̂_0=$x̂_0),
+                samples=50,
+                seconds=10*60
+            )
+        @show btime_EMPC_track_solver_SQ = median(bm)
+    end
+end
 
 ## =========================================
 x_0 = [π, 0]; x̂_0 = [π, 0, 0]; y_step = [10; 0]
@@ -235,19 +249,23 @@ savefig(plt, "$(@__DIR__())/../../fig/plot_EconomMPC2.pdf")
 ## =========================================
 ## ========= Benchmark =====================
 ## =========================================
-bm = @benchmark(
-        sim!($empc_ipopt, $N, $ry; plant=$plant2, x_0=$x_0, x̂_0=$x̂_0, y_step=$y_step),
-        samples=50,
-        seconds=10*60
-    )
-@show btime_EMPC_regul_solver_IP = median(bm)
+if run_benchmarks
+    bm = @benchmark(
+            sim!($empc_ipopt, $N, $ry; plant=$plant2, x_0=$x_0, x̂_0=$x̂_0, y_step=$y_step),
+            samples=50,
+            seconds=10*60
+        )
+    @show btime_EMPC_regul_solver_IP = median(bm)
 
-bm = @benchmark(
-        sim!($empc_knitro, $N, $ry; plant=$plant2, x_0=$x_0, x̂_0=$x̂_0, y_step=$y_step),
-        samples=50,
-        seconds=10*60
-    )
-@show btime_EMPC_regul_solver_SQ = median(bm)
+    if benchmark_knitro
+        bm = @benchmark(
+                sim!($empc_knitro, $N, $ry; plant=$plant2, x_0=$x_0, x̂_0=$x̂_0, y_step=$y_step),
+                samples=50,
+                seconds=10*60
+            )
+        @show btime_EMPC_regul_solver_SQ = median(bm)
+    end
+end
 
 ## ==========================================
 ## ====== SUCCESSIVE LINEARIZATION MPC ======
@@ -303,13 +321,15 @@ savefig(plt, "$(@__DIR__())/../../fig/plot_SuccLinMPC1.pdf")
 ## =========================================
 using BenchmarkTools
 
-x_0 = [0, 0]; x̂_0 = [0, 0, 0]; ry = [180]; y_step=[0]
-bm = @benchmark(
-        sim2!($mpc3, $model, $N, $ry, $plant, $x_0, $x̂_0, $y_step),
-        samples=500, 
-        seconds=10*60
-    )
-@show btime_SLMPC_track_solver_AS = median(bm)
+if run_benchmarks
+    x_0 = [0, 0]; x̂_0 = [0, 0, 0]; ry = [180]; y_step=[0]
+    bm = @benchmark(
+            sim2!($mpc3, $model, $N, $ry, $plant, $x_0, $x̂_0, $y_step),
+            samples=500, 
+            seconds=10*60
+        )
+    @show btime_SLMPC_track_solver_AS = median(bm)
+end
 
 ## =========================================
 x_0 = [π, 0]; 𝕩̂_0 = [π, 0, 0]; ry = [180]
@@ -329,10 +349,12 @@ savefig(plt, "$(@__DIR__())/../../fig/plot_SuccLinMPC2.pdf")
 ## =========================================
 ## ========= Benchmark =====================
 ## =========================================
-x_0 = [π, 0]; x̂_0 = [π, 0, 0]; ry = [180]; y_step=[10]
-bm = @benchmark(
-        sim2!($mpc3, $model, $N, $ry, $plant, $x_0, $x̂_0, $y_step),
-        samples=500, 
-        seconds=10*60
-    )
-@show btime_SLMPC_track_solver_AS = median(bm)
+if run_benchmarks
+    x_0 = [π, 0]; x̂_0 = [π, 0, 0]; ry = [180]; y_step=[10]
+    bm = @benchmark(
+            sim2!($mpc3, $model, $N, $ry, $plant, $x_0, $x̂_0, $y_step),
+            samples=500, 
+            seconds=10*60
+        )
+    @show btime_SLMPC_track_solver_AS = median(bm)
+end
