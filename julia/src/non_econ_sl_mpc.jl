@@ -356,5 +356,5 @@ if run_benchmarks
             samples=500, 
             seconds=10*60
         )
-    @show btime_SLMPC_track_solver_AS = median(bm)
+    @show btime_SLMPC_regul_solver_AS = median(bm)
 end
