@@ -2,7 +2,8 @@
 # ========== GLOBAL SETTINGS ===============
 # ==========================================
 run_benchmarks   = true
-benchmark_knitro = false # put false if no KNITRO license:
+benchmark_knitro = true # put false if no KNITRO license:
+benchmark_madnlp = false
 
 # ==========================================
 # ========== STATE ESTIMATOR ===============
@@ -96,16 +97,18 @@ if run_benchmarks
         )
     @show btime_NMPC_track_solver_IP = median(bm)
 
-    optim = JuMP.Model(MadNLP.Optimizer, add_bridges=false)
-    nmpc_madnlp = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt, optim)
-    nmpc_madnlp = setconstraint!(nmpc_madnlp; umin, umax)
-    JuMP.unset_time_limit_sec(nmpc_madnlp.optim)
-    bm = @benchmark(
-        sim!($nmpc_madnlp, $N, $ry; plant=$plant, x_0=$x_0, x̂_0=$x̂_0),
-        samples=50, 
-        seconds=10*60
-    )
-@show btime_NMPC_track_solver_IP2 = median(bm)
+    if benchmark_madnlp
+        optim = JuMP.Model(MadNLP.Optimizer, add_bridges=false)
+        nmpc_madnlp = NonLinMPC(estim; Hp, Hc, Mwt, Nwt, Cwt, optim)
+        nmpc_madnlp = setconstraint!(nmpc_madnlp; umin, umax)
+        JuMP.unset_time_limit_sec(nmpc_madnlp.optim)
+        bm = @benchmark(
+            sim!($nmpc_madnlp, $N, $ry; plant=$plant, x_0=$x_0, x̂_0=$x̂_0),
+            samples=50, 
+            seconds=10*60
+        )
+        @show btime_NMPC_track_solver_IP2 = median(bm)
+    end
 
     if benchmark_knitro
         optim = JuMP.Model(KNITRO.Optimizer, add_bridges=false)
@@ -148,12 +151,14 @@ if run_benchmarks
         )
     @show btime_NMPC_regul_solver_IP = median(bm)
 
-    bm = @benchmark(
-        sim!($nmpc_madnlp, $N, $[180.0]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0, y_step=$y_step),
-        samples=50,
-        seconds=10*60
-    )
-@show btime_NMPC_regul_solver_IP2 = median(bm)
+    if benchmark_madnlp
+        bm = @benchmark(
+            sim!($nmpc_madnlp, $N, $[180.0]; plant=$plant, x_0=$x_0, x̂_0=$x̂_0, y_step=$y_step),
+            samples=50,
+            seconds=10*60
+        )
+        @show btime_NMPC_regul_solver_IP2 = median(bm)
+    end
 
     if benchmark_knitro
         bm = @benchmark(
@@ -232,16 +237,18 @@ if run_benchmarks
         )
     @show btime_EMPC_track_solver_IP = median(bm)
 
-    optim = JuMP.Model(MadNLP.Optimizer, add_bridges=false)
-    empc_madnlp = NonLinMPC(estim2; Hp, Hc, Nwt, Mwt=Mwt2, Cwt, JE, Ewt, optim, p)
-    empc_madnlp = setconstraint!(empc_madnlp; umin, umax)
-    JuMP.unset_time_limit_sec(empc_madnlp.optim)
-    bm = @benchmark(
-            sim!($empc_madnlp, $N, $ry; plant=$plant2, x_0=$x_0, x̂_0=$x̂_0),
-            samples=50, 
-            seconds=10*60
-        )
-    @show btime_EMPC_track_solver_IP2 = median(bm)
+    if benchmark_madnlp
+        optim = JuMP.Model(MadNLP.Optimizer, add_bridges=false)
+        empc_madnlp = NonLinMPC(estim2; Hp, Hc, Nwt, Mwt=Mwt2, Cwt, JE, Ewt, optim, p)
+        empc_madnlp = setconstraint!(empc_madnlp; umin, umax)
+        JuMP.unset_time_limit_sec(empc_madnlp.optim)
+        bm = @benchmark(
+                sim!($empc_madnlp, $N, $ry; plant=$plant2, x_0=$x_0, x̂_0=$x̂_0),
+                samples=50, 
+                seconds=10*60
+            )
+        @show btime_EMPC_track_solver_IP2 = median(bm)
+    end
 
     if benchmark_knitro
         optim = JuMP.Model(KNITRO.Optimizer, add_bridges=false)
@@ -288,12 +295,14 @@ if run_benchmarks
         )
     @show btime_EMPC_regul_solver_IP = median(bm)
 
-    bm = @benchmark(
-        sim!($empc_madnlp, $N, $ry; plant=$plant2, x_0=$x_0, x̂_0=$x̂_0, y_step=$y_step),
-        samples=50,
-        seconds=10*60
-    )
-@show btime_EMPC_regul_solver_IP2 = median(bm)
+    if benchmark_madnlp
+        bm = @benchmark(
+            sim!($empc_madnlp, $N, $ry; plant=$plant2, x_0=$x_0, x̂_0=$x̂_0, y_step=$y_step),
+            samples=50,
+            seconds=10*60
+        )
+        @show btime_EMPC_regul_solver_IP2 = median(bm)
+    end
 
     if benchmark_knitro
         bm = @benchmark(
