@@ -112,7 +112,7 @@ and also $\epsilon \ge 0$. Box constraints on the terminal states are also possi
 \end{equation}
 in which $i=k$ when using current estimators, and $i=k-1$ for delayed formulations. Note that changing the bounds at runtime and time-varying constraints over the horizons are supported.
 
-The default optimizer is \texttt{OSQP.jl} that efficiently handles sparse problems \citep{osqp}, but the interface based on \texttt{JuMP.jl} interface allows switching among many quadratic solvers. For example, the dual active-set method of \citet{daqp} is sometimes more efficient on small and dense matrices. Testing this solver only takes 2 lines of code (see \cref{sec:successive_linearization} for an example).
+The default optimizer is \texttt{OSQP.jl} that efficiently handles sparse problems \citep{osqp}, but the interface based on \texttt{JuMP.jl} allows switching among many quadratic solvers. For example, the dual active-set method of \citet{daqp} is sometimes more efficient on small and dense matrices. Testing this solver only takes 2 lines of code (see \cref{sec:successive_linearization} for an example).
 
 \paragraph{\textnormal{\texttt{ExplicitMPC}}}
 Linear model predictive controller without constraints, see \texttt{LinMPC} for the cost function. The computational costs are extremely low (the analytical solution of the quadratic problem leads to a single array division), therefore suitable for applications that require small sample times. It produces a control law similar to a finite-horizon linear-quadratic regulator (LQR), but with the control horizon $H_c$, the move suppression $\mathbf{N}_{H_c}$ and the input setpoint tracking $\mathbf{L}_{H_p}$ weights available as additional tuning parameters.
