@@ -1,6 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite the article below."
-authors: "ModelPredictiveControl.jl contributors"
+authors:
+  - name:  "ModelPredictiveControl.jl contributors"
 title: "ModelPredictiveControl.jl - An open source model predictive control package for Julia."
 url: "https://github.com/JuliaControl/ModelPredictiveControl.jl"
 preferred-citation:
@@ -15,7 +16,6 @@ preferred-citation:
     - family-names: "Bagge Carlson"
       given-names: "Fredrik"
   title: "ModelPredictiveControl.jl: advanced process control made easy in Julia"
-  publisher: "Springer"
   eprint: "2411.09764"
   archivePrefix: "arXiv"
   year: 2024
