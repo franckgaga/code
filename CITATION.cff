@@ -4,7 +4,7 @@ authors: "ModelPredictiveControl.jl contributors"
 title: "ModelPredictiveControl.jl - An open source model predictive control package for Julia."
 url: "https://github.com/JuliaControl/ModelPredictiveControl.jl"
 preferred-citation:
-  type: misc
+  type: generic
   authors:
     - family-names: "Gagnon"
       given-names: "Francis"
