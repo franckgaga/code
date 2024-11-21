@@ -16,8 +16,6 @@ preferred-citation:
     - family-names: "Bagge Carlson"
       given-names: "Fredrik"
   title: "ModelPredictiveControl.jl: advanced process control made easy in Julia"
-  eprint: "2411.09764"
-  archivePrefix: "arXiv"
   year: 2024
   doi: "10.1007/978-3-030-68928-5"
   url: "https://arxiv.org/abs/2411.09764"
