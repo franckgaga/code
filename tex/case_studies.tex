@@ -302,7 +302,7 @@ Thus, the work in joule done by the motor from $t_0$ to $t_{end}$ is:
 \begin{equation}
 W = \int_{t_0}^{t_{end}} P(t) \mathrm{d}t 
 \end{equation}
-With the sampling time $T_s$ in second and the prediction horizon $H_p$ in time steps, computing the integral with the left-endpoint rectangle method and defining the limits as $t_0=k$ and $t_{end} = (k + H_p) T_s$ give:
+With the sampling time $T_s$ in second and the prediction horizon $H_p$ in time steps, computing the integral with the left-endpoint rectangle method and defining the limits as $t_0=k T_s$ and $t_{end} = (k + H_p) T_s$ give:
 \begin{equation}\label{eq:pendulum_W}
 W \approx T_s \sum_{j = 0}^{H_p - 1} \tau(k+j) \omega(k+j) 
 \end{equation}
