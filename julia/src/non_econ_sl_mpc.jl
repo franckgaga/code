@@ -317,7 +317,7 @@ end
 ## ==========================================
 ## ====== SUCCESSIVE LINEARIZATION MPC ======
 ## ==========================================
-using Pkg; Pkg.add(["JuMP","DAQP"])
+# using Pkg; Pkg.add(["JuMP","DAQP"])
 using JuMP, DAQP
 optim = JuMP.Model(DAQP.Optimizer, add_bridges=false)
 
